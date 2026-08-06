@@ -1,6 +1,6 @@
-# 협업 API 공통 규칙
+# 입을래? API 공통 규칙
 
-> 프론트엔드와 백엔드가 분리된 저장소에서 동일한 기준으로 API를 설계하고 연동하기 위한 팀 공동 규칙입니다.
+> 프론트엔드와 백엔드가 분리된 저장소에서 동일한 기준으로 API를 설계하고 연동하기 위한 팀 공통 규칙이다.
 
 ## 1. 핵심 합의 사항
 
@@ -12,6 +12,7 @@
 | 성공 응답       | `{ "success": true, "data": ... }`                                         |
 | 오류 응답       | `{ "success": false, "error": { "code", "message" } }`                     |
 | Validation 오류 | `error.fields` 배열에 필드별 오류를 담는다.                                |
+| 필드 포함 규칙  | 성공 응답에는 `error`를, 오류 응답에는 `data`를 포함하지 않는다.           |
 | 날짜·시간       | ISO 8601 형식을 사용한다.                                                  |
 | 기준 시간대     | 서버·DB·API는 UTC, 화면 표시는 `Asia/Seoul`을 사용한다.                    |
 | Enum            | 영문 대문자 `SNAKE_CASE`를 사용한다.                                       |
@@ -112,13 +113,41 @@ GET  /api/getProducts
 
 ## 4. 성공 응답 형식
 
-### 4.1 단일 객체
+### 4.1 성공·오류 필드 포함 규칙
+
+- 성공 응답에는 `success`와 `data`를 포함한다.
+- 성공 응답에는 `error`를 포함하지 않는다.
+- 오류 응답에는 `success`와 `error`를 포함한다.
+- 오류 응답에는 `data`를 포함하지 않는다.
+- `fields`는 Validation 오류가 발생한 경우에만 `error` 내부에 포함한다.
+- 사용하지 않는 최상위 필드를 `null`로 보내지 않고 응답에서 생략한다.
+
+성공 응답:
+
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+다음처럼 `error: null`을 함께 보내지 않는다.
+
+```json
+{
+  "success": true,
+  "data": {},
+  "error": null
+}
+```
+
+### 4.2 단일 객체
 
 ```json
 {
   "success": true,
   "data": {
-    "id": "123",
+    "productId": "123",
     "name": "MCM 가방",
     "price": 1250000,
     "currency": "KRW"
@@ -126,9 +155,9 @@ GET  /api/getProducts
 }
 ```
 
-### 4.2 배열
+### 4.3 페이지네이션을 사용하지 않는 작은 목록
 
-페이지네이션을 사용하지 않는 작은 목록은 `data`에 배열을 담는다.
+페이지네이션을 사용하지 않는 작은 목록은 `data`에 배열을 직접 담는다.
 
 ```json
 {
@@ -142,23 +171,56 @@ GET  /api/getProducts
 }
 ```
 
-### 4.3 응답 본문이 없는 성공
+### 4.4 작은 목록의 조회 결과가 없는 경우
 
-삭제처럼 반환할 데이터가 없다면 `204 No Content`를 사용하고 응답 본문을 보내지 않는다. `204` 응답에 JSON 본문을 함께 보내지 않는다.
+조회 결과가 없더라도 오류로 처리하지 않고 빈 배열을 반환한다.
 
-### 4.4 HTTP 상태 코드
+```json
+{
+  "success": true,
+  "data": []
+}
+```
 
-| 상황                        |                   상태 코드 |
-| --------------------------- | --------------------------: |
-| 조회·수정 성공              |                    `200 OK` |
-| 생성 성공                   |               `201 Created` |
-| 성공했지만 반환할 본문 없음 |            `204 No Content` |
-| 잘못된 요청·Validation 실패 |           `400 Bad Request` |
-| 인증 필요                   |          `401 Unauthorized` |
-| 권한 없음                   |             `403 Forbidden` |
-| 리소스 없음                 |             `404 Not Found` |
-| 중복 또는 현재 상태와 충돌  |              `409 Conflict` |
-| 서버 내부 오류              | `500 Internal Server Error` |
+- `null` 대신 `[]`을 반환한다.
+- 단순히 검색·추천 결과가 없다는 이유로 `404 Not Found`를 반환하지 않는다.
+- 특정 ID로 조회한 하나의 리소스가 존재하지 않는 경우에는 `404 Not Found`를 사용한다.
+
+### 4.5 생성 성공
+
+새로운 리소스를 생성한 경우 `201 Created`를 사용한다.
+
+```http
+HTTP/1.1 201 Created
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "myItemId": "25"
+  }
+}
+```
+
+### 4.6 응답 본문이 없는 성공
+
+삭제나 찜 해제처럼 반환할 데이터가 없다면 `204 No Content`를 사용하고 응답 본문을 보내지 않는다. `204` 응답에는 `success`, `data`를 포함한 JSON 본문도 함께 보내지 않는다.
+
+### 4.7 HTTP 상태 코드
+
+| 상황                             |                   상태 코드 |
+| -------------------------------- | --------------------------: |
+| 조회·수정 성공                   |                    `200 OK` |
+| 정상적인 빈 목록·추천 결과       |                    `200 OK` |
+| 생성 성공                        |               `201 Created` |
+| 성공했지만 반환할 본문 없음      |            `204 No Content` |
+| 잘못된 요청·Validation 실패      |           `400 Bad Request` |
+| 인증 필요                        |          `401 Unauthorized` |
+| 권한 없음                        |             `403 Forbidden` |
+| 특정 ID의 리소스 없음            |             `404 Not Found` |
+| 중복 또는 현재 상태와 충돌       |              `409 Conflict` |
+| 서버 내부 오류                   | `500 Internal Server Error` |
 
 ---
 
@@ -237,19 +299,21 @@ GET /api/products?page=0&size=20&sort=status,asc&sort=createdAt,desc
   "success": false,
   "error": {
     "code": "PRODUCT_NOT_FOUND",
-    "message": "상품을 찾을 수 없습니다."
+    "message": "제품을 찾을 수 없습니다."
   }
 }
 ```
 
+- 오류 응답에는 `success`와 `error`를 포함하고 `data`는 포함하지 않는다.
+- 사용하지 않는 `data`를 `null`로 보내지 않고 응답에서 생략한다.
 - `code`는 프론트엔드가 오류 종류를 구분할 때 사용하는 고정된 영문 코드이다.
-- `message`는 사용자 안내 또는 개발 중 확인을 위한 설명이다.
+- `message`는 사용자 안내 또는 개발 중 확인을 위한 안전한 설명이다.
 - 프론트엔드는 `message` 문자열을 비교하지 않고 `code`를 기준으로 분기한다.
 - 서버의 예외 메시지, SQL, 파일 경로, 스택 트레이스 등 내부 정보는 응답에 노출하지 않는다.
 
 ```ts
 if (error.code === "PRODUCT_NOT_FOUND") {
-  // 상품 없음 화면 표시
+  // 제품 없음 화면 표시
 }
 ```
 
@@ -257,9 +321,35 @@ if (error.code === "PRODUCT_NOT_FOUND") {
 
 ```text
 PRODUCT_NOT_FOUND
-EMAIL_ALREADY_EXISTS
-AUTH_TOKEN_EXPIRED
+MY_ITEM_NOT_FOUND
+VERIFICATION_CODE_INVALID
+VERIFICATION_CODE_EXPIRED
 FILE_SIZE_EXCEEDED
+INTERNAL_SERVER_ERROR
+```
+
+요청 본문 자체가 없거나 JSON 문법이 잘못된 경우에는 `fields` 없이 일반 오류 형식을 사용한다.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "REQUEST_BODY_INVALID",
+    "message": "요청 본문 형식을 확인해 주세요."
+  }
+}
+```
+
+처리되지 않은 서버 내부 오류도 내부 예외 내용을 노출하지 않고 공통 형식으로 반환한다.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "서버 오류가 발생했습니다."
+  }
+}
 ```
 
 ---
@@ -280,18 +370,21 @@ FILE_SIZE_EXCEEDED
         "reason": "올바른 이메일 형식이 아닙니다."
       },
       {
-        "field": "password",
-        "reason": "비밀번호는 8자 이상이어야 합니다."
+        "field": "verificationCode",
+        "reason": "인증번호는 6자리여야 합니다."
       }
     ]
   }
 }
 ```
 
+- `fields`는 Validation 오류가 발생한 경우에만 `error` 내부에 포함한다.
 - `field`는 프론트 요청 DTO의 필드명과 정확히 일치시킨다.
+- 이메일 인증 요청이면 `email`, 휴대폰 인증 요청이면 `phoneNumber`처럼 실제 요청 필드명을 사용한다.
 - 한 필드에 오류가 여러 개여도 우선순위가 가장 높은 오류 하나만 반환한다.
 - 여러 필드가 잘못되었다면 가능한 한 한 번에 모두 반환한다.
-- 요청 본문 자체가 없거나 JSON 문법이 잘못된 경우에는 `fields` 없이 일반 오류 형식을 사용할 수 있다.
+- Validation 오류가 아닌 일반 오류에는 `fields`를 빈 배열로 넣지 않고 필드 자체를 생략한다.
+- 요청 본문 자체가 없거나 JSON 문법이 잘못된 경우에는 `fields` 없이 일반 오류 형식을 사용한다.
 
 ---
 
@@ -363,6 +456,7 @@ const statusLabel = {
 - 배열은 항상 배열로 반환하여 프론트에서 바로 `map`, `filter` 등을 사용할 수 있게 한다.
 - 선택 필드가 응답마다 사라지지 않게 하여 프론트 타입을 안정적으로 유지한다.
 - 공백 문자열을 `null` 대신 사용하지 않는다.
+- 단, 성공·오류 공통 응답에서 사용하지 않는 최상위 `data` 또는 `error`는 `null`로 보내지 않고 생략한다.
 
 ---
 
@@ -439,7 +533,7 @@ API에서 `"1,250,000원"`처럼 표시용 문자열을 보내지 않는다. 쉼
 Issue 제목 예시:
 
 ```text
-[API 요청] 상품 목록 응답에 대표 이미지 URL 추가
+[API 요청] 제품 목록 응답에 대표 이미지 URL 추가
 ```
 
 기존 프론트가 바로 깨지는 변경이라면 백엔드가 잠시 이전 필드와 새 필드를 함께 제공하는 방식이 가장 안전하다.(배포 후 참고)
@@ -476,7 +570,7 @@ Issue 제목 예시:
 
 ## 변경 이유
 
-상품 목록 데이터가 많아질 때 전체 데이터를 한 번에 불러오는 문제를 막기 위해 페이지네이션을 적용합니다.
+제품 목록 데이터가 많아질 때 전체 데이터를 한 번에 불러오는 문제를 막기 위해 페이지네이션을 적용합니다.
 
 ## 변경 전
 
@@ -543,7 +637,7 @@ Issue 제목 예시:
 ### PR 제목 규칙
 
 ```text
-[API] 상품 목록 페이지네이션 적용
+[API] 제품 목록 페이지네이션 적용
 [API] 추천 결과에 reason 필드 추가
 [API][Breaking] image 필드를 imageUrl로 변경
 ```
@@ -563,7 +657,7 @@ Issue 제목 예시:
 ## 프론트 변경 내용
 
 - 페이지 응답 타입을 추가했습니다.
-- 상품 목록을 `data.items`로 렌더링하도록 수정했습니다.
+- 제품 목록을 `data.items`로 렌더링하도록 수정했습니다.
 - 페이지 이동 시 `page`, `size`를 전달하도록 수정했습니다.
 
 ## 연동 환경
@@ -590,6 +684,8 @@ Issue 제목 예시:
 
 - [ ] 구현 코드가 완료되었다.
 - [ ] 성공, 일반 오류, Validation 오류가 공통 형식을 따른다.
+- [ ] 성공 응답에는 `error`가, 오류 응답에는 `data`가 포함되지 않는다.
+- [ ] Validation 오류가 아닌 경우 `fields`가 포함되지 않는다.
 - [ ] 페이지네이션이 필요한 목록에 공통 페이지 형식을 적용했다.
 - [ ] 백엔드 테스트와 CI가 통과했다.
 - [ ] 프론트 영향도를 PR에 작성했다.
