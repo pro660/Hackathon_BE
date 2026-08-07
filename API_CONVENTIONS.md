@@ -411,6 +411,30 @@ ISO 8601 형식으로 통일한다.
 
 예를 들어 API가 `2026-08-05T07:30:00Z`를 반환하면 프론트는 한국 시간 `2026-08-05 16:30`으로 표시한다.
 
+### 8.3 백엔드 Java 타입
+
+| 의미 | Java 타입 | API 형식 |
+| --- | --- | --- |
+| 날짜만 의미하는 값 | `LocalDate` | `YYYY-MM-DD` |
+| 시간만 의미하는 값 | `LocalTime` | `HH:mm:ss` |
+| 정확한 시각 | `Instant` | UTC ISO 8601 |
+
+예:
+
+- 스타일 플랜 날짜 → `LocalDate`
+- 구매일 → `LocalDate`
+- 사용 기록 날짜 → `LocalDate`
+- 관리 기록 날짜 → `LocalDate`
+- 다음 관리 예정일 → `LocalDate`
+- 스타일 플랜 시간 → `LocalTime`
+- 생성 시각 → `Instant`
+- 수정 시각 → `Instant`
+
+정확한 시각을 저장하기 위해 `LocalDateTime`을 사용하지 않는다.
+`java.util.Date`, `Calendar`, `Timestamp`도 신규 도메인 코드에서는 사용하지 않는다.
+
+날짜와 시간을 화면 표시용 `String`으로 백엔드에서 가공하지 않는다.
+
 ---
 
 ## 9. Enum 표현
