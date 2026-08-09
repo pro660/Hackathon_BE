@@ -2,66 +2,151 @@
 
 2026 중앙해커톤 서비스 **입을래?**의 Spring Boot 백엔드 저장소입니다.
 
-> - 문서 기준일: 2026-08-08
-> - 구현 기준: `main`의 [`39b1bd7`](https://github.com/pro660/Hackathon_BE/commit/39b1bd7baad85de8e74e6028f82afc7bad8e43b7)
-> - API 규칙 원본: [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)
+> - 문서 기준일: 2026-08-10
+> - 구현 기준: `main`의 `d77ef96`
+> - API 공통 규칙 원본: [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)
+
+---
 
 ## 프로젝트 소개
 
-입을래?는 20~30대 개인 사용자가 명품을 구매하기 전부터 보유한 이후까지 더 잘 활용하도록 돕는 모바일 웹 서비스입니다.
+**입을래?**는 20~30대 명품 관심 사용자와 보유자가 제품을 구매하기 전부터 보유한 이후까지 더 자주, 다양하게 활용하고 관리할 수 있도록 돕는 모바일 웹 서비스입니다.
 
-구매 전 탐색과 취향 분석, 제품 추천에서 시작해 보유 제품의 착용·관리·재활용까지 하나의 흐름으로 연결하는 것을 목표로 합니다.
+취향 분석과 제품 추천에서 시작해 구매 전 활용 가능성 분석, 스타일 플랜, 장소 추천, 보유 제품 관리와 활용 지원까지 하나의 흐름으로 연결하는 것을 목표로 합니다.
 
 ### MVP 상위 범위
 
 | 영역 | 주요 내용 | 현재 상태 |
 | --- | --- | --- |
-| 체험·취향 분석 | 취향 입력과 분석 결과 제공 | 확정·미구현 |
-| 제품 추천 | 샘플 MCM 제품 추천과 구매 전 활용 가능성 분석 | 확정·미구현 |
-| 오늘의 스타일 플랜 | 상황에 맞는 스타일 계획 제공 | 확정·미구현 |
-| 장소 추천 | 스타일 플랜과 연결된 장소 추천 | 확정·미구현 |
-| 마이 아이템 | 보유 제품 등록·조회와 아이템 패스포트 제공 | 확정·미구현 |
+| 체험·취향 분석 | 체험/간편 로그인 진입, 단계형 취향 분석 | 확정·미구현 |
+| 제품 추천 | 취향 기반 샘플 MCM 제품 추천, 필터, 찜 | 확정·미구현 |
+| 구매 전 활용성 분석 | 내 아이템과 구매 예정 제품의 활용 가능성 분석 | 확정·미구현 |
+| 오늘의 스타일 플랜 | 제품과 조건을 기반으로 스타일 플랜 생성·저장 | 확정·미구현 |
+| 장소 추천 | 스타일에 맞는 장소 추천·필터·저장·외부 지도 연결 | 확정·미구현 |
+| 마이 아이템 | 보유 제품 등록·조회·검색·필터 | 확정·미구현 |
+| 제품 패스포트 | 보유 제품별 정보와 이력 확인 | 확정·미구현 |
 | 사용·관리 기록 | 착용 기록과 관리 기록 저장 | 확정·미구현 |
-| 활용 지원 | 활용도, 재활용, 스마트 착용 추천. 최종 담당자는 아직 미정 | 확정·미구현 |
+| 활용 지원 | 활용도 분석, 다시 활용할 제품, 스마트 착용 추천 | 확정·미구현 |
+| 마이페이지 | 사용자 관련 정보와 저장 항목 관리 | 확정·미구현 |
 
-상위 MVP 범위는 확정됐지만, 기능명세서의 세부 기능 상태는 아직 `작성중`입니다. 개별 Endpoint, 요청·응답 DTO, Enum, 정렬·필터 조건, 예외 흐름은 기능별 설계 과정에서 확정합니다.
+현재는 **실제 도메인 기능 개발 전 공통 백엔드 기반을 구축하는 단계**입니다.
 
-## 현재 개발 상태
+---
+
+## 현재 개발 진행 상황
 
 상태는 다음 세 가지로 구분합니다.
 
-- **확정·구현**: 결정된 내용이 현재 `main` 코드에 반영됨
-- **확정·미구현**: 팀 결정은 완료됐지만 현재 `main`에는 아직 없음
-- **미확정**: 선택지나 세부 정책을 아직 결정하지 않음
+- **완료**: 현재 `main` 코드에 구현 및 검증 완료
+- **대기**: 진행 순서 또는 선행 설계 때문에 구현 대기
+- **미확정**: 세부 정책 또는 기술 선택을 추가로 결정해야 함
 
-| 항목 | 상태 | 현재 내용 |
-| --- | --- | --- |
-| Spring Boot 기본 프로젝트 | **확정·구현** | Java 21, Spring Boot 4.1.0, Gradle Wrapper 9.5.1 |
-| 개발 데이터베이스 | **확정·구현** | MySQL, Spring Data JPA, Hibernate, `DB_PASSWORD` 환경변수 |
-| 테스트 데이터베이스 | **확정·구현** | `test` 프로필에서 H2 인메모리 DB와 `create-drop` 사용 |
-| 상태 확인 API | **확정·구현** | `GET /api/health` |
-| 로컬 CORS | **확정·구현** | `http://localhost:3000`에서 `/api/**` 호출 허용 |
-| 공통 성공·오류 응답 | **확정·구현** | `ApiResponse`, `ErrorResponse`, Validation의 `error.fields` |
-| 전역 예외 처리 | **확정·구현** | 비즈니스 예외, 요청 Body 검증·파싱 오류, 없는 Endpoint, 예상 밖 오류 처리 |
-| Query·Path 오류 처리 보강 | **확정·미구현** | Query Parameter·Path Variable 관련 Spring 예외를 공통 400 형식으로 보강 예정 |
-| 날짜·시간 공통 기준 | **확정·구현** | 서버·DB·API는 UTC, Java 기준 시각은 `Clock.systemUTC()` |
-| JPA Auditing | **확정·구현** | `BaseTimeEntity`의 `createdAt`, `updatedAt`을 `Instant`로 자동 기록 |
-| API 공통 규칙 | **확정·구현** | 최신 규칙이 `API_CONVENTIONS.md`에 반영됨 |
-| 실제 서비스 도메인 | **확정·미구현** | 사용자, 취향, 제품, 추천, 찜, 마이 아이템, 기록, 스타일 플랜, 장소, 마이페이지 등 |
-| 기능 중심 패키지 | **확정·미구현** | `package-by-domain` 사용 예정이며 아직 도메인 패키지는 없음 |
-| Lombok | **확정·미구현** | 사용하기로 했지만 현재 `build.gradle` 의존성에는 없음 |
-| Swagger/OpenAPI | **확정·미구현** | 도입 예정이며 현재 springdoc 의존성·설정 없음 |
-| GitHub Actions CI | **확정·미구현** | 도입 예정이며 현재 Workflow 없음 |
-| 이미지 URL 저장 흐름 | **확정·미구현** | URL을 저장하는 방향은 확정됐지만 업로드 구현은 없음 |
-| 이미지 업로드 기술 | **미확정** | 저장소, Multipart 방식, 파일 형식·용량 제한 미결정 |
-| 회원 진입 기능 | **확정·미구현** | 이메일·휴대폰 인증번호와 Kakao·Naver·Google 소셜 로그인 방향, 관련 API·코드는 아직 없음 |
-| AI 기반 기능 | **확정·미구현** | 서비스 범위에는 포함되지만 공급자·모델·호출 정책은 미확정 |
-| AI 세부 기술 | **미확정** | 공급자, 모델, Prompt, 비용, Timeout, Retry, Fallback 미결정 |
-| 인증 기술 | **미확정** | Spring Security, JWT, Refresh Token, Cookie·Header 방식 등 미결정 |
-| ERD·도메인 Entity | **미확정** | 관계와 제약조건을 포함한 도메인 모델 설계 전 |
-| 배포 환경 | **미확정** | 플랫폼, 운영 DB, 도메인, 운영 CORS, 배포 주소 미결정 |
+| 단계 | 작업 | 상태 | 현재 내용 |
+| --- | --- | --- | --- |
+| 1 | MVP 기능 범위 확정 | ✅ 완료 | 상위 MVP 기능 범위 확정 |
+| 2 | 백엔드 협업 규칙 확정 | ✅ 완료 | 작업 브랜치·PR·Squash merge 기준 확정 |
+| 3 | FE/BE API 공통 규칙 확정 | ✅ 완료 | `API_CONVENTIONS.md` 반영 |
+| 4 | 로그인·사용자 정책 확정 | ⏸️ 대기 | 팀 요구사항 변경 반영을 위한 재확정 대기 |
+| 5 | 이미지·AI·외부 서비스 정책 확정 | ⏳ 미확정 | 공급자·저장소·호출 정책 결정 필요 |
+| 6 | ERD와 도메인 구조 확정 | ⏳ 미확정 | Entity·관계·제약조건 설계 전 |
+| 7 | 실행 환경과 환경변수 세팅 보완 | ✅ 완료 | `local`/`prod` profile 및 환경변수 구성 |
+| 8 | 테스트 환경 구축 | ✅ 완료 | H2 기반 독립 테스트 환경 구축 |
+| 9 | 백엔드 CI 구축 | ✅ 완료 | GitHub Actions 전체 테스트 자동화 |
+| 10 | 개발용 백엔드 첫 배포 | ⏳ 대기 | Railway용 운영 설정은 준비, 실제 배포 대기 |
+| 11 | 공통 응답·예외 처리 구현 | ✅ 완료 | 성공/오류 응답 및 Query/Path 예외 처리 완료 |
+| 12 | Swagger/OpenAPI 구축 | ✅ 완료 | springdoc 기반 Swagger UI/OpenAPI 구성 |
+| 13 | 샘플 데이터와 DB 변경 관리 | ⏳ 대기 | ERD·Entity 확정 후 구현 예정 |
+| 14 | 프론트 원격 연동 테스트 | ⏳ 대기 | 개발 서버 첫 배포 이후 진행 |
+| 15 | 실제 기능 개발 시작 | ⏳ 대기 | 공통 설계 및 ERD 확정 이후 시작 |
 
-현재 공개된 서비스 API는 상태 확인용 `GET /api/health` 하나입니다. 사용자·제품·추천·마이 아이템 등 실제 도메인의 Controller, Service, Repository, Entity는 아직 구현되지 않았습니다.
+---
+
+## 현재 구현된 공통 기반
+
+### Spring Boot 기본 환경
+
+- Java 21
+- Spring Boot 4.1.0
+- Gradle Wrapper 9.5.1
+- Spring Web MVC
+- Spring Data JPA
+- Jakarta Validation
+- MySQL
+- H2 Test DB
+
+### 공통 API 응답
+
+성공 응답:
+
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+오류 응답:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "오류 메시지"
+  }
+}
+```
+
+Validation 오류:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "입력값을 확인해 주세요.",
+    "fields": [
+      {
+        "field": "page",
+        "reason": "잘못된 입력값입니다."
+      }
+    ]
+  }
+}
+```
+
+### 공통 예외 처리
+
+현재 다음 예외 흐름이 공통 응답 형식으로 처리됩니다.
+
+- 비즈니스 예외
+- Request Body Validation 실패
+- 잘못된 JSON Body
+- 존재하지 않는 Endpoint
+- 예상하지 못한 서버 예외
+- Query Parameter 타입 변환 실패
+- Path Variable 타입 변환 실패
+- Query Parameter Validation 실패
+- Path Variable Validation 실패
+- 필수 Query Parameter 누락
+
+Query/Path 관련 잘못된 요청은 공통적으로 `400 Bad Request`와 `VALIDATION_ERROR` 응답을 사용합니다.
+
+### 날짜·시간 정책
+
+서버·DB·API의 기준 시간대는 **UTC**입니다.
+
+- 정확한 시점: `Instant`
+- 날짜: `LocalDate`
+- 시간: `LocalTime`
+- 기준 Clock: `Clock.systemUTC()`
+- Hibernate JDBC timezone: UTC
+- Jackson timezone: UTC
+- 프론트엔드 화면 표시: `Asia/Seoul`
+
+JPA Entity의 생성·수정 시각은 `BaseTimeEntity`와 JPA Auditing을 이용해 자동으로 관리합니다.
+
+---
 
 ## 기술 스택
 
@@ -71,58 +156,81 @@
 | Framework | Spring Boot | 4.1.0 |
 | Build | Gradle Wrapper | 9.5.1 |
 | Web | Spring Web MVC | REST API |
-| Persistence | Spring Data JPA, Hibernate | MySQL 연동 |
-| Validation | Jakarta Validation | 요청 DTO 검증 |
-| Development DB | MySQL | `hackathon_db` |
-| Test DB | H2 | 인메모리 `hackathon_test` |
-| Test | JUnit 5, Spring Boot Test | Controller·직렬화·시간·JPA 기반 테스트 |
+| Persistence | Spring Data JPA, Hibernate | MySQL |
+| Validation | Jakarta Validation | 요청값 검증 |
+| Local DB | MySQL | `hackathon_db` |
+| Test DB | H2 | In-memory |
+| API Docs | springdoc-openapi | 3.1.0 |
+| Test | JUnit 5, Spring Boot Test | 자동 테스트 |
+| CI | GitHub Actions | PR/main 자동 테스트 |
+| Deployment | Railway | 운영 설정 준비, 실제 배포 대기 |
+
+---
 
 ## 현재 프로젝트 구조
 
 ```text
-src/
-├─ main/
-│  ├─ java/org/likelionhsu/hackathon/
-│  │  ├─ common/
-│  │  │  ├─ config/
-│  │  │  │  ├─ ClockConfig.java
-│  │  │  │  ├─ JpaAuditingConfig.java
-│  │  │  │  └─ WebConfig.java
-│  │  │  ├─ controller/
-│  │  │  │  └─ HealthController.java
-│  │  │  ├─ entity/
-│  │  │  │  └─ BaseTimeEntity.java
-│  │  │  ├─ exception/
-│  │  │  │  ├─ BusinessException.java
-│  │  │  │  ├─ ErrorCode.java
-│  │  │  │  └─ GlobalExceptionHandler.java
-│  │  │  └─ response/
-│  │  │     ├─ ApiResponse.java
-│  │  │     ├─ ErrorDetail.java
-│  │  │     ├─ ErrorResponse.java
-│  │  │     └─ FieldErrorResponse.java
-│  │  └─ HackathonBeApplication.java
-│  └─ resources/
-│     └─ application.properties
-└─ test/
-   ├─ java/org/likelionhsu/hackathon/
-   │  ├─ common/config/DateTimePolicyTest.java
-   │  ├─ common/entity/
-   │  │  ├─ BaseTimeEntityTest.java
-   │  │  └─ TestAuditEntity.java
-   │  ├─ common/exception/GlobalExceptionHandlerTest.java
-   │  ├─ common/response/CommonResponseSerializationTest.java
-   │  └─ HackathonBeApplicationTests.java
-   └─ resources/
-      └─ application-test.properties
+.
+├─ .github/
+│  └─ workflows/
+│     └─ ci.yml
+├─ .env.example
+├─ API_CONVENTIONS.md
+├─ build.gradle
+├─ gradlew
+├─ gradlew.bat
+├─ README.md
+└─ src/
+   ├─ main/
+   │  ├─ java/org/likelionhsu/hackathon/
+   │  │  ├─ common/
+   │  │  │  ├─ config/
+   │  │  │  │  ├─ ClockConfig.java
+   │  │  │  │  ├─ JpaAuditingConfig.java
+   │  │  │  │  ├─ OpenApiConfig.java
+   │  │  │  │  └─ WebConfig.java
+   │  │  │  ├─ controller/
+   │  │  │  │  └─ HealthController.java
+   │  │  │  ├─ entity/
+   │  │  │  │  └─ BaseTimeEntity.java
+   │  │  │  ├─ exception/
+   │  │  │  │  ├─ BusinessException.java
+   │  │  │  │  ├─ ErrorCode.java
+   │  │  │  │  └─ GlobalExceptionHandler.java
+   │  │  │  └─ response/
+   │  │  │     ├─ ApiResponse.java
+   │  │  │     ├─ ErrorDetail.java
+   │  │  │     ├─ ErrorResponse.java
+   │  │  │     └─ FieldErrorResponse.java
+   │  │  └─ HackathonBeApplication.java
+   │  └─ resources/
+   │     ├─ application.properties
+   │     ├─ application-local.properties
+   │     └─ application-prod.properties
+   └─ test/
+      ├─ java/org/likelionhsu/hackathon/
+      │  ├─ common/config/
+      │  ├─ common/entity/
+      │  ├─ common/exception/
+      │  │  └─ GlobalExceptionHandlerTest.java
+      │  ├─ common/response/
+      │  └─ HackathonBeApplicationTests.java
+      └─ resources/
+         └─ application-test.properties
 ```
 
-도메인 기능을 추가할 때는 기능 중심 패키지 구조를 사용합니다.
+실제 도메인 기능을 추가할 때는 **package-by-domain** 구조를 사용합니다.
 
 ```text
 org.likelionhsu.hackathon
 ├─ common/
 ├─ user/
+│  ├─ controller/
+│  ├─ service/
+│  ├─ repository/
+│  ├─ entity/
+│  └─ dto/
+├─ product/
 │  ├─ controller/
 │  ├─ service/
 │  ├─ repository/
@@ -136,14 +244,20 @@ org.likelionhsu.hackathon
    └─ dto/
 ```
 
+---
+
 ## API 공통 규칙
 
-API 계약의 단일 기준은 [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)입니다. README와 API 규칙이 다르면 최신 `main`의 `API_CONVENTIONS.md`를 우선합니다.
+API 계약의 단일 기준은 [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)입니다.
+
+README와 API 규칙이 다를 경우 최신 `main`의 `API_CONVENTIONS.md`를 우선합니다.
 
 | 항목 | 규칙 |
 | --- | --- |
 | API 기본 경로 | `/api` |
 | Endpoint | 소문자 `kebab-case`, 가능한 한 복수 명사 |
+| Path Variable | `lowerCamelCase` |
+| Query Parameter | `lowerCamelCase` |
 | JSON 필드 | `lowerCamelCase` |
 | DB 컬럼 | `snake_case` |
 | 성공 응답 | `{ "success": true, "data": ... }` |
@@ -152,50 +266,72 @@ API 계약의 단일 기준은 [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)입�
 | 날짜·시간 | UTC 기반 ISO 8601 |
 | Enum | 영문 대문자 `SNAKE_CASE` |
 | ID | API에서 문자열로 전달 |
-| 금액 | MVP에서는 KRW 원 단위 정수, `currency` 필드는 기본 생략 |
+| 금액 | KRW 원 단위 정수 |
+| 페이지 번호 | `page=0`부터 시작 |
+| 페이지 크기 | `1~100` |
 | 목록 | 증가 가능한 목록은 `page`, `size`, `sort` 기반 페이지네이션 |
 
-### 성공 응답 예시
+---
 
-```json
-{
-  "success": true,
-  "data": {
-    "productId": "123",
-    "name": "토트백"
-  }
-}
+## 실행 환경
+
+Spring Profile은 환경별로 분리되어 있습니다.
+
+### 기본
+
+```text
+application.properties
 ```
 
-### 오류 응답 예시
+기본 profile:
 
-```json
-{
-  "success": false,
-  "error": {
-    "code": "PRODUCT_NOT_FOUND",
-    "message": "제품을 찾을 수 없습니다."
-  }
-}
+```properties
+spring.profiles.default=local
 ```
 
-### Validation 오류 예시
+### 로컬 개발
 
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "입력값을 확인해 주세요.",
-    "fields": [
-      {
-        "field": "name",
-        "reason": "이름은 필수입니다."
-      }
-    ]
-  }
-}
+```text
+application-local.properties
 ```
+
+사용 환경변수:
+
+```env
+DB_USERNAME=hackathon
+DB_PASSWORD=change-me
+CORS_ALLOWED_ORIGIN=http://localhost:3000
+```
+
+`DB_USERNAME`을 지정하지 않으면 기본값 `hackathon`을 사용합니다.
+
+### 운영 환경
+
+```text
+application-prod.properties
+```
+
+Railway 환경을 기준으로 다음 환경변수를 사용합니다.
+
+```env
+SPRING_PROFILES_ACTIVE=prod
+
+PORT=8080
+
+MYSQLHOST=change-me
+MYSQLPORT=3306
+MYSQLDATABASE=change-me
+MYSQLUSER=change-me
+MYSQLPASSWORD=change-me
+
+CORS_ALLOWED_ORIGIN=https://frontend-domain.example
+```
+
+실제 비밀번호와 운영 환경 값은 Git에 저장하지 않습니다.
+
+환경변수 이름과 예시는 [`.env.example`](./.env.example)을 참고합니다.
+
+---
 
 ## 시작하기
 
@@ -222,7 +358,7 @@ CREATE DATABASE hackathon_db
     COLLATE utf8mb4_0900_ai_ci;
 ```
 
-`hackathon` 사용자가 없다면 생성하고 권한을 부여합니다.
+기본 DB 사용자 `hackathon`을 사용하는 경우:
 
 ```sql
 CREATE USER 'hackathon'@'localhost'
@@ -235,79 +371,99 @@ TO 'hackathon'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-이미 사용자가 있다면 생성 명령은 다시 실행하지 않습니다.
+기존 MySQL 사용자가 있다면 `DB_USERNAME` 환경변수를 이용할 수 있습니다.
 
 ### 4. 환경변수 설정
-
-DB 비밀번호는 소스 코드나 Git에 저장하지 않고 `DB_PASSWORD` 환경변수로 전달합니다.
-
-macOS 또는 Linux:
-
-```bash
-export DB_PASSWORD='자신의_DB_비밀번호'
-```
 
 Windows PowerShell:
 
 ```powershell
+$env:DB_USERNAME="hackathon"
 $env:DB_PASSWORD="자신의_DB_비밀번호"
+$env:CORS_ALLOWED_ORIGIN="http://localhost:3000"
 ```
 
-IntelliJ에서는 다음 실행 설정에 추가할 수 있습니다.
+macOS / Linux:
+
+```bash
+export DB_USERNAME='hackathon'
+export DB_PASSWORD='자신의_DB_비밀번호'
+export CORS_ALLOWED_ORIGIN='http://localhost:3000'
+```
+
+IntelliJ:
 
 ```text
 Run
 → Edit Configurations
 → HackathonBeApplication
 → Environment variables
-→ DB_PASSWORD=자신의_DB_비밀번호
 ```
 
-### 5. 빌드와 테스트
-
-macOS 또는 Linux:
-
-```bash
-./gradlew clean build
-```
+### 5. 테스트
 
 Windows PowerShell:
 
 ```powershell
-.\gradlew.bat clean build
+.\gradlew test
 ```
 
-테스트만 실행하려면 다음 명령을 사용합니다.
+macOS / Linux:
 
 ```bash
 ./gradlew test
 ```
 
-테스트는 `test` 프로필의 H2 인메모리 DB를 사용하므로 로컬 MySQL 데이터에 접근하지 않습니다.
+테스트 환경은 `test` profile의 **H2 In-memory DB**를 사용하므로 로컬 MySQL 데이터에 접근하지 않습니다.
+
+현재 테스트에서는 다음 공통 기반을 검증합니다.
+
+- Spring Application Context
+- H2 테스트 DB 연결
+- 공통 성공·오류 응답 JSON
+- Request Body Validation
+- Query/Path Validation
+- Query/Path 타입 변환 오류
+- 필수 Query Parameter 누락
+- 비즈니스 예외
+- 없는 Endpoint
+- 안전한 500 응답
+- UTC 날짜·시간 정책
+- JPA Auditing
 
 ### 6. 서버 실행
 
-macOS 또는 Linux:
+Windows PowerShell:
+
+```powershell
+.\gradlew bootRun
+```
+
+macOS / Linux:
 
 ```bash
 ./gradlew bootRun
 ```
 
-Windows PowerShell:
+기본 실행 주소:
 
-```powershell
-.\gradlew.bat bootRun
+```text
+http://localhost:8080
 ```
 
-기본 실행 주소는 `http://localhost:8080`입니다.
+---
 
-### 7. 상태 확인
+## 현재 공개 API
+
+현재 실제 서비스 도메인 API 개발 전이며 공개된 API는 상태 확인용 API입니다.
+
+### Health Check
 
 ```http
-GET http://localhost:8080/api/health
+GET /api/health
 ```
 
-현재 정상 응답은 공통 성공 응답으로 감싸집니다.
+응답 예시:
 
 ```json
 {
@@ -319,52 +475,61 @@ GET http://localhost:8080/api/health
 }
 ```
 
-## 데이터베이스와 시간 기준
+---
 
-### 개발 환경
+## Swagger / OpenAPI
 
-```text
-Host: localhost
-Port: 3306
-Database: hackathon_db
-Username: hackathon
-Password: DB_PASSWORD 환경변수
-Server timezone: UTC
-Character encoding: UTF-8
-```
+springdoc 기반 API 문서가 구성되어 있습니다.
 
-현재 JPA 설정은 다음과 같습니다.
-
-```properties
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.open-in-view=false
-spring.jpa.properties.hibernate.format_sql=true
-spring.jpa.properties.hibernate.jdbc.time_zone=UTC
-spring.jackson.time-zone=UTC
-```
-
-`ddl-auto=update`는 현재 초기 개발 설정입니다. 장기 유지 여부와 운영 환경의 Migration 전략은 아직 확정되지 않았으므로, 배포 설정과 함께 별도로 결정해야 합니다.
-
-### 테스트 환경
+### Swagger UI
 
 ```text
-Database: H2 in-memory
-URL: jdbc:h2:mem:hackathon_test
-Schema lifecycle: create-drop
-Timezone: UTC
+http://localhost:8080/swagger-ui/index.html
 ```
 
-현재 테스트 코드는 다음을 검증합니다.
+### OpenAPI JSON
 
-- Spring Application Context와 H2 연결
-- 공통 성공·오류 응답의 JSON 직렬화
-- Validation·비즈니스·공통 예외 응답
-- UTC 날짜·시간 정책
-- `BaseTimeEntity`의 생성·수정 시각 Auditing
+```text
+http://localhost:8080/v3/api-docs
+```
+
+현재 OpenAPI 기본 정보:
+
+```text
+Title: 입을래? API
+Version: v1
+```
+
+실제 도메인 API가 구현되면 Controller별 `@Tag`, `@Operation` 등을 추가해 문서를 확장합니다.
+
+---
+
+## GitHub Actions CI
+
+다음 상황에서 백엔드 전체 테스트가 자동 실행됩니다.
+
+```text
+main 대상 Pull Request
+main 브랜치 Push
+```
+
+CI 환경:
+
+```text
+OS: Ubuntu
+Java: Temurin 21
+Command: ./gradlew clean test --no-daemon
+```
+
+중복 실행은 자동으로 취소하도록 설정되어 있습니다.
+
+---
 
 ## CORS
 
-현재 로컬 프론트엔드 개발 주소만 허용합니다.
+CORS Origin은 소스 코드에 고정하지 않고 환경변수로 관리합니다.
+
+기본 로컬 설정:
 
 ```text
 Allowed origin: http://localhost:3000
@@ -375,85 +540,273 @@ Credentials: false
 Preflight max age: 3600 seconds
 ```
 
-인증 방식과 배포 주소가 확정되면 Credentials와 운영 Origin을 함께 재검토해야 합니다.
+로그인·세션 정책이 최종 확정되고 인증 기능을 구현할 때 Credentials와 운영 환경 요청 구조를 함께 재검토합니다.
 
-## 담당 영역
+---
 
-| 담당자 | 기능 영역                                                                          | 비고                                                |
-| --- |------------------------------------------------------------------------------------|-----------------------------------------------------|
-| 정승원 | 사용자, 취향, 제품, 추천, 찜, 구매 전 활용성 분석                                  | 도메인 구현 전                                      |
-| 장재준 | 마이 아이템, 아이템 패스포트, 사용·관리 기록, 스타일 플랜, 장소, 마이페이지        | 도메인 구현 전                                      |
-| 정승원 | 공통 예외 처리, 공통 응답 구조, 테스트 환경, 시간 날짜 공통 설정, 샘플 데이터 관리 | 구현 완료                                           |
-| 장재준 | Swagger/OpenAPI, GitHub Actions CI, 배포·환경변수 영역                             | 담당은 확정됐지만 현재 미구현 또는 세부 방식 미확정 |
-| 미정 | 활용도, 재활용, 스마트 착용 추천                                                   | 최종 담당 미확정                                    |
+## 데이터베이스
+
+### 로컬
+
+```text
+Host: localhost
+Port: 3306
+Database: hackathon_db
+Username: DB_USERNAME
+Password: DB_PASSWORD
+Timezone: UTC
+Encoding: UTF-8
+```
+
+현재 개발 환경 JPA 설정:
+
+```properties
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+```
+
+### 테스트
+
+```text
+Database: H2 In-memory
+URL: jdbc:h2:mem:hackathon_test
+Schema lifecycle: create-drop
+Timezone: UTC
+```
+
+### 운영
+
+Railway MySQL 환경변수를 사용할 수 있도록 `prod` profile이 준비되어 있습니다.
+
+현재 `ddl-auto=update`를 사용하고 있으며, Migration 도구 도입 여부는 아직 확정하지 않았습니다.
+
+---
+
+## 백엔드 담당 영역
+
+### 정승원
+
+도메인:
+
+- 사용자
+- 취향
+- 제품
+- 제품 추천
+- 찜
+- 구매 전 활용성 분석
+
+공통 작업:
+
+- ✅ 공통 응답 구조
+- ✅ 공통 예외 처리
+- ✅ 테스트 환경
+- ✅ 시간·날짜 공통 설정
+- ⏳ 샘플 데이터 관리
+
+### 장재준
+
+도메인:
+
+- 마이 아이템
+- 제품 패스포트
+- 사용 기록
+- 관리 기록
+- 스타일 플랜
+- 장소
+- 마이페이지
+
+공통 작업:
+
+- ✅ Swagger/OpenAPI
+- ✅ GitHub Actions CI
+- ✅ 환경별 설정 및 환경변수 구성
+- ⏳ 개발용 첫 배포
+
+### 담당 미확정
+
+- 활용도 분석
+- 다시 활용할 제품 추천
+- 스마트 착용 추천
+
+---
 
 ## Git과 협업 규칙
 
-본격적인 기능 개발에서는 `main`에 직접 Push하지 않습니다.
+`main`에 직접 Push하지 않고 작업 브랜치를 사용합니다.
+
+기본 작업 흐름:
 
 ```text
 main 최신화
 → 작업 브랜치 생성
 → 개발
-→ 빌드·테스트
-→ Commit·Push
+→ 테스트
+→ Commit
+→ Push
 → Pull Request
-→ 다른 백엔드 팀원의 교차 리뷰와 Approve
-→ PR 작성자가 Squash and merge
-→ 병합된 작업 브랜치 삭제
+→ 검토
+→ Squash and merge
+→ 작업 브랜치 삭제
 ```
 
 작업 시작 예시:
 
 ```bash
 git switch main
-git pull origin main
+git pull --ff-only origin main
 git switch -c feat/user-api
 ```
 
-`feat/`, `fix/`, `chore/`, `refactor/`, `test/`, `docs/` 등은 사용할 수 있는 예시입니다. 브랜치·커밋 Prefix의 최종 허용 목록은 아직 확정되지 않았으므로, 새 규칙을 추가하거나 제한하기 전에 팀과 합의합니다.
+사용 가능한 브랜치 Prefix 예시:
 
-PR 전 확인 사항:
+```text
+feat/
+fix/
+chore/
+refactor/
+test/
+docs/
+ci/
+```
 
-- [ ] 최신 `main`을 반영했습니다.
-- [ ] 관련 테스트를 추가하거나 기존 테스트로 변경 내용을 검증했습니다.
-- [ ] `clean build`가 성공합니다.
-- [ ] 새 API의 요청·응답과 오류 형식을 확인했습니다.
-- [ ] DB 변경 내용을 다른 백엔드 담당자에게 공유했습니다.
-- [ ] 비밀번호, 토큰, 개인정보, 실제 환경변수 파일이 포함되지 않았습니다.
+Merge 방식은 **Squash and merge**를 사용합니다.
+
+### PR 전 확인
+
+- [ ] 최신 `main`에서 작업을 시작했습니다.
+- [ ] 관련 테스트를 작성하거나 기존 테스트로 변경사항을 검증했습니다.
+- [ ] 전체 테스트가 성공합니다.
+- [ ] `git diff --check`에 문제가 없습니다.
+- [ ] 비밀번호·토큰·실제 환경변수 파일이 포함되지 않았습니다.
+- [ ] DB 변경사항을 다른 백엔드 담당자에게 공유했습니다.
 - [ ] API 계약 변경 시 프론트엔드와 먼저 합의했습니다.
+
+---
 
 ## FE/BE API 변경 절차
 
-프론트엔드 저장소에서 API 계약을 독자적으로 확정하지 않습니다.
+프론트엔드 저장소에서 백엔드 API 계약을 독자적으로 변경하지 않습니다.
 
-1. 프론트엔드가 백엔드 저장소에 API 변경 요청 Issue를 생성합니다.
-2. 현재 문제와 원하는 요청·응답 예시를 작성합니다.
-3. 프론트엔드와 백엔드 담당자가 변경 가능 여부와 형식을 합의합니다.
-4. 백엔드 담당자가 협의안을 코드와 문서에 반영하고 PR을 생성합니다.
-5. 프론트엔드는 확정된 백엔드 PR을 기준으로 구현합니다.
+1. 변경이 필요한 API와 문제 상황을 공유합니다.
+2. 프론트엔드와 백엔드가 요청·응답 형식을 협의합니다.
+3. 백엔드 API 계약을 먼저 확정합니다.
+4. 백엔드 코드와 문서를 수정하고 PR을 생성합니다.
+5. 프론트엔드는 확정된 API 계약을 기준으로 구현합니다.
 
-호환성이 깨지는 변경은 Endpoint, HTTP Method, 필드명·자료형, 필수값, Enum, `null` 가능 여부, 페이지네이션, 상태 코드·오류 코드의 의미 변경을 포함합니다. 자세한 분류와 PR 작성 기준은 [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)를 따릅니다.
+다음 변경은 특히 사전 협의가 필요합니다.
 
-## 아직 확정하지 않은 사항
+- Endpoint
+- HTTP Method
+- 요청·응답 필드
+- 필드 자료형
+- 필수/선택 여부
+- Enum
+- 상태 코드
+- 오류 코드
+- 페이지네이션
+- `null` 허용 여부
 
-아래 내용은 구현 전에 반드시 별도 합의가 필요합니다.
+세부 기준은 [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)를 따릅니다.
 
-- 도메인 ERD, Entity 관계, 제약조건, Index
-- 기능별 Endpoint, DTO, Enum, 필터·정렬·페이지네이션 세부 계약
-- JWT·Refresh Token·세션·Cookie·Header와 Spring Security 적용 방식
-- 이메일·휴대폰 인증번호의 발급·검증 정책과 소셜 계정 통합 방식
-- AI 공급자, 모델, 적용 기능, Prompt, 비용 제한, Timeout, Retry, Fallback
-- 이미지 저장소, 업로드 API, Multipart 정책, 파일 형식·용량 제한
-- 배포 플랫폼, 운영 DB, 도메인, HTTPS, 운영 CORS와 비밀값 관리 방식
-- 개인정보 범위, 보관 기간, 삭제 정책
-- `ddl-auto=update`의 장기 유지 여부와 Flyway 등 Migration 도구 도입 여부
-- 성능 목표, 예상 트래픽, 외부 API 장애 정책
-- 브랜치 보호 설정, GitHub에서 강제할 승인 수, 최종 Prefix 목록
+---
 
-미확정 사항은 임의로 구현 기준으로 삼지 않습니다. 기존 확정사항을 변경해야 한다면 기존 결정, 변경 이유, 영향 범위를 먼저 공유하고 팀 동의를 받은 뒤 반영합니다.
+## 현재 남은 주요 결정 사항
+
+### 로그인·사용자
+
+기존에 논의한 인증 정책이 있으나 팀 요구사항 변경사항을 반영하기 위해 현재 최종 재확정 대기 상태입니다.
+
+최종 정책 확정 전에는 관련 Entity나 인증 코드를 구현하지 않습니다.
+
+### ERD / 도메인
+
+다음 항목을 기능 개발 전에 확정해야 합니다.
+
+- Entity
+- 관계
+- FK
+- Unique 제약조건
+- Index
+- Enum
+- 삭제 정책
+
+### 이미지
+
+다음 세부 기술이 미확정입니다.
+
+- 이미지 저장소
+- 업로드 방식
+- Multipart 정책
+- 파일 형식
+- 용량 제한
+- URL 저장 구조
+
+### AI / 외부 서비스
+
+다음 항목이 미확정입니다.
+
+- AI 공급자
+- 모델
+- Prompt
+- 비용 제한
+- Timeout
+- Retry
+- Fallback
+- 외부 API 장애 대응
+
+### DB 변경 관리
+
+현재 초기 개발 단계에서는 `ddl-auto=update`를 사용합니다.
+
+향후 다음 항목을 결정해야 합니다.
+
+- Flyway 등 Migration 도구 도입 여부
+- 운영 DB Schema 변경 절차
+- 샘플 데이터 초기화 방식
+- Seed 데이터 중복 방지 방식
+
+### 배포
+
+Railway용 `prod` profile과 환경변수 구조는 준비되어 있습니다.
+
+남은 항목:
+
+- 실제 개발용 백엔드 첫 배포
+- 운영 DB 연결 검증
+- 배포 주소 확정
+- 프론트엔드 원격 연동
+- 운영 CORS 검증
+- HTTPS/도메인 구성
+
+---
+
+## 다음 개발 순서
+
+현재 기준 다음 순서로 진행합니다.
+
+```text
+로그인·사용자 정책 재확정
+        ↓
+이미지·AI·외부 서비스 정책 확정
+        ↓
+ERD와 도메인 구조 확정
+        ↓
+개발용 백엔드 첫 배포
+        ↓
+샘플 데이터 / DB 변경 관리
+        ↓
+프론트 원격 연동 테스트
+        ↓
+실제 도메인 기능 개발
+```
+
+공통 응답, 예외 처리, 테스트 환경, 날짜·시간 설정, Swagger/OpenAPI, CI와 실행 환경 구성은 현재 `main`에 구현되어 있습니다.
+
+---
 
 ## 관련 문서
 
 - [API 공통 규칙](./API_CONVENTIONS.md)
+- [환경변수 예시](./.env.example)
 - [백엔드 저장소](https://github.com/pro660/Hackathon_BE)
