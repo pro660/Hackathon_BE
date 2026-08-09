@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -78,6 +82,112 @@ public class GlobalExceptionHandler {
                         errorCode.code(),
                         errorCode.message(),
                         fields
+                );
+
+        return ResponseEntity
+                .status(errorCode.status())
+                .body(response);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ErrorResponse> handleHandlerMethodValidation(
+            HandlerMethodValidationException exception
+    ) {
+        ErrorCode errorCode =
+                ErrorCode.VALIDATION_ERROR;
+
+        List<FieldErrorResponse> fields =
+                exception
+                        .getParameterValidationResults()
+                        .stream()
+                        .flatMap(result -> {
+                            String field =
+                                    result
+                                            .getMethodParameter()
+                                            .getParameterName();
+
+                            if (field == null || field.isBlank()) {
+                                field = "parameter";
+                            }
+
+                            String resolvedField = field;
+
+                            return result
+                                    .getResolvableErrors()
+                                    .stream()
+                                    .map(error -> {
+                                        String reason =
+                                                error.getDefaultMessage();
+
+                                        if (reason == null
+                                                || reason.isBlank()) {
+                                            reason =
+                                                    "잘못된 입력값입니다.";
+                                        }
+
+                                        return new FieldErrorResponse(
+                                                resolvedField,
+                                                reason
+                                        );
+                                    });
+                        })
+                        .toList();
+
+        ErrorResponse response =
+                ErrorResponse.validation(
+                        errorCode.code(),
+                        errorCode.message(),
+                        fields
+                );
+
+        return ResponseEntity
+                .status(errorCode.status())
+                .body(response);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(
+            MethodArgumentTypeMismatchException exception
+    ) {
+        ErrorCode errorCode =
+                ErrorCode.VALIDATION_ERROR;
+
+        FieldErrorResponse field =
+                new FieldErrorResponse(
+                        exception.getName(),
+                        "잘못된 입력값입니다."
+                );
+
+        ErrorResponse response =
+                ErrorResponse.validation(
+                        errorCode.code(),
+                        errorCode.message(),
+                        List.of(field)
+                );
+
+        return ResponseEntity
+                .status(errorCode.status())
+                .body(response);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingServletRequestParameter(
+            MissingServletRequestParameterException exception
+    ) {
+        ErrorCode errorCode =
+                ErrorCode.VALIDATION_ERROR;
+
+        FieldErrorResponse field =
+                new FieldErrorResponse(
+                        exception.getParameterName(),
+                        "필수 입력값입니다."
+                );
+
+        ErrorResponse response =
+                ErrorResponse.validation(
+                        errorCode.code(),
+                        errorCode.message(),
+                        List.of(field)
                 );
 
         return ResponseEntity

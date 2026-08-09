@@ -21,6 +21,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
+import jakarta.validation.constraints.Min;
+
 @WebMvcTest
 @Import({
         GlobalExceptionHandler.class,
@@ -216,6 +220,205 @@ class GlobalExceptionHandlerTest {
                 );
     }
 
+    @Test
+    void queryParameterTypeMismatchReturnsValidationError()
+            throws Exception {
+
+        mockMvc.perform(
+                        get(
+                                "/test/exceptions/query-type"
+                        )
+                                .param(
+                                        "page",
+                                        "abc"
+                                )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.success")
+                                .value(false)
+                )
+                .andExpect(
+                        jsonPath("$.error.code")
+                                .value("VALIDATION_ERROR")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].field"
+                        )
+                                .value("page")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].reason"
+                        )
+                                .value("잘못된 입력값입니다.")
+                )
+                .andExpect(
+                        jsonPath("$.data")
+                                .doesNotExist()
+                );
+    }
+
+    @Test
+    void pathVariableTypeMismatchReturnsValidationError()
+            throws Exception {
+
+        mockMvc.perform(
+                        get(
+                                "/test/exceptions/path-type/abc"
+                        )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.success")
+                                .value(false)
+                )
+                .andExpect(
+                        jsonPath("$.error.code")
+                                .value("VALIDATION_ERROR")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].field"
+                        )
+                                .value("itemId")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].reason"
+                        )
+                                .value("잘못된 입력값입니다.")
+                )
+                .andExpect(
+                        jsonPath("$.data")
+                                .doesNotExist()
+                );
+    }
+
+    @Test
+    void queryParameterValidationFailureReturnsValidationError()
+            throws Exception {
+
+        mockMvc.perform(
+                        get(
+                                "/test/exceptions/query-validation"
+                        )
+                                .param(
+                                        "page",
+                                        "-1"
+                                )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.success")
+                                .value(false)
+                )
+                .andExpect(
+                        jsonPath("$.error.code")
+                                .value("VALIDATION_ERROR")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].field"
+                        )
+                                .value("page")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].reason"
+                        )
+                                .value("0 이상이어야 합니다.")
+                )
+                .andExpect(
+                        jsonPath("$.data")
+                                .doesNotExist()
+                );
+    }
+
+
+    @Test
+    void pathVariableValidationFailureReturnsValidationError()
+            throws Exception {
+
+        mockMvc.perform(
+                        get(
+                                "/test/exceptions/path-validation/0"
+                        )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.success")
+                                .value(false)
+                )
+                .andExpect(
+                        jsonPath("$.error.code")
+                                .value("VALIDATION_ERROR")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].field"
+                        )
+                                .value("itemId")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].reason"
+                        )
+                                .value("1 이상이어야 합니다.")
+                )
+                .andExpect(
+                        jsonPath("$.data")
+                                .doesNotExist()
+                );
+    }
+
+    @Test
+    void missingRequiredQueryParameterReturnsValidationError()
+            throws Exception {
+
+        mockMvc.perform(
+                        get(
+                                "/test/exceptions/required-query"
+                        )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.success")
+                                .value(false)
+                )
+                .andExpect(
+                        jsonPath("$.error.code")
+                                .value("VALIDATION_ERROR")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].field"
+                        )
+                                .value("keyword")
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.error.fields[0].reason"
+                        )
+                                .value("필수 입력값입니다.")
+                )
+                .andExpect(
+                        jsonPath("$.data")
+                                .doesNotExist()
+                );
+    }
+
     @RestController
     @RequestMapping("/test/exceptions")
     public static class TestController {
@@ -240,6 +443,49 @@ class GlobalExceptionHandlerTest {
             throw new RuntimeException(
                     "외부에 노출되면 안 되는 내부 메시지"
             );
+        }
+
+        @GetMapping("/query-type")
+        void queryType(
+                @RequestParam
+                int page
+        ) {
+        }
+
+        @GetMapping("/query-validation")
+        void queryValidation(
+                @RequestParam
+                @Min(
+                        value = 0,
+                        message = "0 이상이어야 합니다."
+                )
+                int page
+        ) {
+        }
+
+        @GetMapping("/path-type/{itemId}")
+        void pathType(
+                @PathVariable
+                Long itemId
+        ) {
+        }
+
+        @GetMapping("/path-validation/{itemId}")
+        void pathValidation(
+                @PathVariable
+                @Min(
+                        value = 1,
+                        message = "1 이상이어야 합니다."
+                )
+                Long itemId
+        ) {
+        }
+
+        @GetMapping("/required-query")
+        void requiredQuery(
+                @RequestParam
+                String keyword
+        ) {
         }
     }
 
