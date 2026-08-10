@@ -33,10 +33,12 @@ API의 공통 경로는 `/api`로 통일한다. 별도의 버전 경로인 `/v1`
 
 ```text
 로컬 개발: http://localhost:8080/api
-운영 환경: https://서비스도메인/api
+운영 환경: https://프론트도메인/api
 ```
 
-프론트엔드와 백엔드가 운영 환경에서 같은 도메인을 사용한다면 운영 환경의 값은 다음처럼 상대 경로로 둘 수 있다.
+운영 브라우저는 Vercel 프론트 도메인의 `/api/**`를 호출하고 Vercel이 요청을 Railway 백엔드로 rewrite한다. 브라우저가 Railway 백엔드 주소를 직접 호출하지 않는다.
+
+운영 환경의 API 기본 주소는 다음처럼 상대 경로로 둔다.
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=/api
@@ -85,6 +87,41 @@ api.get("/products");
 api.get("/api/products");
 ```
 
+### 2.4 Cookie 요청과 Origin 보안 규칙
+
+운영 환경에서는 Vercel의 `/api/**` rewrite를 통해 브라우저 기준 동일 Origin 요청을 사용한다.
+
+```text
+Browser
+→ Vercel /api/**
+→ Railway Backend
+```
+
+따라서 운영 Fetch 요청은 기본 `credentials: "same-origin"`을 사용할 수 있다.
+
+로컬에서 프론트 `http://localhost:3000`과 백엔드 `http://localhost:8080`을 직접 연결할 때 Cookie가 필요한 요청은 다음과 같이 처리한다.
+
+```js
+fetch("http://localhost:8080/api/auth/refresh", {
+  method: "POST",
+  credentials: "include"
+});
+```
+
+Axios를 사용하면 Cookie가 필요한 로컬 cross-origin 요청에 `withCredentials: true`를 설정한다.
+
+백엔드는 로컬 cross-origin Cookie 요청에 다음 원칙을 적용한다.
+
+```text
+allowCredentials(true)
+정확한 CORS 허용 Origin 사용
+Wildcard Origin 사용 금지
+```
+
+**CORS 허용 Origin과 인증 POST의 신뢰 Origin 검증은 별개의 설정이다.**
+
+Swagger UI를 포함한 로컬 신뢰 Origin을 어떤 환경변수 구조로 관리할지는 이 문서에서 확정하지 않고 7번 실행 환경·환경변수 세팅 보완 단계에서 결정한다.
+
 ---
 
 ## 3. URL 및 요청 작성 규칙
@@ -110,6 +147,43 @@ GET /api/products?page=0&size=20&sort=createdAt,desc
 POST /api/createProduct
 GET  /api/getProducts
 ```
+
+### 3.0 인증 Endpoint 예외 및 Origin 검증
+
+`/api/auth/**` 인증 흐름은 일반 CRUD와 달리 인증 동작의 의미가 중요한 경우 필요한 동작형 Endpoint를 허용한다.
+
+대표적인 확정 예외는 다음과 같다.
+
+```http
+POST /api/auth/signup
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/auth/logout
+POST /api/auth/email-verifications/confirm
+```
+
+OAuth 흐름의 인증 Endpoint도 같은 예외 범위로 본다.
+
+다음 브라우저 인증 POST는 인증 처리 또는 Cookie 변경 전에 허용된 신뢰 `Origin`인지 검증한다.
+
+```http
+POST /api/auth/signup
+POST /api/auth/login
+POST /api/auth/oauth/signup
+POST /api/auth/refresh
+POST /api/auth/logout
+```
+
+`Origin`이 누락되거나 `null`이거나 허용 목록과 정확히 일치하지 않으면 다음 오류를 반환한다.
+
+```text
+HTTP 403
+ErrorCode: ORIGIN_NOT_ALLOWED
+```
+
+OAuth Provider Callback은 외부 공급자에서 돌아오는 요청이므로 위 인증 POST Origin 검증 대상에서 제외하고 기존 `oauth_state` 검증을 적용한다.
+
+CORS 허용 Origin과 인증 POST의 신뢰 Origin 검증은 별도 설정이며 구체적인 신뢰 Origin 환경변수 구조는 7번에서 확정한다.
 
 ### 3.1 이름 표기 규칙
 
@@ -910,6 +984,33 @@ productId가 1000 미만이면 샘플로 판단
 
 향후 실제 외부 데이터와 여러 종류의 시연 데이터를 세부적으로 구분해야 하는 요구가 생기는 경우에는 `dataSource`와 같은 별도의 Enum 필드를 도입할 수 있다. 해당 구분이 필요해질 때 API 계약에서 별도로 정의한다.
 
+### 3.14 ITEM 이미지 업로드 완료 규칙
+
+`ITEM` 이미지 업로드 완료는 다음 확정 계약을 따른다.
+
+- 아이템당 최대 3장
+- `sortOrder`는 `0~2`
+- 동일한 `UserItem` 안에서 동일 `sortOrder` 중복 금지
+- 같은 아이템에 대한 동시 완료 요청은 `UserItem` 행 비관적 쓰기 잠금으로 직렬화
+
+Transaction에서는 다음 순서로 검증한다.
+
+```text
+UserItem 행 PESSIMISTIC_WRITE 잠금
+→ 같은 아이템의 status != DELETED 이미지 조회
+→ 최대 3장 검증
+→ sortOrder 0~2 검증
+→ 동일 sortOrder 중복 검증
+→ 저장
+```
+
+동일한 `sortOrder`가 이미 사용 중이면 다음 오류를 반환한다.
+
+```text
+HTTP 409
+ErrorCode: IMAGE_SORT_ORDER_CONFLICT
+```
+
 ---
 
 ## 4. 성공 응답 형식
@@ -1216,6 +1317,17 @@ INTERNAL_SERVER_ERROR
 }
 ```
 
+### 6.1 확정된 인증·이미지 오류 코드
+
+| HTTP | ErrorCode | 의미 |
+| ---: | --- | --- |
+| 403 | `ORIGIN_NOT_ALLOWED` | 인증 POST 요청의 Origin이 허용되지 않음 |
+| 409 | `IMAGE_SORT_ORDER_CONFLICT` | 동일 아이템 이미지 표시 순서 충돌 |
+
+`ORIGIN_NOT_ALLOWED`는 브라우저의 CORS 차단 자체가 아니라 서버의 인증 POST 신뢰 Origin 검증 실패를 의미한다.
+
+`IMAGE_SORT_ORDER_CONFLICT`는 같은 `UserItem`의 이미지 완료 Transaction에서 동일한 `sortOrder`가 이미 사용 중일 때 반환한다.
+
 ---
 
 ## 7. Validation 오류 형식
@@ -1244,7 +1356,7 @@ INTERNAL_SERVER_ERROR
 
 - `fields`는 Validation 오류가 발생한 경우에만 `error` 내부에 포함한다.
 - `field`는 실제 요청에서 사용하는 필드명, Query Parameter명 또는 Path Variable명과 일치시킨다.
-- 이메일 인증 요청이면 `email`, 휴대폰 인증 요청이면 `phoneNumber`처럼 실제 요청 필드명을 사용한다.
+- 이메일 인증 요청이면 `email`, 인증번호 확인 요청이면 `verificationCode`처럼 실제 요청 필드명을 사용한다.
 - 한 필드에 오류가 여러 개여도 우선순위가 가장 높은 오류 하나만 반환한다.
 - 여러 필드가 잘못되었다면 가능한 한 한 번에 모두 반환한다.
 - Validation 오류가 아닌 일반 오류에는 `fields`를 빈 배열로 넣지 않고 필드 자체를 생략한다.
