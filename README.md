@@ -61,7 +61,7 @@
 | 12 | Swagger/OpenAPI 구축 | ✅ 완료 | springdoc 기반 Swagger UI/OpenAPI 구성 |
 | 13 | 샘플 데이터와 DB 변경 관리 | ⏳ 대기 | 확정된 ERD·Flyway 정책 기준 후속 구현 예정 |
 | 14 | 프론트 원격 연동 테스트 | ⏳ 대기 | 개발 서버 첫 배포 이후 진행 |
-| 15 | 실제 기능 개발 시작 | ⏳ 대기 | 공통 설계 및 ERD 확정 이후 시작 |
+| 15 | 실제 기능 개발 시작 | ⏳ 대기 | 7번 환경 보완·10번 첫 배포·13번 DB 변경 관리 등 선행 작업 이후 시작 |
 
 ---
 
@@ -864,7 +864,7 @@ Merge 방식은 **Squash and merge**를 사용합니다.
 - OpenAI
 - Resend
 - Kakao Local
-- Flyway / Testcontainers 적용에 필요한 실행 설정
+
 
 CORS 허용 Origin과 인증 POST의 신뢰 Origin 검증은 별도 설정으로 유지하며, 구체적인 환경변수 이름·구조는 **7번에서 확정합니다.**
 
