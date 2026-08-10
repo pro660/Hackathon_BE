@@ -3,7 +3,7 @@
 2026 중앙해커톤 서비스 **입을래?**의 Spring Boot 백엔드 저장소입니다.
 
 > - 문서 기준일: 2026-08-11
-> - 구현 기준: `main`의 `b5f17c3`
+> - 구현 기준: `main`의 `d77ef96`
 > - API 공통 규칙 원본: [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)
 
 ---
