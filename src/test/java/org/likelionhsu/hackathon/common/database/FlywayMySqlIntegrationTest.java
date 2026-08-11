@@ -54,6 +54,7 @@ class FlywayMySqlIntegrationTest {
             verifyMigrationState(statement);
 
             verifyAiJobConstraints(statement);
+            verifyPreferenceProfileConstraints(statement);
 
             long productId = verifyProductConstraints(statement);
             verifyProductImageConstraints(statement, productId);
@@ -64,43 +65,69 @@ class FlywayMySqlIntegrationTest {
                     productId,
                     productTagId
             );
+
+            verifyWishlistConstraints(statement, productId);
         }
     }
 
     private void verifyMigrationState(Statement statement) throws SQLException {
-        try (ResultSet tableResult = statement.executeQuery("""
-                SELECT COUNT(*)
-                FROM information_schema.tables
-                WHERE table_schema = DATABASE()
-                  AND table_name IN (
-                      'users',
-                      'local_credentials',
-                      'social_accounts',
-                      'pending_social_signups',
-                      'terms_agreements',
-                      'email_verifications',
-                      'refresh_tokens',
-                      'ai_jobs',
-                      'products',
-                      'product_images',
-                      'product_tags',
-                      'product_tag_mappings'
-                  )
-                """)) {
+        var foundTables = new java.util.ArrayList<String>();
 
-            tableResult.next();
-            assertThat(tableResult.getInt(1)).isEqualTo(12);
+        try (ResultSet tableResult = statement.executeQuery("""
+                        SELECT table_name
+                        FROM information_schema.tables
+                        WHERE table_schema = DATABASE()
+                          AND table_name IN (
+                              'users',
+                              'local_credentials',
+                              'social_accounts',
+                              'pending_social_signups',
+                              'terms_agreements',
+                              'email_verifications',
+                              'refresh_tokens',
+                              'ai_jobs',
+                              'products',
+                              'product_images',
+                              'product_tags',
+                              'product_tag_mappings',
+                              'preference_profiles',
+                              'wishlists'
+                          )
+                        ORDER BY table_name
+                        """)) {
+
+            while (tableResult.next()) {
+                foundTables.add(tableResult.getString("table_name"));
+            }
         }
+
+        assertThat(foundTables)
+                .containsExactlyInAnyOrder(
+                        "users",
+                        "local_credentials",
+                        "social_accounts",
+                        "pending_social_signups",
+                        "terms_agreements",
+                        "email_verifications",
+                        "refresh_tokens",
+                        "ai_jobs",
+                        "products",
+                        "product_images",
+                        "product_tags",
+                        "product_tag_mappings",
+                        "preference_profiles",
+                        "wishlists"
+                );
 
         try (ResultSet historyResult = statement.executeQuery("""
                 SELECT COUNT(*)
                 FROM flyway_schema_history
-                WHERE version IN ('1', '2', '3')
+                WHERE version IN ('1', '2', '3', '4')
                   AND success = 1
                 """)) {
 
             historyResult.next();
-            assertThat(historyResult.getInt(1)).isEqualTo(3);
+            assertThat(historyResult.getInt(1)).isEqualTo(4);
         }
     }
 
@@ -781,5 +808,400 @@ class FlywayMySqlIntegrationTest {
                 WHERE id = %d
                 """.formatted(productTagId)))
                 .isInstanceOf(SQLException.class);
+    }
+
+    private void verifyPreferenceProfileConstraints(Statement statement) throws SQLException {
+        statement.executeUpdate("""
+                INSERT INTO preference_profiles (
+                    user_id,
+                    analysis_version,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    1,
+                    'v1',
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """);
+
+        assertThatThrownBy(() -> statement.executeUpdate("""
+                INSERT INTO preference_profiles (
+                    user_id,
+                    analysis_version,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    1,
+                    'v2',
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """))
+                .isInstanceOf(SQLException.class);
+
+        statement.executeUpdate("""
+                INSERT INTO users (
+                    id,
+                    nickname,
+                    gender,
+                    status,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    2,
+                    'confidence-test-user',
+                    'NOT_SPECIFIED',
+                    'ACTIVE',
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """);
+
+        assertThatThrownBy(() -> statement.executeUpdate("""
+                INSERT INTO preference_profiles (
+                    user_id,
+                    confidence,
+                    analysis_version,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    2,
+                    -0.0001,
+                    'v1',
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """))
+                .isInstanceOf(SQLException.class);
+
+        assertThatThrownBy(() -> statement.executeUpdate("""
+                INSERT INTO preference_profiles (
+                    user_id,
+                    confidence,
+                    analysis_version,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    2,
+                    1.0001,
+                    'v1',
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """))
+                .isInstanceOf(SQLException.class);
+
+        statement.executeUpdate("""
+                INSERT INTO preference_profiles (
+                    user_id,
+                    analysis_version,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    2,
+                    'json-default-v1',
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """);
+
+        try (ResultSet jsonDefaultResult = statement.executeQuery("""
+                SELECT
+                    JSON_TYPE(preferred_colors) AS colors_type,
+                    JSON_LENGTH(preferred_colors) AS colors_length,
+                    JSON_TYPE(preferred_categories) AS categories_type,
+                    JSON_LENGTH(preferred_categories) AS categories_length,
+                    JSON_TYPE(preferred_style_tags) AS style_tags_type,
+                    JSON_LENGTH(preferred_style_tags) AS style_tags_length
+                FROM preference_profiles
+                WHERE user_id = 2
+                """)) {
+
+            jsonDefaultResult.next();
+
+            assertThat(jsonDefaultResult.getString("colors_type"))
+                    .isEqualTo("ARRAY");
+            assertThat(jsonDefaultResult.getInt("colors_length"))
+                    .isEqualTo(0);
+
+            assertThat(jsonDefaultResult.getString("categories_type"))
+                    .isEqualTo("ARRAY");
+            assertThat(jsonDefaultResult.getInt("categories_length"))
+                    .isEqualTo(0);
+
+            assertThat(jsonDefaultResult.getString("style_tags_type"))
+                    .isEqualTo("ARRAY");
+            assertThat(jsonDefaultResult.getInt("style_tags_length"))
+                    .isEqualTo(0);
+        }
+
+        statement.executeUpdate("""
+                INSERT INTO ai_jobs (
+                    user_id,
+                    type,
+                    status,
+                    idempotency_key,
+                    model,
+                    prompt_version,
+                    input_hash,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    2,
+                    'PREFERENCE_ANALYSIS',
+                    'SUCCEEDED',
+                    'preference-ai-job-test-key',
+                    'gpt-5.6-luna',
+                    'v1',
+                    '4444444444444444444444444444444444444444444444444444444444444444',
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """);
+
+        long preferenceAiJobId;
+
+        try (ResultSet aiJobResult = statement.executeQuery("""
+                SELECT id
+                FROM ai_jobs
+                WHERE user_id = 2
+                  AND idempotency_key = 'preference-ai-job-test-key'
+                """)) {
+
+            aiJobResult.next();
+            preferenceAiJobId = aiJobResult.getLong("id");
+        }
+
+        statement.executeUpdate("""
+                UPDATE preference_profiles
+                SET ai_job_id = %d
+                WHERE user_id = 2
+                """.formatted(preferenceAiJobId));
+
+        assertThatThrownBy(() -> statement.executeUpdate("""
+                UPDATE preference_profiles
+                SET ai_job_id = 999999999
+                WHERE user_id = 2
+                """))
+                .isInstanceOf(SQLException.class);
+
+        statement.executeUpdate("""
+                DELETE FROM ai_jobs
+                WHERE id = %d
+                """.formatted(preferenceAiJobId));
+
+        try (ResultSet aiJobNullResult = statement.executeQuery("""
+                SELECT ai_job_id
+                FROM preference_profiles
+                WHERE user_id = 2
+                """)) {
+
+            aiJobNullResult.next();
+
+            assertThat(aiJobNullResult.getObject("ai_job_id"))
+                    .isNull();
+        }
+
+        statement.executeUpdate("""
+                DELETE FROM users
+                WHERE id = 2
+                """);
+
+        try (ResultSet preferenceCascadeResult = statement.executeQuery("""
+                SELECT COUNT(*)
+                FROM preference_profiles
+                WHERE user_id = 2
+                """)) {
+
+            preferenceCascadeResult.next();
+
+            assertThat(preferenceCascadeResult.getInt(1))
+                    .isEqualTo(0);
+        }
+        }
+
+    private void verifyWishlistConstraints(
+            Statement statement,
+            long productId
+    ) throws SQLException {
+
+        statement.executeUpdate("""
+                    INSERT INTO users (
+                        id,
+                        nickname,
+                        gender,
+                        status,
+                        created_at,
+                        updated_at
+                    ) VALUES (
+                        3,
+                        'wishlist-test-user',
+                        'NOT_SPECIFIED',
+                        'ACTIVE',
+                        CURRENT_TIMESTAMP(6),
+                        CURRENT_TIMESTAMP(6)
+                    )
+                    """);
+
+        statement.executeUpdate("""
+                    INSERT INTO wishlists (
+                        user_id,
+                        product_id,
+                        created_at,
+                        updated_at
+                    ) VALUES (
+                        3,
+                        %d,
+                        CURRENT_TIMESTAMP(6),
+                        CURRENT_TIMESTAMP(6)
+                    )
+                    """.formatted(productId));
+
+        assertThatThrownBy(() -> statement.executeUpdate("""
+                    INSERT INTO wishlists (
+                        user_id,
+                        product_id,
+                        created_at,
+                        updated_at
+                    ) VALUES (
+                        3,
+                        %d,
+                        CURRENT_TIMESTAMP(6),
+                        CURRENT_TIMESTAMP(6)
+                    )
+                    """.formatted(productId)))
+                .isInstanceOf(SQLException.class);
+
+        assertThatThrownBy(() -> statement.executeUpdate("""
+                INSERT INTO wishlists (
+                    user_id,
+                    product_id,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    999999999,
+                    %d,
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """.formatted(productId)))
+                .isInstanceOf(SQLException.class);
+
+        assertThatThrownBy(() -> statement.executeUpdate("""
+                INSERT INTO wishlists (
+                    user_id,
+                    product_id,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    3,
+                    999999999,
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """))
+                .isInstanceOf(SQLException.class);
+
+        statement.executeUpdate("""
+                DELETE FROM users
+                WHERE id = 3
+                """);
+
+        try (ResultSet wishlistCascadeResult = statement.executeQuery("""
+                SELECT COUNT(*)
+                FROM wishlists
+                WHERE user_id = 3
+                """)) {
+
+            wishlistCascadeResult.next();
+
+            assertThat(wishlistCascadeResult.getInt(1))
+                    .isEqualTo(0);
+        }
+
+        statement.executeUpdate("""
+        INSERT INTO users (
+            id,
+            nickname,
+            gender,
+            status,
+            created_at,
+            updated_at
+        ) VALUES (
+              4,
+              'wishlist-user-4',
+              'NOT_SPECIFIED',
+              'ACTIVE',
+              CURRENT_TIMESTAMP(6),
+              CURRENT_TIMESTAMP(6)
+          )
+        """);
+
+        statement.executeUpdate("""
+                INSERT INTO products (
+                    brand,
+                    sku,
+                    name,
+                    category,
+                    price,
+                    status,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    'MCM',
+                    'WISHLIST-PRODUCT-DELETE-TEST',
+                    'Wishlist Product Delete Test',
+                    'BAG',
+                    100000,
+                    'ACTIVE',
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """);
+
+        long wishlistProductId;
+
+        try (ResultSet wishlistProductResult = statement.executeQuery("""
+                SELECT id
+                FROM products
+                WHERE sku = 'WISHLIST-PRODUCT-DELETE-TEST'
+                """)) {
+
+            wishlistProductResult.next();
+            wishlistProductId = wishlistProductResult.getLong("id");
+        }
+
+        statement.executeUpdate("""
+                INSERT INTO wishlists (
+                    user_id,
+                    product_id,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    4,
+                    %d,
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+        """.formatted(wishlistProductId));
+
+        assertThatThrownBy(() -> statement.executeUpdate("""
+                DELETE FROM products
+                WHERE id = %d
+                """.formatted(wishlistProductId)))
+                .isInstanceOf(SQLException.class);
+
+        try (ResultSet productStillExistsResult = statement.executeQuery("""
+                SELECT COUNT(*)
+                FROM products
+                WHERE id = %d
+                """.formatted(wishlistProductId))) {
+
+            productStillExistsResult.next();
+
+            assertThat(productStillExistsResult.getInt(1))
+                    .isEqualTo(1);
+        }
     }
 }
