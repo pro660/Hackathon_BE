@@ -91,7 +91,9 @@ class FlywayMySqlIntegrationTest {
                               'product_tags',
                               'product_tag_mappings',
                               'preference_profiles',
-                              'wishlists'
+                              'wishlists',
+                              'user_items',
+                              'image_assets'
                           )
                         ORDER BY table_name
                         """)) {
@@ -116,18 +118,20 @@ class FlywayMySqlIntegrationTest {
                         "product_tags",
                         "product_tag_mappings",
                         "preference_profiles",
-                        "wishlists"
+                        "wishlists",
+                        "user_items",
+                        "image_assets"
                 );
 
         try (ResultSet historyResult = statement.executeQuery("""
                 SELECT COUNT(*)
                 FROM flyway_schema_history
-                WHERE version IN ('1', '2', '3', '4')
+                WHERE version IN ('1', '2', '3', '4', '5')
                   AND success = 1
                 """)) {
 
             historyResult.next();
-            assertThat(historyResult.getInt(1)).isEqualTo(4);
+            assertThat(historyResult.getInt(1)).isEqualTo(5);
         }
     }
 
