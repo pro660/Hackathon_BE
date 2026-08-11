@@ -93,7 +93,10 @@ class FlywayMySqlIntegrationTest {
                               'preference_profiles',
                               'wishlists',
                               'user_items',
-                              'image_assets'
+                              'image_assets',
+                              'wear_records',
+                              'wear_record_items',
+                              'care_records'
                           )
                         ORDER BY table_name
                         """)) {
@@ -120,18 +123,21 @@ class FlywayMySqlIntegrationTest {
                         "preference_profiles",
                         "wishlists",
                         "user_items",
-                        "image_assets"
+                        "image_assets",
+                        "wear_records",
+                        "wear_record_items",
+                        "care_records"
                 );
 
         try (ResultSet historyResult = statement.executeQuery("""
                 SELECT COUNT(*)
                 FROM flyway_schema_history
-                WHERE version IN ('1', '2', '3', '4', '5')
+                WHERE version IN ('1', '2', '3', '4', '5', '6')
                   AND success = 1
                 """)) {
 
             historyResult.next();
-            assertThat(historyResult.getInt(1)).isEqualTo(5);
+            assertThat(historyResult.getInt(1)).isEqualTo(6);
         }
     }
 
