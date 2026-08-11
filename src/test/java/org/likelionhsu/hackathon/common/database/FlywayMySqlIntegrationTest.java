@@ -99,7 +99,13 @@ class FlywayMySqlIntegrationTest {
                               'care_records',
                               'recommendations',
                               'recommendation_products',
-                              'purchase_utility_analyses'
+                              'purchase_utility_analyses',
+                              'places',
+                              'saved_places',
+                              'style_plans',
+                              'style_plan_items',
+                              'style_plan_products',
+                              'style_plan_places'
                           )
                         ORDER BY table_name
                         """)) {
@@ -132,18 +138,24 @@ class FlywayMySqlIntegrationTest {
                         "care_records",
                         "recommendations",
                         "recommendation_products",
-                        "purchase_utility_analyses"
+                        "purchase_utility_analyses",
+                        "places",
+                        "saved_places",
+                        "style_plans",
+                        "style_plan_items",
+                        "style_plan_products",
+                        "style_plan_places"
                 );
 
         try (ResultSet historyResult = statement.executeQuery("""
                 SELECT COUNT(*)
                 FROM flyway_schema_history
-                WHERE version IN ('1', '2', '3', '4', '5', '6', '7')
+                WHERE version IN ('1', '2', '3', '4', '5', '6', '7', '8')
                   AND success = 1
                 """)) {
 
             historyResult.next();
-            assertThat(historyResult.getInt(1)).isEqualTo(7);
+            assertThat(historyResult.getInt(1)).isEqualTo(8);
         }
     }
 
