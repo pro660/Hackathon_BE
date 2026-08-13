@@ -150,12 +150,24 @@ class FlywayMySqlIntegrationTest {
         try (ResultSet historyResult = statement.executeQuery("""
                 SELECT COUNT(*)
                 FROM flyway_schema_history
-                WHERE version IN ('1', '2', '3', '4', '5', '6', '7', '8')
+                WHERE version IN ('1', '2', '3', '4', '5', '6', '7', '8', '9')
                   AND success = 1
                 """)) {
 
             historyResult.next();
-            assertThat(historyResult.getInt(1)).isEqualTo(8);
+            assertThat(historyResult.getInt(1)).isEqualTo(9);
+        }
+
+        try (ResultSet columnResult = statement.executeQuery("""
+                SELECT COUNT(*)
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE()
+                  AND table_name = 'product_tags'
+                  AND column_name = 'display_name'
+                """)) {
+
+            columnResult.next();
+            assertThat(columnResult.getInt(1)).isZero();
         }
     }
 
@@ -687,24 +699,20 @@ class FlywayMySqlIntegrationTest {
         statement.executeUpdate("""
                 INSERT INTO product_tags (
                     type,
-                    code,
-                    display_name
+                    code
                 ) VALUES (
                     'STYLE',
-                    'TEST_UNIQUE_TAG',
-                    '테스트 태그'
+                    'TEST_UNIQUE_TAG'
                 )
                 """);
 
         assertThatThrownBy(() -> statement.executeUpdate("""
                 INSERT INTO product_tags (
                     type,
-                    code,
-                    display_name
+                    code
                 ) VALUES (
                     'STYLE',
-                    'TEST_UNIQUE_TAG',
-                    '다른 테스트 태그 이름'
+                    'TEST_UNIQUE_TAG'
                 )
                 """))
                 .isInstanceOf(SQLException.class);
