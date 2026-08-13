@@ -178,6 +178,9 @@ JPA Entity의 생성·수정 시각은 `BaseTimeEntity`와 JPA Auditing을 이�
 - AI: OpenAI
 - 이메일: Resend SMTP
 - 장소 검색: Kakao Local REST API
+- MCM 제품 추천 점수·순위는 백엔드 Rule-Based로 계산하며 AI를 사용하지 않음
+- 구매 전 활용성 점수는 백엔드 Rule-Based로 계산하고, OpenAI는 개인화 설명 생성에만 사용
+- 장소 추천은 Kakao Local REST API 검색 결과를 기반으로 백엔드 Rule-Based로 순위를 계산
 - MCM 카탈로그 이미지는 `ProductImage`, 사용자 업로드 이미지는 `ImageAsset`으로 분리
 - `ITEM` 이미지는 아이템당 최대 3장, `sortOrder`는 `0~2`
 - 사용자당 ACTIVE `PROFILE` 이미지는 최대 1장
