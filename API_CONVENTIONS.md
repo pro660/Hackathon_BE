@@ -219,7 +219,6 @@ Endpoint에서 여러 단어가 필요한 경우 다음처럼 작성한다.
 /my-items
 /style-plans
 /usage-records
-/care-records
 
 비권장
 /myItems
@@ -742,12 +741,11 @@ DELETE /api/products/{productId}/favorite
 
 하위 리소스를 조회·수정·삭제할 때는 해당 하위 리소스가 URL에 지정된 부모 리소스에 실제로 속하는지도 함께 확인한다.
 
-현재 프로젝트에서 대표적인 예는 마이아이템의 사용 기록과 관리 기록이다.
+현재 프로젝트에서 대표적인 예는 마이아이템의 사용 기록이다.
 
 ```text
 마이아이템
-├─ 사용 기록
-└─ 관리 기록
+└─ 사용 기록
 ```
 
 이 경우 다음과 같이 부모 리소스의 ID를 경로에 포함한다.
@@ -755,9 +753,6 @@ DELETE /api/products/{productId}/favorite
 ```http
 GET  /api/my-items/{myItemId}/usage-records
 POST /api/my-items/{myItemId}/usage-records
-
-GET  /api/my-items/{myItemId}/care-records
-POST /api/my-items/{myItemId}/care-records
 ```
 
 특정 기록 하나를 조회·수정·삭제해야 하는 경우에는 해당 하위 리소스의 ID를 추가한다.
@@ -770,17 +765,10 @@ PATCH  /api/my-items/{myItemId}/usage-records/{usageRecordId}
 DELETE /api/my-items/{myItemId}/usage-records/{usageRecordId}
 ```
 
-```http
-GET    /api/my-items/{myItemId}/care-records/{careRecordId}
-PATCH  /api/my-items/{myItemId}/care-records/{careRecordId}
-DELETE /api/my-items/{myItemId}/care-records/{careRecordId}
-```
-
 다음처럼 동작을 URL에 직접 표현하는 방식은 사용하지 않는다.
 
 ```http
 POST /api/addUsageRecord
-POST /api/createCareRecord
 POST /api/my-items/{myItemId}/add-usage
 ```
 
@@ -980,7 +968,7 @@ productId가 1000 미만이면 샘플로 판단
 
 단, 모든 API 응답에 `isSample`을 의무적으로 포함하지 않는다. 실제 데이터와 샘플 데이터의 구분이 필요한 리소스에만 적용한다.
 
-사용자가 직접 등록한 마이아이템이나 사용·관리 기록처럼 사용자 입력으로 생성된 데이터는 일반적으로 샘플 데이터로 취급하지 않는다.
+사용자가 직접 등록한 마이아이템이나 사용 기록처럼 사용자 입력으로 생성된 데이터는 일반적으로 샘플 데이터로 취급하지 않는다.
 
 향후 실제 외부 데이터와 여러 종류의 시연 데이터를 세부적으로 구분해야 하는 요구가 생기는 경우에는 `dataSource`와 같은 별도의 Enum 필드를 도입할 수 있다. 해당 구분이 필요해질 때 API 계약에서 별도로 정의한다.
 
@@ -1202,7 +1190,6 @@ GET /api/products?page=0&size=20&sort=status,asc&sort=createdAt,desc
 ```text
 마이아이템 목록
 사용 기록 목록
-관리 기록 목록
 찜한 제품 목록
 저장한 스타일 플랜 목록
 저장한 장소 목록
@@ -1400,7 +1387,6 @@ ISO 8601 형식으로 통일한다.
 - 스타일 플랜 날짜 → `LocalDate`
 - 구매일 → `LocalDate`
 - 사용 기록 날짜 → `LocalDate`
-- 관리 기록 날짜 → `LocalDate`
 - 다음 관리 예정일 → `LocalDate`
 - 스타일 플랜 시간 → `LocalTime`
 - 생성 시각 → `Instant`
