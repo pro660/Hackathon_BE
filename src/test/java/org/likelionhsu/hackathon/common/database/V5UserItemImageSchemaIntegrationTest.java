@@ -88,7 +88,6 @@ class V5UserItemImageSchemaIntegrationTest {
                         name,
                         category,
                         purchase_price,
-                        status,
                         created_at,
                         updated_at
                     ) VALUES (
@@ -97,7 +96,6 @@ class V5UserItemImageSchemaIntegrationTest {
                         'V5 Price Test Item',
                         'BAG',
                         -1,
-                        'ACTIVE',
                         CURRENT_TIMESTAMP(6),
                         CURRENT_TIMESTAMP(6)
                     )
@@ -165,7 +163,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     product_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -173,7 +170,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     101,
                     'Invalid User Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -186,7 +182,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     product_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -194,7 +189,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     999999999,
                     'Invalid Product Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -263,7 +257,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     ai_job_id,
                     created_at,
                     updated_at
@@ -271,7 +264,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     102,
                     'AI Linked Item',
                     'BAG',
-                    'ACTIVE',
                     102,
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
@@ -341,14 +333,12 @@ class V5UserItemImageSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
                     103,
                     'Cascade Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -646,7 +636,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -654,7 +643,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     106,
                     'V5 Image FK Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -997,7 +985,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -1005,7 +992,6 @@ class V5UserItemImageSchemaIntegrationTest {
                     109,
                     'Referenced User Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )

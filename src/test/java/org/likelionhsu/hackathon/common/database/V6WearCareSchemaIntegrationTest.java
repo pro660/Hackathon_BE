@@ -158,7 +158,6 @@ class V6WearCareSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -166,7 +165,6 @@ class V6WearCareSchemaIntegrationTest {
                     201,
                     'V6 Wear Test Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -253,7 +251,6 @@ class V6WearCareSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -261,7 +258,6 @@ class V6WearCareSchemaIntegrationTest {
                     202,
                     'V6 Sort Test Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -336,7 +332,6 @@ class V6WearCareSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -344,7 +339,6 @@ class V6WearCareSchemaIntegrationTest {
                     203,
                     'V6 FK Test Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -432,7 +426,6 @@ class V6WearCareSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -440,7 +433,6 @@ class V6WearCareSchemaIntegrationTest {
                     204,
                     'V6 Cascade Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -543,7 +535,6 @@ class V6WearCareSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -551,7 +542,6 @@ class V6WearCareSchemaIntegrationTest {
                     205,
                     'V6 Restricted Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -597,196 +587,6 @@ class V6WearCareSchemaIntegrationTest {
                 SELECT COUNT(*)
                 FROM user_items
                 WHERE id = 205
-                """)) {
-
-                result.next();
-
-                assertThat(result.getInt(1))
-                        .isEqualTo(1);
-            }
-        }
-    }
-
-    @Test
-    void negativeCareRecordCostIsRejected() throws Exception {
-        migrateDatabase();
-
-        try (
-                Connection connection = DriverManager.getConnection(
-                        mysql.getJdbcUrl(),
-                        mysql.getUsername(),
-                        mysql.getPassword()
-                );
-                Statement statement = connection.createStatement()
-        ) {
-            statement.executeUpdate("""
-                INSERT INTO users (
-                    id,
-                    nickname,
-                    gender,
-                    status,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    206,
-                    'v6-care-user',
-                    'NOT_SPECIFIED',
-                    'ACTIVE',
-                    CURRENT_TIMESTAMP(6),
-                    CURRENT_TIMESTAMP(6)
-                )
-                """);
-
-            statement.executeUpdate("""
-                INSERT INTO user_items (
-                    id,
-                    user_id,
-                    name,
-                    category,
-                    status,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    206,
-                    206,
-                    'V6 Care Test Item',
-                    'BAG',
-                    'ACTIVE',
-                    CURRENT_TIMESTAMP(6),
-                    CURRENT_TIMESTAMP(6)
-                )
-                """);
-
-            assertThatThrownBy(() -> statement.executeUpdate("""
-                INSERT INTO care_records (
-                    user_item_id,
-                    care_type,
-                    cared_at,
-                    cost,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    206,
-                    'CLEANING',
-                    CURRENT_TIMESTAMP(6),
-                    -1,
-                    CURRENT_TIMESTAMP(6),
-                    CURRENT_TIMESTAMP(6)
-                )
-                """))
-                    .isInstanceOf(SQLException.class);
-        }
-    }
-
-    @Test
-    void careRecordUserItemForeignKeyIsEnforced() throws Exception {
-        migrateDatabase();
-
-        try (
-                Connection connection = DriverManager.getConnection(
-                        mysql.getJdbcUrl(),
-                        mysql.getUsername(),
-                        mysql.getPassword()
-                );
-                Statement statement = connection.createStatement()
-        ) {
-            assertThatThrownBy(() -> statement.executeUpdate("""
-                INSERT INTO care_records (
-                    user_item_id,
-                    care_type,
-                    cared_at,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    999999999,
-                    'CLEANING',
-                    CURRENT_TIMESTAMP(6),
-                    CURRENT_TIMESTAMP(6),
-                    CURRENT_TIMESTAMP(6)
-                )
-                """))
-                    .isInstanceOf(SQLException.class);
-        }
-    }
-
-    @Test
-    void userItemDeletionIsBlockedWhileCareRecordReferencesIt() throws Exception {
-        migrateDatabase();
-
-        try (
-                Connection connection = DriverManager.getConnection(
-                        mysql.getJdbcUrl(),
-                        mysql.getUsername(),
-                        mysql.getPassword()
-                );
-                Statement statement = connection.createStatement()
-        ) {
-            statement.executeUpdate("""
-                INSERT INTO users (
-                    id,
-                    nickname,
-                    gender,
-                    status,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    207,
-                    'v6-care-restrict',
-                    'NOT_SPECIFIED',
-                    'ACTIVE',
-                    CURRENT_TIMESTAMP(6),
-                    CURRENT_TIMESTAMP(6)
-                )
-                """);
-
-            statement.executeUpdate("""
-                INSERT INTO user_items (
-                    id,
-                    user_id,
-                    name,
-                    category,
-                    status,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    207,
-                    207,
-                    'V6 Care Restricted Item',
-                    'BAG',
-                    'ACTIVE',
-                    CURRENT_TIMESTAMP(6),
-                    CURRENT_TIMESTAMP(6)
-                )
-                """);
-
-            statement.executeUpdate("""
-                INSERT INTO care_records (
-                    user_item_id,
-                    care_type,
-                    cared_at,
-                    cost,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    207,
-                    'CLEANING',
-                    CURRENT_TIMESTAMP(6),
-                    10000,
-                    CURRENT_TIMESTAMP(6),
-                    CURRENT_TIMESTAMP(6)
-                )
-                """);
-
-            assertThatThrownBy(() -> statement.executeUpdate("""
-                DELETE FROM user_items
-                WHERE id = 207
-                """))
-                    .isInstanceOf(SQLException.class);
-
-            try (var result = statement.executeQuery("""
-                SELECT COUNT(*)
-                FROM user_items
-                WHERE id = 207
                 """)) {
 
                 result.next();

@@ -758,7 +758,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -766,7 +765,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     409,
                     'V8 Style Plan Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -861,7 +859,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -869,7 +866,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     410,
                     'V8 Sort Test Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -950,7 +946,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -958,7 +953,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     411,
                     'V8 Item FK Test',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -1054,7 +1048,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -1062,7 +1055,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     412,
                     'V8 Cascade Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
@@ -1173,7 +1165,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     user_id,
                     name,
                     category,
-                    status,
                     created_at,
                     updated_at
                 ) VALUES (
@@ -1181,7 +1172,6 @@ class V8StylePlanPlaceSchemaIntegrationTest {
                     413,
                     'V8 Restricted Item',
                     'BAG',
-                    'ACTIVE',
                     CURRENT_TIMESTAMP(6),
                     CURRENT_TIMESTAMP(6)
                 )
