@@ -691,8 +691,8 @@ class FlywayMySqlIntegrationTest {
                     display_name
                 ) VALUES (
                     'STYLE',
-                    'CASUAL',
-                    '캐주얼'
+                    'TEST_UNIQUE_TAG',
+                    '테스트 태그'
                 )
                 """);
 
@@ -703,8 +703,8 @@ class FlywayMySqlIntegrationTest {
                     display_name
                 ) VALUES (
                     'STYLE',
-                    'CASUAL',
-                    '다른 캐주얼 이름'
+                    'TEST_UNIQUE_TAG',
+                    '다른 테스트 태그 이름'
                 )
                 """))
                 .isInstanceOf(SQLException.class);
@@ -713,7 +713,7 @@ class FlywayMySqlIntegrationTest {
                 SELECT id
                 FROM product_tags
                 WHERE type = 'STYLE'
-                  AND code = 'CASUAL'
+                  AND code = 'TEST_UNIQUE_TAG'
                 """)) {
 
             productTagResult.next();
