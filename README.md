@@ -181,6 +181,10 @@ JPA Entity의 생성·수정 시각은 `BaseTimeEntity`와 JPA Auditing을 이�
 - MCM 제품 추천 점수·순위는 백엔드 Rule-Based로 계산하며 AI를 사용하지 않음
 - 구매 전 활용성 점수는 백엔드 Rule-Based로 계산하고, OpenAI는 개인화 설명 생성에만 사용
 - 장소 추천은 Kakao Local REST API 검색 결과를 기반으로 백엔드 Rule-Based로 순위를 계산
+- AI Job 상태는 `PENDING → PROCESSING → SUCCEEDED / FAILED`로 관리
+- `FAILED`는 AI 작업 자체가 실패한 정상적인 polling 결과로 처리하며, 조회 API는 `200 OK`와 상태·오류 정보·fallback을 반환
+- 요청 처리 자체의 시스템 오류는 `5xx`로 처리
+- 프론트엔드는 AI Job을 2초 간격으로 polling하며 최대 약 30초 동안 조회
 - MCM 카탈로그 이미지는 `ProductImage`, 사용자 업로드 이미지는 `ImageAsset`으로 분리
 - `ITEM` 이미지는 아이템당 최대 3장, `sortOrder`는 `0~2`
 - 사용자당 ACTIVE `PROFILE` 이미지는 최대 1장
