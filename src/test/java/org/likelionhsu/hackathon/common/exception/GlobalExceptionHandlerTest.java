@@ -25,7 +25,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import jakarta.validation.constraints.Min;
 
-@WebMvcTest
+@WebMvcTest(
+        controllers =
+                GlobalExceptionHandlerTest.TestController.class
+)
 @Import({
         GlobalExceptionHandler.class,
         GlobalExceptionHandlerTest.TestController.class

@@ -1,0 +1,2868 @@
+{
+  "products": [
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "핸드백",
+      "sku": "MWTGATA01CO001",
+      "brand": "MCM",
+      "name": "L Pina 비세토스 스터드 장식 토트",
+      "category": "BAG",
+      "description": null,
+      "price": 1850000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%ED%95%B8%EB%93%9C%EB%B0%B1/%EC%87%BC%ED%8D%BC-%ED%86%A0%ED%8A%B8%EB%B0%B1/pina-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EC%8A%A4%ED%84%B0%EB%93%9C-%EC%9E%A5%EC%8B%9D-%ED%86%A0%ED%8A%B8/MWTGATA01CO001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786732955/hackathon/mcm-products/MWTGATA01CO001-01.webp",
+          "publicId": "hackathon/mcm-products/MWTGATA01CO001-01",
+          "altText": "MCM L Pina 비세토스 스터드 장식 토트 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "FEATURE",
+          "code": "SPACIOUS"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "핸드백",
+      "sku": "MWPGALR01BK001",
+      "brand": "MCM",
+      "name": "M New Liz 엠보스드 모노그램 레더 쇼퍼",
+      "category": "BAG",
+      "description": null,
+      "price": 1490000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%ED%95%B8%EB%93%9C%EB%B0%B1/%EC%87%BC%ED%8D%BC-%ED%86%A0%ED%8A%B8%EB%B0%B1/new-liz-%EC%97%A0%EB%B3%B4%EC%8A%A4%EB%93%9C-%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%A0%88%EB%8D%94-%EC%87%BC%ED%8D%BC/MWPGALR01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733176/hackathon/mcm-products/MWPGALR01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MWPGALR01BK001-01",
+          "altText": "MCM M New Liz 엠보스드 모노그램 레더 쇼퍼 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "FEATURE",
+          "code": "SPACIOUS"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "핸드백",
+      "sku": "MWDGADU02BK001",
+      "brand": "MCM",
+      "name": "M Dessau 비세토스 드로우스트링 백",
+      "category": "BAG",
+      "description": null,
+      "price": 1550000,
+      "primaryColor": "BLACK",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%ED%95%B8%EB%93%9C%EB%B0%B1/%EC%88%84%EB%8D%94%EB%B0%B1-%ED%81%AC%EB%A1%9C%EC%8A%A4%EB%B0%B1/dessau-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EB%93%9C%EB%A1%9C%EC%9A%B0%EC%8A%A4%ED%8A%B8%EB%A7%81-%EB%B0%B1/MWDGADU02BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733176/hackathon/mcm-products/MWDGADU02BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MWDGADU02BK001-01",
+          "altText": "MCM M Dessau 비세토스 드로우스트링 백 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "핸드백",
+      "sku": "MWSGSTA01BK001",
+      "brand": "MCM",
+      "name": "S Aren 맥시 모노그램 레더 E/W 숄더백",
+      "category": "BAG",
+      "description": null,
+      "price": 1550000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%ED%95%B8%EB%93%9C%EB%B0%B1/%EC%88%84%EB%8D%94%EB%B0%B1-%ED%81%AC%EB%A1%9C%EC%8A%A4%EB%B0%B1/aren-%EB%A7%A5%EC%8B%9C-%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%A0%88%EB%8D%94-e%2Fw-%EC%88%84%EB%8D%94%EB%B0%B1/MWSGSTA01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733177/hackathon/mcm-products/MWSGSTA01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MWSGSTA01BK001-01",
+          "altText": "MCM S Aren 맥시 모노그램 레더 E/W 숄더백 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "OCCASION",
+          "code": "CEREMONY"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "핸드백",
+      "sku": "MWBESEA01BK001",
+      "brand": "MCM",
+      "name": "미니 Ella 비세토스 보스턴 백",
+      "category": "BAG",
+      "description": null,
+      "price": 1090000,
+      "primaryColor": "BLACK",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%ED%95%B8%EB%93%9C%EB%B0%B1/%ED%83%91-%ED%95%B8%EB%93%A4%EB%B0%B1/ella-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EB%B3%B4%EC%8A%A4%ED%84%B4-%EB%B0%B1/MWBESEA01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733178/hackathon/mcm-products/MWBESEA01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MWBESEA01BK001-01",
+          "altText": "MCM 미니 Ella 비세토스 보스턴 백 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "핸드백",
+      "sku": "MWRGAOB01CO001",
+      "brand": "MCM",
+      "name": "S Pina 비세토스 탬버린 백",
+      "category": "BAG",
+      "description": null,
+      "price": 1690000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%ED%95%B8%EB%93%9C%EB%B0%B1/%EC%88%84%EB%8D%94%EB%B0%B1-%ED%81%AC%EB%A1%9C%EC%8A%A4%EB%B0%B1/pina-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%ED%83%AC%EB%B2%84%EB%A6%B0-%EB%B0%B1-/MWRGAOB01CO001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733179/hackathon/mcm-products/MWRGAOB01CO001-01.webp",
+          "publicId": "hackathon/mcm-products/MWRGAOB01CO001-01",
+          "altText": "MCM S Pina 비세토스 탬버린 백 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MYLGATA01CO001",
+      "brand": "MCM",
+      "name": "L Pina 스터드 장식 크로스바디 월렛",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 830000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EC%B2%B4%EC%9D%B8-%EC%A7%80%EA%B0%91/pina-%EC%8A%A4%ED%84%B0%EB%93%9C-%EC%9E%A5%EC%8B%9D-%ED%81%AC%EB%A1%9C%EC%8A%A4%EB%B0%94%EB%94%94-%EC%9B%94%EB%A0%9B/MYLGATA01CO001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733180/hackathon/mcm-products/MYLGATA01CO001-01.webp",
+          "publicId": "hackathon/mcm-products/MYLGATA01CO001-01",
+          "altText": "MCM L Pina 스터드 장식 크로스바디 월렛 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MYSGAAF01BK001",
+      "brand": "MCM",
+      "name": "S Pina 스터드 장식 카프스킨 지갑",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 590000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EB%B0%98%EC%A7%80%EA%B0%91/pina-%EC%8A%A4%ED%84%B0%EB%93%9C-%EC%9E%A5%EC%8B%9D-%EC%B9%B4%ED%94%84%EC%8A%A4%ED%82%A8-%EC%A7%80%EA%B0%91/MYSGAAF01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733180/hackathon/mcm-products/MYSGAAF01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MYSGAAF01BK001-01",
+          "altText": "MCM S Pina 스터드 장식 카프스킨 지갑 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MYSGATA01CO001",
+      "brand": "MCM",
+      "name": "S Pina 스터드 장식 비세토스 지갑",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 550000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EB%B0%98%EC%A7%80%EA%B0%91/pina-%EC%8A%A4%ED%84%B0%EB%93%9C-%EC%9E%A5%EC%8B%9D-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EC%A7%80%EA%B0%91/MYSGATA01CO001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733181/hackathon/mcm-products/MYSGATA01CO001-01.webp",
+          "publicId": "hackathon/mcm-products/MYSGATA01CO001-01",
+          "altText": "MCM S Pina 스터드 장식 비세토스 지갑 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MYSGSTA01BK001",
+      "brand": "MCM",
+      "name": "S Aren 비세토스 브라스 플레이트 지갑",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 490000,
+      "primaryColor": "BLACK",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EB%B0%98%EC%A7%80%EA%B0%91/aren-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EB%B8%8C%EB%9D%BC%EC%8A%A4-%ED%94%8C%EB%A0%88%EC%9D%B4%ED%8A%B8-%EC%A7%80%EA%B0%91/MYSGSTA01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733182/hackathon/mcm-products/MYSGSTA01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MYSGSTA01BK001-01",
+          "altText": "MCM S Aren 비세토스 브라스 플레이트 지갑 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MYLFATA04CO001",
+      "brand": "MCM",
+      "name": "L Aren 비세토스 콘티넨털 지갑",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 690000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EC%9E%A5%EC%A7%80%EA%B0%91/aren-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EC%BD%98%ED%8B%B0%EB%84%A8%ED%84%B8-%EC%A7%80%EA%B0%91/MYLFATA04CO001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733183/hackathon/mcm-products/MYLFATA04CO001-01.webp",
+          "publicId": "hackathon/mcm-products/MYLFATA04CO001-01",
+          "altText": "MCM L Aren 비세토스 콘티넨털 지갑 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MYLDATA08BK001",
+      "brand": "MCM",
+      "name": "L Aren 엠보스드 모노그램 레더 콘티넨털 지갑",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 750000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/aren-%EC%97%A0%EB%B3%B4%EC%8A%A4%EB%93%9C-%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%A0%88%EB%8D%94-%EC%BD%98%ED%8B%B0%EB%84%A8%ED%84%B8-%EC%A7%80%EA%B0%91/MYLDATA08BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733184/hackathon/mcm-products/MYLDATA08BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MYLDATA08BK001-01",
+          "altText": "MCM L Aren 엠보스드 모노그램 레더 콘티넨털 지갑 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "패션소품",
+      "sku": "MYBGAUM014B110",
+      "brand": "MCM",
+      "name": "M-Art 비세토스 1인치 벨트",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 450000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EB%B2%A8%ED%8A%B8/m-art-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-1%EC%9D%B8%EC%B9%98-%EB%B2%A8%ED%8A%B8/MYBGAUM014B110.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733184/hackathon/mcm-products/MYBGAUM014B110-01.webp",
+          "publicId": "hackathon/mcm-products/MYBGAUM014B110-01",
+          "altText": "MCM M-Art 비세토스 1인치 벨트 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "패션소품",
+      "sku": "MXZGATA19BK001",
+      "brand": "MCM",
+      "name": "모노그램 프린트 레더 2D Stark 비세토스 백팩 참",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 290000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%ED%94%84%EB%A6%B0%ED%8A%B8-%EB%A0%88%EB%8D%94-2d-stark-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EB%B0%B1%ED%8C%A9-%EC%B0%B8-/MXZGATA19BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733185/hackathon/mcm-products/MXZGATA19BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MXZGATA19BK001-01",
+          "altText": "MCM 모노그램 프린트 레더 2D Stark 비세토스 백팩 참 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "패션소품",
+      "sku": "MEGGSMM01SV001",
+      "brand": "MCM",
+      "name": "Mars Mask 선글라스",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 710000,
+      "primaryColor": "METALLIC",
+      "material": "METAL",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4/mars-mask-%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4/MEGGSMM01SV001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733186/hackathon/mcm-products/MEGGSMM01SV001-01.webp",
+          "publicId": "hackathon/mcm-products/MEGGSMM01SV001-01",
+          "altText": "MCM Mars Mask 선글라스 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "패션소품",
+      "sku": "MXZFATT04K8001",
+      "brand": "MCM",
+      "name": "38-41mm 비세토스 Apple Watch 밴드",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 290000,
+      "primaryColor": "GREEN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%9D%BC%EC%9D%B4%ED%94%84%EC%8A%A4%ED%83%80%EC%9D%BC/%ED%85%8C%ED%81%AC-%EC%95%A1%EC%84%B8%EC%84%9C%EB%A6%AC/38-41mm-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-apple-watch-%EB%B0%B4%EB%93%9C/MXZFATT04K8001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733187/hackathon/mcm-products/MXZFATT04K8001-01.webp",
+          "publicId": "hackathon/mcm-products/MXZFATT04K8001-01",
+          "altText": "MCM 38-41mm 비세토스 Apple Watch 밴드 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "패션소품",
+      "sku": "MECFAMM01K8001",
+      "brand": "MCM",
+      "name": "ECONYL® 가죽 클래식 캡",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 390000,
+      "primaryColor": "GREEN",
+      "material": "NYLON",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/econyl%C2%AE-%EA%B0%80%EC%A3%BD-%ED%81%B4%EB%9E%98%EC%8B%9D-%EC%BA%A1/MECFAMM01K8001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733187/hackathon/mcm-products/MECFAMM01K8001-01.webp",
+          "publicId": "hackathon/mcm-products/MECFAMM01K8001-01",
+          "altText": "MCM ECONYL® 가죽 클래식 캡 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "패션소품",
+      "sku": "MECFAMM02HD001",
+      "brand": "MCM",
+      "name": "모노그램 데님 자카드 클래식 캡",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 450000,
+      "primaryColor": "BLUE",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EB%AA%A8%EC%9E%90/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%8D%B0%EB%8B%98-%EC%9E%90%EC%B9%B4%EB%93%9C-%ED%81%B4%EB%9E%98%EC%8B%9D-%EC%BA%A1/MECFAMM02HD001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733189/hackathon/mcm-products/MECFAMM02HD001-01.webp",
+          "publicId": "hackathon/mcm-products/MECFAMM02HD001-01",
+          "altText": "MCM 모노그램 데님 자카드 클래식 캡 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "의류",
+      "sku": "MFPGAMM04LI038",
+      "brand": "MCM",
+      "name": "루렉스 데님 플레어 팬츠",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 830000,
+      "primaryColor": "BLUE",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EB%A3%A8%EB%A0%89%EC%8A%A4-%EB%8D%B0%EB%8B%98-%ED%94%8C%EB%A0%88%EC%96%B4-%ED%8C%AC%EC%B8%A0/MFPGAMM04LI038.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733190/hackathon/mcm-products/MFPGAMM04LI038-01.webp",
+          "publicId": "hackathon/mcm-products/MFPGAMM04LI038-01",
+          "altText": "MCM 루렉스 데님 플레어 팬츠 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "SPRING"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "의류",
+      "sku": "MFTGAMM01WT00L",
+      "brand": "MCM",
+      "name": "디스코 시퀸 티셔츠",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 450000,
+      "primaryColor": "WHITE",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EB%94%94%EC%8A%A4%EC%BD%94-%EC%8B%9C%ED%80%B8-%ED%8B%B0%EC%85%94%EC%B8%A0-/MFTGAMM01WT00L.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733191/hackathon/mcm-products/MFTGAMM01WT00L-01.webp",
+          "publicId": "hackathon/mcm-products/MFTGAMM01WT00L-01",
+          "altText": "MCM 디스코 시퀸 티셔츠 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "SPRING"
+        },
+        {
+          "type": "SEASON",
+          "code": "SUMMER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "의류",
+      "sku": "MFKGAMM01LI00M",
+      "brand": "MCM",
+      "name": "루렉스 데님 오버올 스커트",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 890000,
+      "primaryColor": "BLUE",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EB%A3%A8%EB%A0%89%EC%8A%A4-%EB%8D%B0%EB%8B%98-%EC%98%A4%EB%B2%84%EC%98%AC-%EC%8A%A4%EC%BB%A4%ED%8A%B8/MFKGAMM01LI00M.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733192/hackathon/mcm-products/MFKGAMM01LI00M-01.webp",
+          "publicId": "hackathon/mcm-products/MFKGAMM01LI00M-01",
+          "altText": "MCM 루렉스 데님 오버올 스커트 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "SPRING"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "의류",
+      "sku": "MFJGAMM02PZ040",
+      "brand": "MCM",
+      "name": "워싱 데님 재킷",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 1250000,
+      "primaryColor": "PINK",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EC%9B%8C%EC%8B%B1-%EB%8D%B0%EB%8B%98-%EC%9E%AC%ED%82%B7/MFJGAMM02PZ040.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733193/hackathon/mcm-products/MFJGAMM02PZ040-01.webp",
+          "publicId": "hackathon/mcm-products/MFJGAMM02PZ040-01",
+          "altText": "MCM 워싱 데님 재킷 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "SPRING"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "의류",
+      "sku": "MFDFSMM01Q200S",
+      "brand": "MCM",
+      "name": "울 리사이클 캐시미어 라우렐 크롭 카디건",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 850000,
+      "primaryColor": "PINK",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EC%9A%B8-%EB%A6%AC%EC%82%AC%EC%9D%B4%ED%81%B4-%EC%BA%90%EC%8B%9C%EB%AF%B8%EC%96%B4-%EB%9D%BC%EC%9A%B0%EB%A0%90-%ED%81%AC%EB%A1%AD-%EC%B9%B4%EB%94%94%EA%B1%B4/MFDFSMM01Q200S.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733194/hackathon/mcm-products/MFDFSMM01Q200S-01.webp",
+          "publicId": "hackathon/mcm-products/MFDFSMM01Q200S-01",
+          "altText": "MCM 울 리사이클 캐시미어 라우렐 크롭 카디건 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "SEASON",
+          "code": "WINTER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "의류",
+      "sku": "MFTFAMM03BW00M",
+      "brand": "MCM",
+      "name": "모노그램 ECONYL®이 더해진 라우렐 크롭 코튼 티셔츠",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 510000,
+      "primaryColor": "MULTI",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-econyl%C2%AE%EC%9D%B4-%EB%8D%94%ED%95%B4%EC%A7%84-%EB%9D%BC%EC%9A%B0%EB%A0%90-%ED%81%AC%EB%A1%AD-%EC%BD%94%ED%8A%BC-%ED%8B%B0%EC%85%94%EC%B8%A0/MFTFAMM03BW00M.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733194/hackathon/mcm-products/MFTFAMM03BW00M-01.webp",
+          "publicId": "hackathon/mcm-products/MFTFAMM03BW00M-01",
+          "altText": "MCM 모노그램 ECONYL®이 더해진 라우렐 크롭 코튼 티셔츠 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "SPRING"
+        },
+        {
+          "type": "SEASON",
+          "code": "SUMMER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "슈즈",
+      "sku": "MESGSAS01BK040",
+      "brand": "MCM",
+      "name": "Diamante 퀼팅 레더 로우탑 스니커즈",
+      "category": "SHOES",
+      "description": null,
+      "price": 630000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%8A%88%EC%A6%88/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/diamante-%ED%80%BC%ED%8C%85-%EB%A0%88%EB%8D%94-%EB%A1%9C%EC%9A%B0%ED%83%91-%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/MESGSAS01BK040.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733195/hackathon/mcm-products/MESGSAS01BK040-01.webp",
+          "publicId": "hackathon/mcm-products/MESGSAS01BK040-01",
+          "altText": "MCM Diamante 퀼팅 레더 로우탑 스니커즈 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "슈즈",
+      "sku": "MESGSAP02BK038",
+      "brand": "MCM",
+      "name": "Federlite 퀼팅 가죽 로우탑 슬립온 스니커즈",
+      "category": "SHOES",
+      "description": null,
+      "price": 730000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%8A%88%EC%A6%88/%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/federlite-%ED%80%BC%ED%8C%85-%EA%B0%80%EC%A3%BD-%EB%A1%9C%EC%9A%B0%ED%83%91-%EC%8A%AC%EB%A6%BD%EC%98%A8-%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/MESGSAP02BK038.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733196/hackathon/mcm-products/MESGSAP02BK038-01.webp",
+          "publicId": "hackathon/mcm-products/MESGSAP02BK038-01",
+          "altText": "MCM Federlite 퀼팅 가죽 로우탑 슬립온 스니커즈 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "슈즈",
+      "sku": "MEXESMM01CO037",
+      "brand": "MCM",
+      "name": "모노그램 프린트 양가죽 크로스 샌들",
+      "category": "SHOES",
+      "description": null,
+      "price": 830000,
+      "primaryColor": "BROWN",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%8A%88%EC%A6%88/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%ED%94%84%EB%A6%B0%ED%8A%B8-%EC%96%91%EA%B0%80%EC%A3%BD-%ED%81%AC%EB%A1%9C%EC%8A%A4-%EC%83%8C%EB%93%A4/MEXESMM01CO037.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733197/hackathon/mcm-products/MEXESMM01CO037-01.webp",
+          "publicId": "hackathon/mcm-products/MEXESMM01CO037-01",
+          "altText": "MCM 모노그램 프린트 양가죽 크로스 샌들 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "SUMMER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "슈즈",
+      "sku": "MEXFSMM02BK038",
+      "brand": "MCM",
+      "name": "비세토스 샌들",
+      "category": "SHOES",
+      "description": null,
+      "price": 770000,
+      "primaryColor": "BLACK",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%8A%88%EC%A6%88/%EC%83%8C%EB%93%A4-%EC%8A%AC%EB%9D%BC%EC%9D%B4%EB%93%9C/%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EC%83%8C%EB%93%A4/MEXFSMM02BK038.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733197/hackathon/mcm-products/MEXFSMM02BK038-01.webp",
+          "publicId": "hackathon/mcm-products/MEXFSMM02BK038-01",
+          "altText": "MCM 비세토스 샌들 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "SUMMER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "슈즈",
+      "sku": "MESGSMM01CO036",
+      "brand": "MCM",
+      "name": "카프스킨 스웨이드 플랫폼 부츠",
+      "category": "SHOES",
+      "description": null,
+      "price": 830000,
+      "primaryColor": "BROWN",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%B9%B4%ED%94%84%EC%8A%A4%ED%82%A8-%EC%8A%A4%EC%9B%A8%EC%9D%B4%EB%93%9C-%ED%94%8C%EB%9E%AB%ED%8F%BC-%EB%B6%80%EC%B8%A0/MESGSMM01CO036.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733198/hackathon/mcm-products/MESGSMM01CO036-01.webp",
+          "publicId": "hackathon/mcm-products/MESGSMM01CO036-01",
+          "altText": "MCM 카프스킨 스웨이드 플랫폼 부츠 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "SEASON",
+          "code": "WINTER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "WOMEN",
+      "sourceCategory": "슈즈",
+      "sku": "MESFAMM01CO036",
+      "brand": "MCM",
+      "name": "누벅 모노그램 프린트 가죽 엥클 부츠",
+      "category": "SHOES",
+      "description": null,
+      "price": 1150000,
+      "primaryColor": "BROWN",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%8A%88%EC%A6%88/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EB%88%84%EB%B2%85-%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%ED%94%84%EB%A6%B0%ED%8A%B8-%EA%B0%80%EC%A3%BD-%EC%95%B5%ED%81%B4-%EB%B6%80%EC%B8%A0/MESFAMM01CO036.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733199/hackathon/mcm-products/MESFAMM01CO036-01.webp",
+          "publicId": "hackathon/mcm-products/MESFAMM01CO036-01",
+          "altText": "MCM 누벅 모노그램 프린트 가죽 엥클 부츠 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "SEASON",
+          "code": "WINTER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "가방",
+      "sku": "MMKEAVE15BK001",
+      "brand": "MCM",
+      "name": "S Stark 사이드 스터드 비세토스 백팩",
+      "category": "BAG",
+      "description": null,
+      "price": 1650000,
+      "primaryColor": "BLACK",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EA%B0%80%EB%B0%A9/%EB%B0%B1%ED%8C%A9/stark-%EC%82%AC%EC%9D%B4%EB%93%9C-%EC%8A%A4%ED%84%B0%EB%93%9C-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EB%B0%B1%ED%8C%A9/MMKEAVE15BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733199/hackathon/mcm-products/MMKEAVE15BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MMKEAVE15BK001-01",
+          "altText": "MCM S Stark 사이드 스터드 비세토스 백팩 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "가방",
+      "sku": "MMKGSVE09BK001",
+      "brand": "MCM",
+      "name": "M Stark 모노그램 나일론 패커블 백팩",
+      "category": "BAG",
+      "description": null,
+      "price": 930000,
+      "primaryColor": "BLACK",
+      "material": "NYLON",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EA%B0%80%EB%B0%A9/%EB%B0%B1%ED%8C%A9/stark-%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%82%98%EC%9D%BC%EB%A1%A0-%ED%8C%A8%EC%BB%A4%EB%B8%94-%EB%B0%B1%ED%8C%A9/MMKGSVE09BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733200/hackathon/mcm-products/MMKGSVE09BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MMKGSVE09BK001-01",
+          "altText": "MCM M Stark 모노그램 나일론 패커블 백팩 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        },
+        {
+          "type": "FEATURE",
+          "code": "SPACIOUS"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "가방",
+      "sku": "MMTFATA01BK001",
+      "brand": "MCM",
+      "name": "L Aren 비세토스 N/S 토트",
+      "category": "BAG",
+      "description": null,
+      "price": 1390000,
+      "primaryColor": "BLACK",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EA%B0%80%EB%B0%A9/%ED%86%A0%ED%8A%B8%EB%B0%B1/aren-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-n%2Fs-%ED%86%A0%ED%8A%B8/MMTFATA01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733201/hackathon/mcm-products/MMTFATA01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MMTFATA01BK001-01",
+          "altText": "MCM L Aren 비세토스 N/S 토트 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "FEATURE",
+          "code": "SPACIOUS"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "가방",
+      "sku": "MMMEATA02BK001",
+      "brand": "MCM",
+      "name": "미니 Aren 비세토스 메신저 백",
+      "category": "BAG",
+      "description": null,
+      "price": 1190000,
+      "primaryColor": "BLACK",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EA%B0%80%EB%B0%A9/%ED%81%AC%EB%A1%9C%EC%8A%A4%EB%B0%B1/aren-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EB%A9%94%EC%8B%A0%EC%A0%80-%EB%B0%B1/MMMEATA02BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733202/hackathon/mcm-products/MMMEATA02BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MMMEATA02BK001-01",
+          "altText": "MCM 미니 Aren 비세토스 메신저 백 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "가방",
+      "sku": "MMVGATT01CO001",
+      "brand": "MCM",
+      "name": "S Ottomar 비세토스 위켄더",
+      "category": "BAG",
+      "description": null,
+      "price": 1750000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%ED%8A%B8%EB%9E%98%EB%B8%94/%EB%9F%AC%EA%B8%B0%EC%A7%80-%EB%B0%B1/ottomar-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EC%9C%84%EC%BC%84%EB%8D%94/MMVGATT01CO001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733202/hackathon/mcm-products/MMVGATT01CO001-01.webp",
+          "publicId": "hackathon/mcm-products/MMVGATT01CO001-01",
+          "altText": "MCM S Ottomar 비세토스 위켄더 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "FEATURE",
+          "code": "SPACIOUS"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "가방",
+      "sku": "MMZGSFI01BK001",
+      "brand": "MCM",
+      "name": "M Fursten 모노그램 나일론 벨트백",
+      "category": "BAG",
+      "description": null,
+      "price": 650000,
+      "primaryColor": "BLACK",
+      "material": "NYLON",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EA%B0%80%EB%B0%A9/%EB%B2%A8%ED%8A%B8%EB%B0%B1/fursten-%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%82%98%EC%9D%BC%EB%A1%A0-%EB%B2%A8%ED%8A%B8%EB%B0%B1/MMZGSFI01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733203/hackathon/mcm-products/MMZGSFI01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MMZGSFI01BK001-01",
+          "altText": "MCM M Fursten 모노그램 나일론 벨트백 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MXSFATA03CO001",
+      "brand": "MCM",
+      "name": "S 비세토스 오리지널 카드 케이스 반지갑",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 490000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EB%B0%98%EC%A7%80%EA%B0%91-%EB%A8%B8%EB%8B%88%ED%81%B4%EB%A6%BD/%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EC%98%A4%EB%A6%AC%EC%A7%80%EB%84%90-%EC%B9%B4%EB%93%9C-%EC%BC%80%EC%9D%B4%EC%8A%A4-%EB%B0%98%EC%A7%80%EA%B0%91/MXSFATA03CO001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733204/hackathon/mcm-products/MXSFATA03CO001-01.webp",
+          "publicId": "hackathon/mcm-products/MXSFATA03CO001-01",
+          "altText": "MCM S 비세토스 오리지널 카드 케이스 반지갑 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MXCESTA01BK001",
+      "brand": "MCM",
+      "name": "미니 Aren 맥시 모노그램 레더 머니 클립 카드 케이스",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 330000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EB%B0%98%EC%A7%80%EA%B0%91-%EB%A8%B8%EB%8B%88%ED%81%B4%EB%A6%BD/aren-%EB%A7%A5%EC%8B%9C-%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%A0%88%EB%8D%94-%EB%A8%B8%EB%8B%88-%ED%81%B4%EB%A6%BD-%EC%B9%B4%EB%93%9C-%EC%BC%80%EC%9D%B4%EC%8A%A4/MXCESTA01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733205/hackathon/mcm-products/MXCESTA01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MXCESTA01BK001-01",
+          "altText": "MCM 미니 Aren 맥시 모노그램 레더 머니 클립 카드 케이스 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MXZGSTA03BK001",
+      "brand": "MCM",
+      "name": "Aren 맥시 모노그램 레더 랜야드 ID 월렛",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 370000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EC%B9%B4%EB%93%9C%EC%A7%80%EA%B0%91-%ED%82%A4%ED%99%80%EB%8D%94/aren-%EB%A7%A5%EC%8B%9C-%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%A0%88%EB%8D%94-%EB%9E%9C%EC%95%BC%EB%93%9C-id-%EC%9B%94%EB%A0%9B/MXZGSTA03BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733205/hackathon/mcm-products/MXZGSTA03BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MXZGSTA03BK001-01",
+          "altText": "MCM Aren 맥시 모노그램 레더 랜야드 ID 월렛 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MXZGATA02BK001",
+      "brand": "MCM",
+      "name": "엠보스드 모노그램 레더 랜야드 ID 카드 지갑",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 350000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EC%B9%B4%EB%93%9C%EC%A7%80%EA%B0%91-%ED%82%A4%ED%99%80%EB%8D%94/%EC%97%A0%EB%B3%B4%EC%8A%A4%EB%93%9C-%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%A0%88%EB%8D%94-%EB%9E%9C%EC%95%BC%EB%93%9C-id-%EC%B9%B4%EB%93%9C-%EC%A7%80%EA%B0%91/MXZGATA02BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733206/hackathon/mcm-products/MXZGATA02BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MXZGATA02BK001-01",
+          "altText": "MCM 엠보스드 모노그램 레더 랜야드 ID 카드 지갑 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MYLFSTA01CO001",
+      "brand": "MCM",
+      "name": "L Aren 비세토스 지퍼 지갑",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 690000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EC%9E%A5%EC%A7%80%EA%B0%91/aren-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EC%A7%80%ED%8D%BC-%EC%A7%80%EA%B0%91/MYLFSTA01CO001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733207/hackathon/mcm-products/MYLFSTA01CO001-01.webp",
+          "publicId": "hackathon/mcm-products/MYLFSTA01CO001-01",
+          "altText": "MCM L Aren 비세토스 지퍼 지갑 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "지갑 & 레더소품",
+      "sku": "MXKCSVI01CO001",
+      "brand": "MCM",
+      "name": "미니 비세토스 오리지널 키 파우치",
+      "category": "LEATHER_GOODS",
+      "description": null,
+      "price": 350000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%A7%80%EA%B0%91-%EB%A0%88%EB%8D%94%EC%86%8C%ED%92%88/%EC%B9%B4%EB%93%9C%EC%A7%80%EA%B0%91-%ED%82%A4%ED%99%80%EB%8D%94/%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EC%98%A4%EB%A6%AC%EC%A7%80%EB%84%90-%ED%82%A4-%ED%8C%8C%EC%9A%B0%EC%B9%98/MXKCSVI01CO001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733208/hackathon/mcm-products/MXKCSVI01CO001-01.webp",
+          "publicId": "hackathon/mcm-products/MXKCSVI01CO001-01",
+          "altText": "MCM 미니 비세토스 오리지널 키 파우치 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "패션소품",
+      "sku": "MEFGAMM09BK001",
+      "brand": "MCM",
+      "name": "M50 로고 실크 스카프",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 490000,
+      "primaryColor": "BLACK",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/m50-%EB%A1%9C%EA%B3%A0-%EC%8B%A4%ED%81%AC-%EC%8A%A4%EC%B9%B4%ED%94%84/MEFGAMM09BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733209/hackathon/mcm-products/MEFGAMM09BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MEFGAMM09BK001-01",
+          "altText": "MCM M50 로고 실크 스카프 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "패션소품",
+      "sku": "MECGAMM01BK001",
+      "brand": "MCM",
+      "name": "Disco 로고 자수 코튼 트윌 캡",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 370000,
+      "primaryColor": "BLACK",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/disco-%EB%A1%9C%EA%B3%A0-%EC%9E%90%EC%88%98-%EC%BD%94%ED%8A%BC-%ED%8A%B8%EC%9C%8C-%EC%BA%A1/MECGAMM01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733209/hackathon/mcm-products/MECGAMM01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MECGAMM01BK001-01",
+          "altText": "MCM Disco 로고 자수 코튼 트윌 캡 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "패션소품",
+      "sku": "MXZGATA17BK001",
+      "brand": "MCM",
+      "name": "가죽 테슬 참",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 270000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EA%B0%80%EC%A3%BD-%ED%85%8C%EC%8A%AC-%EC%B0%B8/MXZGATA17BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733210/hackathon/mcm-products/MXZGATA17BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MXZGATA17BK001-01",
+          "altText": "MCM 가죽 테슬 참 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "FEATURE",
+          "code": "COMPACT"
+        },
+        {
+          "type": "FEATURE",
+          "code": "MULTIWAY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "패션소품",
+      "sku": "MXBGSTA04BK001",
+      "brand": "MCM",
+      "name": "Aren 갤럭틱 갈라 가죽 2\" 벨트",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 470000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EB%B2%A8%ED%8A%B8/aren-%EA%B0%A4%EB%9F%AD%ED%8B%B1-%EA%B0%88%EB%9D%BC-%EA%B0%80%EC%A3%BD-2%22-%EB%B2%A8%ED%8A%B8/MXBGSTA04BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733211/hackathon/mcm-products/MXBGSTA04BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MXBGSTA04BK001-01",
+          "altText": "MCM Aren 갤럭틱 갈라 가죽 2\" 벨트 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "패션소품",
+      "sku": "MEGGSMM02NH001",
+      "brand": "MCM",
+      "name": "지오메트릭 쉴드 선글라스",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 390000,
+      "primaryColor": "BROWN",
+      "material": "OTHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4/%EC%A7%80%EC%98%A4%EB%A9%94%ED%8A%B8%EB%A6%AD-%EC%89%B4%EB%93%9C-%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4/MEGGSMM02NH001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733212/hackathon/mcm-products/MEGGSMM02NH001-01.webp",
+          "publicId": "hackathon/mcm-products/MEGGSMM02NH001-01",
+          "altText": "MCM 지오메트릭 쉴드 선글라스 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "패션소품",
+      "sku": "MEHFSBC01BK001",
+      "brand": "MCM",
+      "name": "에센셜 울 비니",
+      "category": "FASHION_ACCESSORY",
+      "description": null,
+      "price": 290000,
+      "primaryColor": "BLACK",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%ED%8C%A8%EC%85%98%EC%86%8C%ED%92%88/%EB%AA%A8%EC%9E%90/%EC%97%90%EC%84%BC%EC%85%9C-%EC%9A%B8-%EB%B9%84%EB%8B%88/MEHFSBC01BK001.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733214/hackathon/mcm-products/MEHFSBC01BK001-01.webp",
+          "publicId": "hackathon/mcm-products/MEHFSBC01BK001-01",
+          "altText": "MCM 에센셜 울 비니 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "WINTER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "의류",
+      "sku": "MHHGAMM02OQ048",
+      "brand": "MCM",
+      "name": "모노그램 패치 포켓 셔츠",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 830000,
+      "primaryColor": "ORANGE",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%9D%98%EB%A5%98/%ED%8B%B0%EC%85%94%EC%B8%A0-%EC%85%94%EC%B8%A0/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%ED%8C%A8%EC%B9%98-%ED%8F%AC%EC%BC%93-%EC%85%94%EC%B8%A0/MHHGAMM02OQ048.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733215/hackathon/mcm-products/MHHGAMM02OQ048-01.webp",
+          "publicId": "hackathon/mcm-products/MHHGAMM02OQ048-01",
+          "altText": "MCM 모노그램 패치 포켓 셔츠 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "SPRING"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "의류",
+      "sku": "MHPGAMM01BK00L",
+      "brand": "MCM",
+      "name": "모노그램 카고 팬츠 ECONYL®",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 990000,
+      "primaryColor": "BLACK",
+      "material": "NYLON",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EC%B9%B4%EA%B3%A0-%ED%8C%AC%EC%B8%A0-econyl%C2%AE-/MHPGAMM01BK00L.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733216/hackathon/mcm-products/MHPGAMM01BK00L-01.webp",
+          "publicId": "hackathon/mcm-products/MHPGAMM01BK00L-01",
+          "altText": "MCM 모노그램 카고 팬츠 ECONYL® 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "SPRING"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "의류",
+      "sku": "MHAGSBC01BK00L",
+      "brand": "MCM",
+      "name": "에센셜 로고 폰테 후디",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 590000,
+      "primaryColor": "BLACK",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EC%97%90%EC%84%BC%EC%85%9C-%EB%A1%9C%EA%B3%A0-%ED%8F%B0%ED%85%8C-%ED%9B%84%EB%94%94/MHAGSBC01BK00L.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733217/hackathon/mcm-products/MHAGSBC01BK00L-01.webp",
+          "publicId": "hackathon/mcm-products/MHAGSBC01BK00L-01",
+          "altText": "MCM 에센셜 로고 폰테 후디 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "SPRING"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "의류",
+      "sku": "MHCGSMM02CO00L",
+      "brand": "MCM",
+      "name": "모노그램 립스탑 나일론 푸퍼 재킷",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 1890000,
+      "primaryColor": "BROWN",
+      "material": "NYLON",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%A6%BD%EC%8A%A4%ED%83%91-%EB%82%98%EC%9D%BC%EB%A1%A0-%ED%91%B8%ED%8D%BC-%EC%9E%AC%ED%82%B7/MHCGSMM02CO00L.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733218/hackathon/mcm-products/MHCGSMM02CO00L-01.webp",
+          "publicId": "hackathon/mcm-products/MHCGSMM02CO00L-01",
+          "altText": "MCM 모노그램 립스탑 나일론 푸퍼 재킷 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "WINTER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "의류",
+      "sku": "MHJGSMM02GK048",
+      "brand": "MCM",
+      "name": "모노그램 프린트 가죽이 더해진 울 트윌 재킷",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 1490000,
+      "primaryColor": "BEIGE",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%ED%94%84%EB%A6%B0%ED%8A%B8-%EA%B0%80%EC%A3%BD%EC%9D%B4-%EB%8D%94%ED%95%B4%EC%A7%84-%EC%9A%B8-%ED%8A%B8%EC%9C%8C-%EC%9E%AC%ED%82%B7/MHJGSMM02GK048.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733218/hackathon/mcm-products/MHJGSMM02GK048-01.webp",
+          "publicId": "hackathon/mcm-products/MHJGSMM02GK048-01",
+          "altText": "MCM 모노그램 프린트 가죽이 더해진 울 트윌 재킷 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "FORMAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "SEASON",
+          "code": "WINTER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        },
+        {
+          "type": "OCCASION",
+          "code": "CEREMONY"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "의류",
+      "sku": "MHEESMM01ED00L",
+      "brand": "MCM",
+      "name": "울 캐시미어 블렌드 라우렐 스웨터",
+      "category": "CLOTHING",
+      "description": null,
+      "price": 850000,
+      "primaryColor": "GRAY",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%9D%98%EB%A5%98/%EB%AA%A8%EB%91%90%EB%B3%B4%EA%B8%B0/%EC%9A%B8-%EC%BA%90%EC%8B%9C%EB%AF%B8%EC%96%B4-%EB%B8%94%EB%A0%8C%EB%93%9C-%EB%9D%BC%EC%9A%B0%EB%A0%90-%EC%8A%A4%EC%9B%A8%ED%84%B0/MHEESMM01ED00L.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733219/hackathon/mcm-products/MHEESMM01ED00L-01.webp",
+          "publicId": "hackathon/mcm-products/MHEESMM01ED00L-01",
+          "altText": "MCM 울 캐시미어 블렌드 라우렐 스웨터 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "AUTUMN"
+        },
+        {
+          "type": "SEASON",
+          "code": "WINTER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "슈즈",
+      "sku": "MEXFSAJ01CO042",
+      "brand": "MCM",
+      "name": "비세토스 네오 터레인 로 스니커즈",
+      "category": "SHOES",
+      "description": null,
+      "price": 630000,
+      "primaryColor": "BROWN",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%84%A4%EC%98%A4-%ED%84%B0%EB%A0%88%EC%9D%B8-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EB%A1%9C%EC%9A%B0%ED%83%91-%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/MEXFSAJ01CO042.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733220/hackathon/mcm-products/MEXFSAJ01CO042-01.webp",
+          "publicId": "hackathon/mcm-products/MEXFSAJ01CO042-01",
+          "altText": "MCM 비세토스 네오 터레인 로 스니커즈 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "슈즈",
+      "sku": "MEXGSAH01BK042",
+      "brand": "MCM",
+      "name": "Skywander 니트 로우탑 스니커즈",
+      "category": "SHOES",
+      "description": null,
+      "price": 790000,
+      "primaryColor": "BLACK",
+      "material": "FABRIC",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%09skywander-%EB%8B%88%ED%8A%B8-%EB%A1%9C%EC%9A%B0%ED%83%91-%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/MEXGSAH01BK042.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733221/hackathon/mcm-products/MEXGSAH01BK042-01.webp",
+          "publicId": "hackathon/mcm-products/MEXGSAH01BK042-01",
+          "altText": "MCM Skywander 니트 로우탑 스니커즈 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "슈즈",
+      "sku": "MEXEAAJ01BK040",
+      "brand": "MCM",
+      "name": "모노그램 레더 네오 터레인 로 스니커즈",
+      "category": "SHOES",
+      "description": null,
+      "price": 770000,
+      "primaryColor": "BLACK",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%8A%88%EC%A6%88/%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%EB%A0%88%EB%8D%94-%EB%84%A4%EC%98%A4-%ED%84%B0%EB%A0%88%EC%9D%B8-%EB%A1%9C-%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/MEXEAAJ01BK040.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733221/hackathon/mcm-products/MEXEAAJ01BK040-01.webp",
+          "publicId": "hackathon/mcm-products/MEXEAAJ01BK040-01",
+          "altText": "MCM 모노그램 레더 네오 터레인 로 스니커즈 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "NEAT"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "슈즈",
+      "sku": "MEXESAJ03BW043",
+      "brand": "MCM",
+      "name": "Neo Terrain 비세토스 로우탑 스니커즈",
+      "category": "SHOES",
+      "description": null,
+      "price": 770000,
+      "primaryColor": "MULTI",
+      "material": "CANVAS",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EB%82%A8%EC%84%B1/%EC%8A%88%EC%A6%88/%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/neo-terrain-%EB%B9%84%EC%84%B8%ED%86%A0%EC%8A%A4-%EB%A1%9C%EC%9A%B0%ED%83%91-%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/MEXESAJ03BW043.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733222/hackathon/mcm-products/MEXESAJ03BW043-01.webp",
+          "publicId": "hackathon/mcm-products/MEXESAJ03BW043-01",
+          "altText": "MCM Neo Terrain 비세토스 로우탑 스니커즈 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "GATHERING"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "슈즈",
+      "sku": "MESFAAP01C9036",
+      "brand": "MCM",
+      "name": "Federlite 라우렐 스웨이드 로우탑 스니커즈",
+      "category": "SHOES",
+      "description": null,
+      "price": 770000,
+      "primaryColor": "BROWN",
+      "material": "LEATHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/hidden-categories---do-not-delete/cn/wechatfeed/federlite--%EB%9D%BC%EC%9A%B0%EB%A0%90-%EC%8A%A4%EC%9B%A8%EC%9D%B4%EB%93%9C-%EB%A1%9C%EC%9A%B0%ED%83%91-%EC%8A%A4%EB%8B%88%EC%BB%A4%EC%A6%88/MESFAAP01C9036.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733223/hackathon/mcm-products/MESFAAP01C9036-01.webp",
+          "publicId": "hackathon/mcm-products/MESFAAP01C9036-01",
+          "altText": "MCM Federlite 라우렐 스웨이드 로우탑 스니커즈 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "SEASON",
+          "code": "ALL_SEASON"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DATE"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        }
+      ]
+    },
+    {
+      "sourceSection": "MEN",
+      "sourceCategory": "슈즈",
+      "sku": "MESCAMM11BK037",
+      "brand": "MCM",
+      "name": "모노그램 프린트 러버 슬라이드",
+      "category": "SHOES",
+      "description": null,
+      "price": 350000,
+      "primaryColor": "BLACK",
+      "material": "OTHER",
+      "productUrl": "https://kr.mcmworldwide.com/ko_KR/%EC%97%AC%EC%84%B1/%EC%8A%88%EC%A6%88/%EC%83%8C%EB%93%A4-%EC%8A%AC%EB%9D%BC%EC%9D%B4%EB%93%9C/%EB%AA%A8%EB%85%B8%EA%B7%B8%EB%9E%A8-%ED%94%84%EB%A6%B0%ED%8A%B8-%EB%9F%AC%EB%B2%84-%EC%8A%AC%EB%9D%BC%EC%9D%B4%EB%93%9C/MESCAMM11BK037.html",
+      "status": "ACTIVE",
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/dclwlaqs/image/upload/v1786733224/hackathon/mcm-products/MESCAMM11BK037-01.webp",
+          "publicId": "hackathon/mcm-products/MESCAMM11BK037-01",
+          "altText": "MCM 모노그램 프린트 러버 슬라이드 대표 이미지",
+          "sortOrder": 0,
+          "isPrimary": true
+        }
+      ],
+      "tags": [
+        {
+          "type": "STYLE",
+          "code": "CASUAL"
+        },
+        {
+          "type": "STYLE",
+          "code": "GLAMOROUS"
+        },
+        {
+          "type": "SEASON",
+          "code": "SUMMER"
+        },
+        {
+          "type": "OCCASION",
+          "code": "DAILY"
+        },
+        {
+          "type": "OCCASION",
+          "code": "TRAVEL"
+        },
+        {
+          "type": "OCCASION",
+          "code": "OUTDOOR"
+        }
+      ]
+    }
+  ]
+}
