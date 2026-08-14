@@ -5,6 +5,10 @@ import java.time.Duration;
 import org.likelionhsu.hackathon.auth.config.AuthProperties;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.WebUtils;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Component
 public class RefreshCookieService {
@@ -25,6 +29,14 @@ public class RefreshCookieService {
         return baseCookie("")
                 .maxAge(Duration.ZERO)
                 .build();
+    }
+
+    public String read(HttpServletRequest request) {
+        Cookie cookie = WebUtils.getCookie(
+                request,
+                properties.cookie().name()
+        );
+        return cookie == null ? null : cookie.getValue();
     }
 
     private ResponseCookie.ResponseCookieBuilder baseCookie(String value) {

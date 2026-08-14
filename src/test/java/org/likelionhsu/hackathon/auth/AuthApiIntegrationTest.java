@@ -28,13 +28,16 @@ import org.springframework.test.web.servlet.MvcResult;
 import jakarta.servlet.http.Cookie;
 
 @ActiveProfiles("test")
-@SpringBootTest
+@SpringBootTest(properties =
+        "app.auth.cookie.name=test_refresh_token")
 @AutoConfigureMockMvc
 @Import(AuthApiIntegrationTest.TestSenderConfig.class)
 class AuthApiIntegrationTest {
 
     private static final String TRUSTED_ORIGIN =
             "http://localhost:3000";
+    private static final String REFRESH_COOKIE_NAME =
+            "test_refresh_token";
 
     @Autowired
     private MockMvc mockMvc;
@@ -137,7 +140,7 @@ class AuthApiIntegrationTest {
 
         Cookie signupRefreshCookie = signupResult
                 .getResponse()
-                .getCookie("refresh_token");
+                .getCookie(REFRESH_COOKIE_NAME);
         assertThat(signupRefreshCookie).isNotNull();
         assertThat(signupRefreshCookie.isHttpOnly()).isTrue();
 
@@ -162,7 +165,7 @@ class AuthApiIntegrationTest {
         );
         Cookie loginRefreshCookie = loginResult
                 .getResponse()
-                .getCookie("refresh_token");
+                .getCookie(REFRESH_COOKIE_NAME);
         assertThat(loginRefreshCookie).isNotNull();
 
         MvcResult refreshResult = mockMvc.perform(
@@ -176,7 +179,7 @@ class AuthApiIntegrationTest {
 
         Cookie rotatedRefreshCookie = refreshResult
                 .getResponse()
-                .getCookie("refresh_token");
+                .getCookie(REFRESH_COOKIE_NAME);
         assertThat(rotatedRefreshCookie).isNotNull();
         assertThat(rotatedRefreshCookie.getValue())
                 .isNotEqualTo(loginRefreshCookie.getValue());
@@ -203,7 +206,7 @@ class AuthApiIntegrationTest {
                 .andExpect(result -> {
                     Cookie clearedCookie = result
                             .getResponse()
-                            .getCookie("refresh_token");
+                            .getCookie(REFRESH_COOKIE_NAME);
                     assertThat(clearedCookie).isNotNull();
                     assertThat(clearedCookie.getMaxAge()).isZero();
                 });

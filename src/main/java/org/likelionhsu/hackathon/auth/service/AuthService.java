@@ -26,6 +26,7 @@ import org.likelionhsu.hackathon.auth.repository.UserRepository;
 import org.likelionhsu.hackathon.auth.support.TokenHashService;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -100,16 +101,32 @@ public class AuthService {
             );
         }
 
-        User user = userRepository.save(
-                User.local(email, request.nickname().trim(), request.gender())
-        );
-        credentialRepository.save(
-                new LocalCredential(
-                        user,
-                        loginId,
-                        passwordEncoder.encode(request.password())
-                )
-        );
+        User user;
+        try {
+            user = userRepository.saveAndFlush(
+                    User.local(
+                            email,
+                            request.nickname().trim(),
+                            request.gender()
+                    )
+            );
+        } catch (DataIntegrityViolationException exception) {
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+
+        try {
+            credentialRepository.saveAndFlush(
+                    new LocalCredential(
+                            user,
+                            loginId,
+                            passwordEncoder.encode(request.password())
+                    )
+            );
+        } catch (DataIntegrityViolationException exception) {
+            throw new BusinessException(
+                    ErrorCode.LOGIN_ID_ALREADY_EXISTS
+            );
+        }
 
         request.termsAgreements().stream()
                 .map(agreement -> new TermsAgreement(

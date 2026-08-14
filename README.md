@@ -398,6 +398,10 @@ AUTH_LOG_VERIFICATION_CODE=false
 
 실제 비밀번호·Token·Secret은 Git에 저장하지 않습니다.
 
+`prod` 프로필에서는 `JWT_SECRET`이 필수이며, 누락되면 애플리케이션이
+기동되지 않습니다. 실제 이메일 발송 Provider가 연결되기 전에는 운영
+환경의 인증번호 요청이 `EMAIL_PROVIDER_UNAVAILABLE`로 실패합니다.
+
 Cloudinary, OpenAI, Resend, Kakao Local에 필요한 추가 환경변수는 실제 연동 구현과 함께 확정·추가합니다.
 
 ---

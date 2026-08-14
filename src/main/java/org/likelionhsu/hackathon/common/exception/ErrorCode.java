@@ -64,6 +64,12 @@ public enum ErrorCode {
             "이메일 인증 요청 횟수를 초과했습니다."
     ),
 
+    EMAIL_PROVIDER_UNAVAILABLE(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "EMAIL_PROVIDER_UNAVAILABLE",
+            "이메일 인증 서비스를 일시적으로 사용할 수 없습니다."
+    ),
+
     INVALID_CREDENTIALS(
             HttpStatus.UNAUTHORIZED,
             "INVALID_CREDENTIALS",
