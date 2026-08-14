@@ -62,6 +62,31 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(RequestValidationException.class)
+    public ResponseEntity<ErrorResponse> handleRequestValidation(
+            RequestValidationException exception
+    ) {
+        ErrorCode errorCode =
+                ErrorCode.VALIDATION_ERROR;
+
+        FieldErrorResponse field =
+                new FieldErrorResponse(
+                        exception.getField(),
+                        exception.getReason()
+                );
+
+        ErrorResponse response =
+                ErrorResponse.validation(
+                        errorCode.code(),
+                        errorCode.message(),
+                        List.of(field)
+                );
+
+        return ResponseEntity
+                .status(errorCode.status())
+                .body(response);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
             MethodArgumentNotValidException exception
