@@ -64,6 +64,40 @@ public class ProductImage extends BaseTimeEntity {
     protected ProductImage() {
     }
 
+    private ProductImage(
+            Product product,
+            String url,
+            String publicId,
+            String altText,
+            int sortOrder,
+            boolean primary
+    ) {
+        this.product = product;
+        this.url = url;
+        this.publicId = publicId;
+        this.altText = altText;
+        this.sortOrder = sortOrder;
+        this.primary = primary;
+    }
+
+    public static ProductImage create(
+            Product product,
+            String url,
+            String publicId,
+            String altText,
+            int sortOrder,
+            boolean primary
+    ) {
+        return new ProductImage(
+                product,
+                url,
+                publicId,
+                altText,
+                sortOrder,
+                primary
+        );
+    }
+
     public Long getId() {
         return id;
     }

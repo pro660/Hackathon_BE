@@ -95,6 +95,82 @@ public class Product extends BaseTimeEntity {
     protected Product() {
     }
 
+    private Product(
+            ProductBrand brand,
+            String sku,
+            String name,
+            ItemCategory category,
+            String description,
+            Long price,
+            ColorGroup primaryColor,
+            MaterialGroup material,
+            String productUrl,
+            ProductStatus status
+    ) {
+        this.brand = brand;
+        this.sku = sku;
+        this.name = name;
+        this.category = category;
+        this.description = description;
+        this.price = price;
+        this.primaryColor = primaryColor;
+        this.material = material;
+        this.productUrl = productUrl;
+        this.status = status;
+    }
+
+    public static Product create(
+            ProductBrand brand,
+            String sku,
+            String name,
+            ItemCategory category,
+            String description,
+            Long price,
+            ColorGroup primaryColor,
+            MaterialGroup material,
+            String productUrl,
+            ProductStatus status
+    ) {
+        return new Product(
+                brand,
+                sku,
+                name,
+                category,
+                description,
+                price,
+                primaryColor,
+                material,
+                productUrl,
+                status
+        );
+    }
+
+    public void updateCatalogInfo(
+            ProductBrand brand,
+            String name,
+            ItemCategory category,
+            String description,
+            Long price,
+            ColorGroup primaryColor,
+            MaterialGroup material,
+            String productUrl,
+            ProductStatus status
+    ) {
+        this.brand = brand;
+        this.name = name;
+        this.category = category;
+        this.description = description;
+        this.price = price;
+        this.primaryColor = primaryColor;
+        this.material = material;
+        this.productUrl = productUrl;
+        this.status = status;
+    }
+
+    public void deactivate() {
+        this.status = ProductStatus.INACTIVE;
+    }
+
     public Long getId() {
         return id;
     }

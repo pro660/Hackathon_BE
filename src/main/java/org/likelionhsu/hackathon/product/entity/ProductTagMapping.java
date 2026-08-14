@@ -40,6 +40,24 @@ public class ProductTagMapping {
     protected ProductTagMapping() {
     }
 
+    private ProductTagMapping(
+            Product product,
+            ProductTag productTag
+    ) {
+        this.product = product;
+        this.productTag = productTag;
+    }
+
+    public static ProductTagMapping create(
+            Product product,
+            ProductTag productTag
+    ) {
+        return new ProductTagMapping(
+                product,
+                productTag
+        );
+    }
+
     public Long getId() {
         return id;
     }
