@@ -1,5 +1,7 @@
 package org.likelionhsu.hackathon.product.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.validation.constraints.Max;
@@ -96,9 +98,10 @@ public class ProductController {
             int size,
 
             @RequestParam(
-                    defaultValue = "createdAt,desc"
+                    name = "sort",
+                    required = false
             )
-            String sort
+            List<String> sort
     ) {
         validatePriceRange(
                 minPrice,
@@ -159,44 +162,99 @@ public class ProductController {
     }
 
     private Sort parseSort(
-            String sort
+            List<String> sortValues
     ) {
-        String[] parts =
-                sort.split(
-                        ",",
-                        -1
-                );
-
-        if (parts.length != 2) {
-            throw invalidSort();
+        if (sortValues == null
+                || sortValues.isEmpty()) {
+            return Sort.by(
+                    Sort.Order.desc("createdAt")
+            );
         }
 
-        String field =
-                parts[0].trim();
+        List<String> normalizedValues =
+                normalizeSortValues(sortValues);
 
-        String direction =
-                parts[1].trim();
+        List<Sort.Order> orders =
+                new ArrayList<>();
 
-        if (!ALLOWED_SORT_FIELDS.contains(field)) {
-            throw invalidSort();
+        for (String sortValue : normalizedValues) {
+            String[] parts =
+                    sortValue.split(
+                            ",",
+                            -1
+                    );
+
+            if (parts.length != 2) {
+                throw invalidSort();
+            }
+
+            String field =
+                    parts[0].trim();
+
+            String direction =
+                    parts[1].trim();
+
+            if (!ALLOWED_SORT_FIELDS.contains(field)) {
+                throw invalidSort();
+            }
+
+            if (!direction.equals("asc")
+                    && !direction.equals("desc")) {
+                throw invalidSort();
+            }
+
+            Sort.Direction sortDirection =
+                    Sort.Direction.fromString(
+                            direction
+                    );
+
+            orders.add(
+                    new Sort.Order(
+                            sortDirection,
+                            field
+                    )
+            );
         }
 
-        if (!direction.equals("asc")
-                && !direction.equals("desc")) {
-            throw invalidSort();
+        return Sort.by(orders);
+    }
+
+    private List<String> normalizeSortValues(
+            List<String> sortValues
+    ) {
+        List<String> normalizedValues =
+                new ArrayList<>();
+
+        for (int index = 0;
+                index < sortValues.size();) {
+
+            String current =
+                    sortValues.get(index).trim();
+
+            if (current.contains(",")) {
+                normalizedValues.add(current);
+                index++;
+                continue;
+            }
+
+            if (index + 1 >= sortValues.size()) {
+                throw invalidSort();
+            }
+
+            String direction =
+                    sortValues.get(index + 1)
+                            .trim();
+
+            normalizedValues.add(
+                    current
+                            + ","
+                            + direction
+            );
+
+            index += 2;
         }
 
-        Sort.Direction sortDirection =
-                Sort.Direction.fromString(
-                        direction
-                );
-
-        return Sort.by(
-                new Sort.Order(
-                        sortDirection,
-                        field
-                )
-        );
+        return normalizedValues;
     }
 
     private RequestValidationException invalidSort() {
