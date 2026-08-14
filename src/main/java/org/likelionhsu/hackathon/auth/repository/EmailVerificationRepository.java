@@ -15,6 +15,7 @@ import jakarta.persistence.LockModeType;
 public interface EmailVerificationRepository extends
         JpaRepository<EmailVerification, Long> {
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<EmailVerification>
     findTopByEmailAndPurposeOrderByCreatedAtDesc(
             String email,

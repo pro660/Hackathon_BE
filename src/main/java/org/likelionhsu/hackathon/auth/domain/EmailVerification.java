@@ -97,6 +97,20 @@ public class EmailVerification extends BaseTimeEntity {
         this.signupTokenConsumedAt = consumedAt;
     }
 
+    public boolean isCodeUsableAt(Instant now, int maxAttempts) {
+        return verifiedAt == null
+                && attemptCount < maxAttempts
+                && codeExpiresAt.isAfter(now);
+    }
+
+    public boolean isSignupTokenUsableAt(Instant now) {
+        return verifiedAt != null
+                && signupTokenHash != null
+                && signupTokenConsumedAt == null
+                && signupTokenExpiresAt != null
+                && signupTokenExpiresAt.isAfter(now);
+    }
+
     public Long getId() {
         return id;
     }

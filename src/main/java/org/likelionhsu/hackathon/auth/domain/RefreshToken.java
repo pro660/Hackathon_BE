@@ -74,4 +74,28 @@ public class RefreshToken {
     public boolean isUsableAt(Instant now) {
         return revokedAt == null && expiresAt.isAfter(now);
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public String getTokenHash() {
+        return tokenHash;
+    }
+
+    public String getJti() {
+        return jti;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
+    public Instant getRevokedAt() {
+        return revokedAt;
+    }
 }

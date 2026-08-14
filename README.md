@@ -19,7 +19,7 @@
 
 | 영역 | 주요 내용 | 현재 상태 |
 | --- | --- | --- |
-| 로그인·회원 | 일반 로그인, Kakao·Naver 소셜 로그인, 회원 정보 관리·탈퇴 | DB 기반 완료 · 인증 API 미구현 |
+| 로그인·회원 | 일반 로그인, Kakao·Naver 소셜 로그인, 회원 정보 관리·탈퇴 | 일반 인증 API 구현 · OAuth/회원 관리 미구현 |
 | 취향 분석 | 단계형 취향 입력·조회·수정·재분석 | DB 기반 확정 · 기능 미구현 |
 | MCM 제품 | 샘플 제품 목록·상세, 카테고리·색상·가격대 필터 | DB 기반 완료 · API 미구현 |
 | 제품 추천 | 취향 기반 MCM 제품 추천 | 정책/DB 기반 확정 · 기능 미구현 |
@@ -52,8 +52,9 @@
 | Flyway/Testcontainers 기반 | ✅ 완료 | MySQL 8.4 Integration Test 분리 |
 | 운영 Migration | ✅ 완료 | **V1~V13** |
 | 최종 DB 스키마 검증 | ✅ 완료 | V1~V13 전체 Migration 및 주요 제약조건 검증 |
-| 실행 환경·외부 서비스 설정 | 🔄 보완 필요 | 인증 세부 설정과 Cloudinary, OpenAI, Resend, Kakao Local 실제 연동 필요 |
-| local/prod JPA Schema 설정 | 🔄 보완 필요 | 현재 `ddl-auto=update`, 확정 정책인 `ddl-auto=validate`로 변경 필요 |
+| 일반 인증 API | ✅ 완료 | 이메일 인증, 회원가입, 로그인, JWT, Refresh Rotation, 로그아웃 |
+| 실행 환경·외부 서비스 설정 | 🔄 보완 필요 | 인증 메일 발송과 Cloudinary, OpenAI, Resend, Kakao Local 실제 연동 필요 |
+| local/prod JPA Schema 설정 | ✅ 완료 | Flyway 단일 변경 기준, JPA `ddl-auto=validate` 적용 |
 | 개발용 백엔드 배포 | ⏳ 대기 | Railway 배포 및 운영 DB 연결 검증 필요 |
 | 도메인 Entity/Repository/Service/API | ⏳ 대기 | DB 스키마 완료 후 실제 기능 개발 시작 단계 |
 | FE 원격 연동 | ⏳ 대기 | 개발 서버 배포·도메인 API 구현 이후 진행 |
@@ -217,13 +218,13 @@ check
 
 ### 현재 설정상 주의점
 
-운영 Migration은 V1~V13까지 구현됐지만 현재 `application-local.properties`와 `application-prod.properties`의 JPA 설정은 아직 다음과 같습니다.
+`application-local.properties`와 `application-prod.properties`는 다음 정책을 사용합니다.
 
 ```properties
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=validate
 ```
 
-최종 정책은 Flyway가 Schema 변경의 단일 기준이 되고 JPA는 `ddl-auto=validate`로 Schema를 검증하는 방식입니다. 현재 local/prod 설정에는 아직 `ddl-auto=update`가 남아 있으므로 실제 운영 배포 전에 확정 정책대로 변경해야 합니다.
+Flyway가 Schema 변경의 단일 기준이며 JPA는 `ddl-auto=validate`로 Entity와 Schema의 정합성만 검증합니다.
 
 ---
 
@@ -370,6 +371,10 @@ API 계약의 단일 기준은 [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)입�
 DB_USERNAME=hackathon
 DB_PASSWORD=change-me
 CORS_ALLOWED_ORIGIN=http://localhost:3000
+JWT_ISSUER=hackathon-be
+JWT_SECRET=replace-with-at-least-32-random-characters
+REFRESH_COOKIE_SECURE=false
+AUTH_LOG_VERIFICATION_CODE=true
 ```
 
 ### 운영
@@ -385,11 +390,15 @@ MYSQLDATABASE=change-me
 MYSQLUSER=change-me
 MYSQLPASSWORD=change-me
 CORS_ALLOWED_ORIGIN=https://frontend-domain.example
+JWT_ISSUER=hackathon-be
+JWT_SECRET=replace-with-a-production-secret-of-at-least-32-characters
+REFRESH_COOKIE_SECURE=true
+AUTH_LOG_VERIFICATION_CODE=false
 ```
 
 실제 비밀번호·Token·Secret은 Git에 저장하지 않습니다.
 
-인증, Cloudinary, OpenAI, Resend, Kakao Local에 필요한 추가 환경변수는 실제 연동 구현과 함께 확정·추가합니다.
+Cloudinary, OpenAI, Resend, Kakao Local에 필요한 추가 환경변수는 실제 연동 구현과 함께 확정·추가합니다.
 
 ---
 
@@ -461,11 +470,20 @@ PR 전 전체 검증:
 
 ## 현재 공개 API
 
-현재 실제 서비스 도메인 API 구현 전이며 공개된 API는 상태 확인용 API입니다.
+현재 상태 확인과 일반 인증 API를 제공합니다.
 
 ```http
 GET /api/health
+POST /api/auth/email-verifications
+POST /api/auth/email-verifications/confirm
+GET /api/auth/login-ids/{loginId}/availability
+POST /api/auth/signup
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/auth/logout
 ```
+
+Postman 실행 순서는 [로컬 인증 API Postman 테스트](./docs/POSTMAN_AUTH_TEST.md)를 참고합니다.
 
 ---
 

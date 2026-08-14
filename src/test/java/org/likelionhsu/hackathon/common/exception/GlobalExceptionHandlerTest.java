@@ -10,8 +10,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
 import org.junit.jupiter.api.Test;
+import org.likelionhsu.hackathon.auth.security.TrustedOriginFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,7 +29,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import jakarta.validation.constraints.Min;
 
-@WebMvcTest
+@WebMvcTest(
+        controllers = GlobalExceptionHandlerTest.TestController.class,
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = TrustedOriginFilter.class
+        )
+)
+@AutoConfigureMockMvc(addFilters = false)
 @Import({
         GlobalExceptionHandler.class,
         GlobalExceptionHandlerTest.TestController.class
@@ -497,4 +508,3 @@ class GlobalExceptionHandlerTest {
     ) {
     }
 }
-
