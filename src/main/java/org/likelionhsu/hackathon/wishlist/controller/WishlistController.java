@@ -1,87 +1,107 @@
-package org.likelionhsu.hackathon.product.controller;
+package org.likelionhsu.hackathon.wishlist.controller;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.PositiveOrZero;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import org.likelionhsu.hackathon.common.enums.ColorGroup;
-import org.likelionhsu.hackathon.common.enums.ItemCategory;
 import org.likelionhsu.hackathon.common.exception.RequestValidationException;
 import org.likelionhsu.hackathon.common.response.ApiResponse;
 import org.likelionhsu.hackathon.common.response.PageResponse;
-import org.likelionhsu.hackathon.product.dto.response.ProductDetailResponse;
-import org.likelionhsu.hackathon.product.dto.response.ProductListItemResponse;
-import org.likelionhsu.hackathon.product.service.ProductService;
+import org.likelionhsu.hackathon.wishlist.dto.response.WishlistItemResponse;
+import org.likelionhsu.hackathon.wishlist.service.WishlistService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 @Tag(
-        name = "Products",
-        description = "MCM 제품 카탈로그 API"
+        name = "Wishlists",
+        description = "제품 찜 API"
 )
 @RestController
-@RequestMapping("/api/products")
-public class ProductController {
+public class WishlistController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS =
             Set.of(
-                    "createdAt",
-                    "name",
-                    "price"
+                    "createdAt"
             );
 
-    private final ProductService productService;
+    private final WishlistService wishlistService;
 
-    public ProductController(
-            ProductService productService
+    public WishlistController(
+            WishlistService wishlistService
     ) {
-        this.productService = productService;
+        this.wishlistService = wishlistService;
     }
 
     @Operation(
-            summary = "제품 목록 조회",
-            description = "MCM 제품 목록을 필터링하고 페이지 단위로 조회합니다."
+            summary = "제품 찜 등록",
+            description = "현재 로그인 사용자의 제품 찜 상태를 등록합니다."
     )
-    @GetMapping
-    public ApiResponse<PageResponse<ProductListItemResponse>>
-    getProducts(
-            @RequestParam(required = false)
-            ItemCategory category,
-
-            @RequestParam(
-                    name = "color",
-                    required = false
+    @PutMapping("/api/products/{productId}/favorite")
+    public ResponseEntity<Void> addFavorite(
+            @PathVariable
+            @Min(
+                    value = 1,
+                    message = "1 이상이어야 합니다."
             )
-            ColorGroup color,
+            Long productId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        wishlistService.addFavorite(
+                Long.valueOf(jwt.getSubject()),
+                productId
+        );
 
-            @RequestParam(required = false)
-            @PositiveOrZero(
-                    message = "0 이상이어야 합니다."
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
+    @Operation(
+            summary = "제품 찜 해제",
+            description = "현재 로그인 사용자의 제품 찜 상태를 해제합니다."
+    )
+    @DeleteMapping("/api/products/{productId}/favorite")
+    public ResponseEntity<Void> removeFavorite(
+            @PathVariable
+            @Min(
+                    value = 1,
+                    message = "1 이상이어야 합니다."
             )
-            Long minPrice,
+            Long productId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        wishlistService.removeFavorite(
+                Long.valueOf(jwt.getSubject()),
+                productId
+        );
 
-            @RequestParam(required = false)
-            @PositiveOrZero(
-                    message = "0 이상이어야 합니다."
-            )
-            Long maxPrice,
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
 
+    @Operation(
+            summary = "찜한 제품 목록 조회",
+            description = "현재 로그인 사용자가 찜한 제품을 페이지 단위로 조회합니다."
+    )
+    @GetMapping("/api/wishlists")
+    public ApiResponse<PageResponse<WishlistItemResponse>>
+    getWishlists(
             @RequestParam(defaultValue = "0")
             @Min(
                     value = 0,
@@ -108,11 +128,6 @@ public class ProductController {
 
             @AuthenticationPrincipal Jwt jwt
     ) {
-        validatePriceRange(
-                minPrice,
-                maxPrice
-        );
-
         Pageable pageable =
                 PageRequest.of(
                         page,
@@ -121,53 +136,11 @@ public class ProductController {
                 );
 
         return ApiResponse.success(
-                productService.getProducts(
+                wishlistService.getWishlists(
                         Long.valueOf(jwt.getSubject()),
-                        category,
-                        color,
-                        minPrice,
-                        maxPrice,
                         pageable
                 )
         );
-    }
-
-    @Operation(
-            summary = "제품 상세 조회",
-            description = "제품 ID를 사용해 MCM 제품의 상세 정보를 조회합니다."
-    )
-    @GetMapping("/{productId}")
-    public ApiResponse<ProductDetailResponse> getProduct(
-            @PathVariable
-            @Min(
-                    value = 1,
-                    message = "1 이상이어야 합니다."
-            )
-            Long productId,
-
-            @AuthenticationPrincipal Jwt jwt
-    ) {
-        return ApiResponse.success(
-                productService.getProduct(
-                        Long.valueOf(jwt.getSubject()),
-                        productId
-                )
-        );
-    }
-
-    private void validatePriceRange(
-            Long minPrice,
-            Long maxPrice
-    ) {
-        if (minPrice != null
-                && maxPrice != null
-                && minPrice > maxPrice) {
-
-            throw new RequestValidationException(
-                    "minPrice",
-                    "minPrice는 maxPrice보다 클 수 없습니다."
-            );
-        }
     }
 
     private Sort parseSort(
@@ -175,13 +148,18 @@ public class ProductController {
     ) {
         if (sortValues == null
                 || sortValues.isEmpty()) {
+
             return Sort.by(
-                    Sort.Order.desc("createdAt")
+                    Sort.Order.desc(
+                            "createdAt"
+                    )
             );
         }
 
         List<String> normalizedValues =
-                normalizeSortValues(sortValues);
+                normalizeSortValues(
+                        sortValues
+                );
 
         List<Sort.Order> orders =
                 new ArrayList<>();
@@ -209,17 +187,15 @@ public class ProductController {
 
             if (!direction.equals("asc")
                     && !direction.equals("desc")) {
+
                 throw invalidSort();
             }
 
-            Sort.Direction sortDirection =
-                    Sort.Direction.fromString(
-                            direction
-                    );
-
             orders.add(
                     new Sort.Order(
-                            sortDirection,
+                            Sort.Direction.fromString(
+                                    direction
+                            ),
                             field
                     )
             );
@@ -235,13 +211,17 @@ public class ProductController {
                 new ArrayList<>();
 
         for (int index = 0;
-                index < sortValues.size();) {
+             index < sortValues.size();) {
 
             String current =
-                    sortValues.get(index).trim();
+                    sortValues
+                            .get(index)
+                            .trim();
 
             if (current.contains(",")) {
-                normalizedValues.add(current);
+                normalizedValues.add(
+                        current
+                );
                 index++;
                 continue;
             }
@@ -251,7 +231,8 @@ public class ProductController {
             }
 
             String direction =
-                    sortValues.get(index + 1)
+                    sortValues
+                            .get(index + 1)
                             .trim();
 
             normalizedValues.add(

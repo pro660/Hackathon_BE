@@ -23,13 +23,16 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
+import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
+
 @Testcontainers
 @Tag("integration")
 @ActiveProfiles("test")
 @SpringBootTest
 @EntityScan(basePackageClasses = {
         Product.class,
-        User.class
+        User.class,
+        Wishlist.class
 })
 class ProductRepositoryIntegrationTest {
 

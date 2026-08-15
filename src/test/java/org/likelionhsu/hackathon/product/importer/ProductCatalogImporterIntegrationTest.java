@@ -20,6 +20,9 @@ import org.likelionhsu.hackathon.product.importer.dto.ProductCatalogImportData;
 import org.likelionhsu.hackathon.product.importer.dto.ProductImportImage;
 import org.likelionhsu.hackathon.product.importer.dto.ProductImportItem;
 import org.likelionhsu.hackathon.product.importer.dto.ProductImportTag;
+
+import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -39,7 +42,8 @@ import org.testcontainers.mysql.MySQLContainer;
 )
 @EntityScan(basePackageClasses = {
         Product.class,
-        User.class
+        User.class,
+        Wishlist.class
 })
 class ProductCatalogImporterIntegrationTest {
 

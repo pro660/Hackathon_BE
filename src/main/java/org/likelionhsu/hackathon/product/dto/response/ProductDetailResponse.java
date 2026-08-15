@@ -19,6 +19,7 @@ public record ProductDetailResponse(
         MaterialGroup material,
         String productUrl,
         List<ProductImageResponse> images,
-        ProductTagsResponse tags
+        ProductTagsResponse tags,
+        boolean favorited
 ) {
 }
