@@ -24,6 +24,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 
 import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
+import org.likelionhsu.hackathon.preference.entity.PreferenceProfile;
 
 @Testcontainers
 @Tag("integration")
@@ -32,7 +33,8 @@ import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
 @EntityScan(basePackageClasses = {
         Product.class,
         User.class,
-        Wishlist.class
+        Wishlist.class,
+        PreferenceProfile.class
 })
 class ProductRepositoryIntegrationTest {
 
