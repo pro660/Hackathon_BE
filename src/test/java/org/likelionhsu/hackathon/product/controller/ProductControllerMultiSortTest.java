@@ -1,8 +1,8 @@
 package org.likelionhsu.hackathon.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.likelionhsu.hackathon.auth.security.TrustedOriginFilter;
 import org.likelionhsu.hackathon.common.exception.GlobalExceptionHandler;
@@ -18,6 +19,7 @@ import org.likelionhsu.hackathon.product.dto.response.ProductListItemResponse;
 import org.likelionhsu.hackathon.product.service.ProductService;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,8 +27,14 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @WebMvcTest(
         controllers = ProductController.class,
@@ -36,7 +44,11 @@ import org.springframework.test.web.servlet.MockMvc;
         )
 )
 @AutoConfigureMockMvc(addFilters = false)
-@Import(GlobalExceptionHandler.class)
+@Import({
+        GlobalExceptionHandler.class,
+        ProductControllerMultiSortTest
+                .SecurityArgumentResolverConfig.class
+})
 class ProductControllerMultiSortTest {
 
     @Autowired
@@ -45,8 +57,15 @@ class ProductControllerMultiSortTest {
     @MockitoBean
     private ProductService productService;
 
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void productListAcceptsMultipleSorts() throws Exception {
+        authenticate(1L);
+
         PageResponse<ProductListItemResponse> response =
                 new PageResponse<>(
                         List.of(),
@@ -60,11 +79,14 @@ class ProductControllerMultiSortTest {
 
         when(
                 productService.getProducts(
-                        eq(null),
-                        eq(null),
-                        eq(null),
-                        eq(null),
-                        any(Pageable.class)
+                        eq(1L),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        org.mockito.ArgumentMatchers.any(
+                                Pageable.class
+                        )
                 )
         ).thenReturn(response);
 
@@ -90,15 +112,17 @@ class ProductControllerMultiSortTest {
 
         verify(productService)
                 .getProducts(
-                        eq(null),
-                        eq(null),
-                        eq(null),
-                        eq(null),
+                        eq(1L),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
                         pageableCaptor.capture()
                 );
 
         List<Sort.Order> orders =
-                pageableCaptor.getValue()
+                pageableCaptor
+                        .getValue()
                         .getSort()
                         .stream()
                         .toList();
@@ -108,13 +132,49 @@ class ProductControllerMultiSortTest {
                         order ->
                                 order.getProperty()
                                         + ","
-                                        + order.getDirection()
-                                                .name()
-                                                .toLowerCase()
+                                        + order
+                                        .getDirection()
+                                        .name()
+                                        .toLowerCase()
                 )
                 .containsExactly(
                         "price,asc",
                         "createdAt,desc"
                 );
+    }
+
+    private void authenticate(
+            Long userId
+    ) {
+        Jwt jwt =
+                Jwt.withTokenValue("test-token")
+                        .header(
+                                "alg",
+                                "HS256"
+                        )
+                        .subject(
+                                String.valueOf(userId)
+                        )
+                        .build();
+
+        SecurityContextHolder
+                .getContext()
+                .setAuthentication(
+                        new JwtAuthenticationToken(jwt)
+                );
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class SecurityArgumentResolverConfig
+            implements WebMvcConfigurer {
+
+        @Override
+        public void addArgumentResolvers(
+                List<HandlerMethodArgumentResolver> resolvers
+        ) {
+            resolvers.add(
+                    new AuthenticationPrincipalArgumentResolver()
+            );
+        }
     }
 }

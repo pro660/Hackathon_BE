@@ -1,10 +1,10 @@
-package org.likelionhsu.hackathon.product.dto.response;
+package org.likelionhsu.hackathon.wishlist.dto.response;
 
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
 import org.likelionhsu.hackathon.product.entity.ProductBrand;
 
-public record ProductListItemResponse(
+public record WishlistItemResponse(
         String productId,
         ProductBrand brand,
         String name,

@@ -2,6 +2,7 @@ package org.likelionhsu.hackathon.product.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.likelionhsu.hackathon.auth.security.TrustedOriginFilter;
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
@@ -26,14 +28,20 @@ import org.likelionhsu.hackathon.product.dto.response.ProductTagsResponse;
 import org.likelionhsu.hackathon.product.entity.ProductBrand;
 import org.likelionhsu.hackathon.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @WebMvcTest(
         controllers = ProductController.class,
@@ -43,7 +51,10 @@ import org.springframework.test.web.servlet.MockMvc;
         )
 )
 @AutoConfigureMockMvc(addFilters = false)
-@Import(GlobalExceptionHandler.class)
+@Import({
+        GlobalExceptionHandler.class,
+        ProductControllerTest.SecurityArgumentResolverConfig.class
+})
 class ProductControllerTest {
 
     @Autowired
@@ -52,8 +63,15 @@ class ProductControllerTest {
     @MockitoBean
     private ProductService productService;
 
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void productListReturnsDefaultPage() throws Exception {
+        authenticate(1L);
+
         PageResponse<ProductListItemResponse> response =
                 new PageResponse<>(
                         List.of(
@@ -64,7 +82,8 @@ class ProductControllerTest {
                                         ItemCategory.BAG,
                                         1_500_000L,
                                         ColorGroup.BLACK,
-                                        "https://example.com/product.webp"
+                                        "https://example.com/product.webp",
+                                        true
                                 )
                         ),
                         0,
@@ -77,11 +96,12 @@ class ProductControllerTest {
 
         when(
                 productService.getProducts(
-                        eq(null),
-                        eq(null),
-                        eq(null),
-                        eq(null),
-                        any(Pageable.class)
+                        eq(1L),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        any()
                 )
         ).thenReturn(response);
 
@@ -116,6 +136,10 @@ class ProductControllerTest {
                                 .value("BLACK")
                 )
                 .andExpect(
+                        jsonPath("$.data.items[0].favorited")
+                                .value(true)
+                )
+                .andExpect(
                         jsonPath("$.data.page")
                                 .value(0)
                 )
@@ -126,16 +150,19 @@ class ProductControllerTest {
 
         verify(productService)
                 .getProducts(
-                        eq(null),
-                        eq(null),
-                        eq(null),
-                        eq(null),
-                        any(Pageable.class)
+                        eq(1L),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        isNull(),
+                        any()
                 );
     }
 
     @Test
     void productListAcceptsFilters() throws Exception {
+        authenticate(1L);
+
         PageResponse<ProductListItemResponse> response =
                 new PageResponse<>(
                         List.of(),
@@ -149,11 +176,12 @@ class ProductControllerTest {
 
         when(
                 productService.getProducts(
+                        eq(1L),
                         eq(ItemCategory.BAG),
                         eq(ColorGroup.BLACK),
                         eq(500_000L),
                         eq(2_000_000L),
-                        any(Pageable.class)
+                        any()
                 )
         ).thenReturn(response);
 
@@ -207,10 +235,22 @@ class ProductControllerTest {
                         jsonPath("$.data.size")
                                 .value(10)
                 );
+
+        verify(productService)
+                .getProducts(
+                        eq(1L),
+                        eq(ItemCategory.BAG),
+                        eq(ColorGroup.BLACK),
+                        eq(500_000L),
+                        eq(2_000_000L),
+                        any()
+                );
     }
 
     @Test
     void productDetailReturnsProduct() throws Exception {
+        authenticate(1L);
+
         ProductDetailResponse response =
                 new ProductDetailResponse(
                         "1",
@@ -236,11 +276,15 @@ class ProductControllerTest {
                                 List.of("ALL_SEASON"),
                                 List.of("DAILY"),
                                 List.of("SPACIOUS")
-                        )
+                        ),
+                        true
                 );
 
         when(
-                productService.getProduct(1L)
+                productService.getProduct(
+                        1L,
+                        1L
+                )
         ).thenReturn(response);
 
         mockMvc.perform(
@@ -268,13 +312,28 @@ class ProductControllerTest {
                 .andExpect(
                         jsonPath("$.data.tags.styles[0]")
                                 .value("CASUAL")
+                )
+                .andExpect(
+                        jsonPath("$.data.favorited")
+                                .value(true)
+                );
+
+        verify(productService)
+                .getProduct(
+                        1L,
+                        1L
                 );
     }
 
     @Test
     void missingProductReturns404() throws Exception {
+        authenticate(1L);
+
         when(
-                productService.getProduct(999L)
+                productService.getProduct(
+                        1L,
+                        999L
+                )
         ).thenThrow(
                 new BusinessException(
                         ErrorCode.PRODUCT_NOT_FOUND
@@ -303,6 +362,8 @@ class ProductControllerTest {
 
     @Test
     void negativePageReturnsValidationError() throws Exception {
+        authenticate(1L);
+
         mockMvc.perform(
                         get("/api/products")
                                 .param(
@@ -325,6 +386,8 @@ class ProductControllerTest {
 
     @Test
     void oversizedPageSizeReturnsValidationError() throws Exception {
+        authenticate(1L);
+
         mockMvc.perform(
                         get("/api/products")
                                 .param(
@@ -347,6 +410,8 @@ class ProductControllerTest {
 
     @Test
     void negativeMinPriceReturnsValidationError() throws Exception {
+        authenticate(1L);
+
         mockMvc.perform(
                         get("/api/products")
                                 .param(
@@ -370,6 +435,8 @@ class ProductControllerTest {
     @Test
     void minPriceGreaterThanMaxPriceReturnsValidationError()
             throws Exception {
+
+        authenticate(1L);
 
         mockMvc.perform(
                         get("/api/products")
@@ -403,6 +470,8 @@ class ProductControllerTest {
 
     @Test
     void invalidCategoryReturnsValidationError() throws Exception {
+        authenticate(1L);
+
         mockMvc.perform(
                         get("/api/products")
                                 .param(
@@ -425,6 +494,8 @@ class ProductControllerTest {
 
     @Test
     void invalidSortFieldReturnsValidationError() throws Exception {
+        authenticate(1L);
+
         mockMvc.perform(
                         get("/api/products")
                                 .param(
@@ -455,6 +526,8 @@ class ProductControllerTest {
     void invalidSortDirectionReturnsValidationError()
             throws Exception {
 
+        authenticate(1L);
+
         mockMvc.perform(
                         get("/api/products")
                                 .param(
@@ -477,6 +550,8 @@ class ProductControllerTest {
 
     @Test
     void zeroProductIdReturnsValidationError() throws Exception {
+        authenticate(1L);
+
         mockMvc.perform(
                         get("/api/products/0")
                 )
@@ -491,5 +566,40 @@ class ProductControllerTest {
                         jsonPath("$.error.fields[0].field")
                                 .value("productId")
                 );
+    }
+
+    private void authenticate(
+            Long userId
+    ) {
+        Jwt jwt =
+                Jwt.withTokenValue("test-token")
+                        .header(
+                                "alg",
+                                "HS256"
+                        )
+                        .subject(
+                                String.valueOf(userId)
+                        )
+                        .build();
+
+        SecurityContextHolder
+                .getContext()
+                .setAuthentication(
+                        new JwtAuthenticationToken(jwt)
+                );
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class SecurityArgumentResolverConfig
+            implements WebMvcConfigurer {
+
+        @Override
+        public void addArgumentResolvers(
+                List<HandlerMethodArgumentResolver> resolvers
+        ) {
+            resolvers.add(
+                    new AuthenticationPrincipalArgumentResolver()
+            );
+        }
     }
 }

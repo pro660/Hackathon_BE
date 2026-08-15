@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,7 @@ import org.likelionhsu.hackathon.product.entity.ProductTagType;
 import org.likelionhsu.hackathon.product.repository.ProductImageRepository;
 import org.likelionhsu.hackathon.product.repository.ProductRepository;
 import org.likelionhsu.hackathon.product.repository.ProductTagMappingRepository;
+import org.likelionhsu.hackathon.wishlist.repository.WishlistRepository;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
@@ -51,6 +53,9 @@ class ProductServiceTest {
     @Mock
     private ProductTagMappingRepository productTagMappingRepository;
 
+    @Mock
+    private WishlistRepository wishlistRepository;
+
     private ProductService productService;
 
     @BeforeEach
@@ -59,7 +64,8 @@ class ProductServiceTest {
                 new ProductService(
                         productRepository,
                         productImageRepository,
-                        productTagMappingRepository
+                        productTagMappingRepository,
+                        wishlistRepository
                 );
     }
 
@@ -105,8 +111,19 @@ class ProductServiceTest {
                 List.of(image)
         );
 
+        when(
+                wishlistRepository
+                        .findProductIdsByUserIdAndProductIdIn(
+                                1L,
+                                List.of(1L)
+                        )
+        ).thenReturn(
+                Set.of(1L)
+        );
+
         PageResponse<ProductListItemResponse> response =
                 productService.getProducts(
+                        1L,
                         null,
                         null,
                         null,
@@ -130,6 +147,9 @@ class ProductServiceTest {
                 .isEqualTo(
                         "https://example.com/product.webp"
                 );
+
+        assertThat(item.favorited())
+                .isTrue();
 
         assertThat(response.page())
                 .isZero();
@@ -161,6 +181,7 @@ class ProductServiceTest {
 
         PageResponse<ProductListItemResponse> response =
                 productService.getProducts(
+                        1L,
                         null,
                         null,
                         null,
@@ -175,6 +196,14 @@ class ProductServiceTest {
                 productImageRepository,
                 never()
         ).findAllByProduct_IdInAndPrimaryTrue(
+                any()
+        );
+
+        verify(
+                wishlistRepository,
+                never()
+        ).findProductIdsByUserIdAndProductIdIn(
+                any(),
                 any()
         );
     }
@@ -216,6 +245,7 @@ class ProductServiceTest {
                         ProductTagType.FEATURE,
                         "SPACIOUS"
                 );
+
         ProductTagMapping styleMapping =
                 mapping(style);
 
@@ -236,6 +266,14 @@ class ProductServiceTest {
         ).thenReturn(
                 Optional.of(product)
         );
+
+        when(
+                wishlistRepository
+                        .existsByUser_IdAndProduct_Id(
+                                1L,
+                                1L
+                        )
+        ).thenReturn(true);
 
         when(
                 productImageRepository
@@ -261,13 +299,19 @@ class ProductServiceTest {
         );
 
         ProductDetailResponse response =
-                productService.getProduct(1L);
+                productService.getProduct(
+                        1L,
+                        1L
+                );
 
         assertThat(response.productId())
                 .isEqualTo("1");
 
         assertThat(response.images())
                 .hasSize(1);
+
+        assertThat(response.favorited())
+                .isTrue();
 
         assertThat(
                 response.images()
@@ -307,6 +351,14 @@ class ProductServiceTest {
         );
 
         when(
+                wishlistRepository
+                        .existsByUser_IdAndProduct_Id(
+                                1L,
+                                1L
+                        )
+        ).thenReturn(false);
+
+        when(
                 productImageRepository
                         .findAllByProduct_IdOrderBySortOrderAsc(
                                 1L
@@ -325,7 +377,10 @@ class ProductServiceTest {
         );
 
         ProductDetailResponse response =
-                productService.getProduct(1L);
+                productService.getProduct(
+                        1L,
+                        1L
+                );
 
         assertThat(response.images())
                 .isEmpty();
@@ -341,6 +396,9 @@ class ProductServiceTest {
 
         assertThat(response.tags().features())
                 .isEmpty();
+
+        assertThat(response.favorited())
+                .isFalse();
     }
 
     @Test
@@ -357,6 +415,7 @@ class ProductServiceTest {
         assertThatThrownBy(
                 () ->
                         productService.getProduct(
+                                1L,
                                 999L
                         )
         )
@@ -373,6 +432,14 @@ class ProductServiceTest {
                             ErrorCode.PRODUCT_NOT_FOUND
                     );
                 });
+
+        verify(
+                wishlistRepository,
+                never()
+        ).existsByUser_IdAndProduct_Id(
+                any(),
+                any()
+        );
     }
 
     private Product listProduct(

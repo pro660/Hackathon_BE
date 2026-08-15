@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
@@ -25,6 +25,7 @@ import org.likelionhsu.hackathon.product.repository.ProductImageRepository;
 import org.likelionhsu.hackathon.product.repository.ProductRepository;
 import org.likelionhsu.hackathon.product.repository.ProductSpecification;
 import org.likelionhsu.hackathon.product.repository.ProductTagMappingRepository;
+import org.likelionhsu.hackathon.wishlist.repository.WishlistRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -38,18 +39,22 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
     private final ProductTagMappingRepository productTagMappingRepository;
+    private final WishlistRepository wishlistRepository;
 
     public ProductService(
             ProductRepository productRepository,
             ProductImageRepository productImageRepository,
-            ProductTagMappingRepository productTagMappingRepository
+            ProductTagMappingRepository productTagMappingRepository,
+            WishlistRepository wishlistRepository
     ) {
         this.productRepository = productRepository;
         this.productImageRepository = productImageRepository;
         this.productTagMappingRepository = productTagMappingRepository;
+        this.wishlistRepository = wishlistRepository;
     }
 
     public PageResponse<ProductListItemResponse> getProducts(
+            Long userId,
             ItemCategory category,
             ColorGroup color,
             Long minPrice,
@@ -93,12 +98,21 @@ public class ProductService {
                         productPage.getContent()
                 );
 
+        Set<Long> favoritedProductIds =
+                findFavoritedProductIds(
+                        userId,
+                        productPage.getContent()
+                );
+
         Page<ProductListItemResponse> responsePage =
                 productPage.map(
                         product ->
                                 toListItemResponse(
                                         product,
                                         primaryImageUrls.get(
+                                                product.getId()
+                                        ),
+                                        favoritedProductIds.contains(
                                                 product.getId()
                                         )
                                 )
@@ -108,6 +122,7 @@ public class ProductService {
     }
 
     public ProductDetailResponse getProduct(
+            Long userId,
             Long productId
     ) {
         Product product =
@@ -121,6 +136,13 @@ public class ProductService {
                                         new BusinessException(
                                                 ErrorCode.PRODUCT_NOT_FOUND
                                         )
+                        );
+
+        boolean favorited =
+                wishlistRepository
+                        .existsByUser_IdAndProduct_Id(
+                                userId,
+                                productId
                         );
 
         List<ProductImageResponse> images =
@@ -153,7 +175,8 @@ public class ProductService {
                 product.getMaterial(),
                 product.getProductUrl(),
                 images,
-                tags
+                tags,
+                favorited
         );
     }
 
@@ -185,9 +208,30 @@ public class ProductService {
                 );
     }
 
+    private Set<Long> findFavoritedProductIds(
+            Long userId,
+            List<Product> products
+    ) {
+        if (products.isEmpty()) {
+            return Set.of();
+        }
+
+        List<Long> productIds =
+                products.stream()
+                        .map(Product::getId)
+                        .toList();
+
+        return wishlistRepository
+                .findProductIdsByUserIdAndProductIdIn(
+                        userId,
+                        productIds
+                );
+    }
+
     private ProductListItemResponse toListItemResponse(
             Product product,
-            String primaryImageUrl
+            String primaryImageUrl,
+            boolean favorited
     ) {
         return new ProductListItemResponse(
                 String.valueOf(product.getId()),
@@ -196,7 +240,8 @@ public class ProductService {
                 product.getCategory(),
                 product.getPrice(),
                 product.getPrimaryColor(),
-                primaryImageUrl
+                primaryImageUrl,
+                favorited
         );
     }
 
