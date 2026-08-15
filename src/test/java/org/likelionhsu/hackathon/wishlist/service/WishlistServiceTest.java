@@ -7,16 +7,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Optional;
 import java.util.List;
-
-import org.likelionhsu.hackathon.common.response.PageResponse;
-import org.likelionhsu.hackathon.product.entity.ProductImage;
-import org.likelionhsu.hackathon.wishlist.dto.response.WishlistItemResponse;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.test.util.ReflectionTestUtils;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,16 +21,22 @@ import org.likelionhsu.hackathon.common.enums.ItemCategory;
 import org.likelionhsu.hackathon.common.enums.MaterialGroup;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
+import org.likelionhsu.hackathon.common.response.PageResponse;
 import org.likelionhsu.hackathon.product.entity.Product;
 import org.likelionhsu.hackathon.product.entity.ProductBrand;
+import org.likelionhsu.hackathon.product.entity.ProductImage;
 import org.likelionhsu.hackathon.product.entity.ProductStatus;
+import org.likelionhsu.hackathon.product.repository.ProductImageRepository;
 import org.likelionhsu.hackathon.product.repository.ProductRepository;
+import org.likelionhsu.hackathon.wishlist.dto.response.WishlistItemResponse;
 import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
 import org.likelionhsu.hackathon.wishlist.repository.WishlistRepository;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import org.likelionhsu.hackathon.product.repository.ProductImageRepository;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class WishlistServiceTest {
@@ -52,10 +50,10 @@ class WishlistServiceTest {
     @Mock
     UserRepository userRepository;
 
-    WishlistService wishlistService;
-
     @Mock
     ProductImageRepository productImageRepository;
+
+    WishlistService wishlistService;
 
     @BeforeEach
     void setUp() {
@@ -75,18 +73,21 @@ class WishlistServiceTest {
 
         Product product = product();
 
-        User user = User.local(
-                "wishlist@example.com",
-                "찜사용자",
-                Gender.NOT_SPECIFIED
-        );
+        User user =
+                User.local(
+                        "wishlist@example.com",
+                        "찜사용자",
+                        Gender.NOT_SPECIFIED
+                );
 
         when(
                 productRepository.findByIdAndStatus(
                         productId,
                         ProductStatus.ACTIVE
                 )
-        ).thenReturn(Optional.of(product));
+        ).thenReturn(
+                Optional.of(product)
+        );
 
         when(
                 wishlistRepository
@@ -97,7 +98,9 @@ class WishlistServiceTest {
         ).thenReturn(false);
 
         when(
-                userRepository.getReferenceById(userId)
+                userRepository.getReferenceById(
+                        userId
+                )
         ).thenReturn(user);
 
         wishlistService.addFavorite(
@@ -106,7 +109,9 @@ class WishlistServiceTest {
         );
 
         verify(wishlistRepository)
-                .save(any(Wishlist.class));
+                .save(
+                        any(Wishlist.class)
+                );
     }
 
     @Test
@@ -119,7 +124,11 @@ class WishlistServiceTest {
                         productId,
                         ProductStatus.ACTIVE
                 )
-        ).thenReturn(Optional.of(product()));
+        ).thenReturn(
+                Optional.of(
+                        product()
+                )
+        );
 
         when(
                 wishlistRepository
@@ -137,12 +146,16 @@ class WishlistServiceTest {
         verify(
                 userRepository,
                 never()
-        ).getReferenceById(any());
+        ).getReferenceById(
+                any()
+        );
 
         verify(
                 wishlistRepository,
                 never()
-        ).save(any());
+        ).save(
+                any()
+        );
     }
 
     @Test
@@ -155,7 +168,11 @@ class WishlistServiceTest {
                         productId,
                         ProductStatus.ACTIVE
                 )
-        ).thenReturn(Optional.of(product()));
+        ).thenReturn(
+                Optional.of(
+                        product()
+                )
+        );
 
         wishlistService.removeFavorite(
                 userId,
@@ -179,7 +196,11 @@ class WishlistServiceTest {
                         productId,
                         ProductStatus.ACTIVE
                 )
-        ).thenReturn(Optional.of(product()));
+        ).thenReturn(
+                Optional.of(
+                        product()
+                )
+        );
 
         wishlistService.removeFavorite(
                 userId,
@@ -203,30 +224,39 @@ class WishlistServiceTest {
                         productId,
                         ProductStatus.ACTIVE
                 )
-        ).thenReturn(Optional.empty());
+        ).thenReturn(
+                Optional.empty()
+        );
 
         assertThatThrownBy(
-                () -> wishlistService.addFavorite(
-                        userId,
-                        productId
-                )
+                () ->
+                        wishlistService.addFavorite(
+                                userId,
+                                productId
+                        )
         )
-                .isInstanceOf(BusinessException.class)
-                .satisfies(exception -> {
-                    BusinessException businessException =
-                            (BusinessException) exception;
+                .isInstanceOf(
+                        BusinessException.class
+                )
+                .satisfies(
+                        exception -> {
+                            BusinessException businessException =
+                                    (BusinessException) exception;
 
-                    assertThat(
-                            businessException.getErrorCode()
-                    ).isEqualTo(
-                            ErrorCode.PRODUCT_NOT_FOUND
-                    );
-                });
+                            assertThat(
+                                    businessException.getErrorCode()
+                            ).isEqualTo(
+                                    ErrorCode.PRODUCT_NOT_FOUND
+                            );
+                        }
+                );
 
         verify(
                 wishlistRepository,
                 never()
-        ).save(any());
+        ).save(
+                any()
+        );
     }
 
     @Test
@@ -239,25 +269,32 @@ class WishlistServiceTest {
                         productId,
                         ProductStatus.ACTIVE
                 )
-        ).thenReturn(Optional.empty());
+        ).thenReturn(
+                Optional.empty()
+        );
 
         assertThatThrownBy(
-                () -> wishlistService.removeFavorite(
-                        userId,
-                        productId
-                )
+                () ->
+                        wishlistService.removeFavorite(
+                                userId,
+                                productId
+                        )
         )
-                .isInstanceOf(BusinessException.class)
-                .satisfies(exception -> {
-                    BusinessException businessException =
-                            (BusinessException) exception;
+                .isInstanceOf(
+                        BusinessException.class
+                )
+                .satisfies(
+                        exception -> {
+                            BusinessException businessException =
+                                    (BusinessException) exception;
 
-                    assertThat(
-                            businessException.getErrorCode()
-                    ).isEqualTo(
-                            ErrorCode.PRODUCT_NOT_FOUND
-                    );
-                });
+                            assertThat(
+                                    businessException.getErrorCode()
+                            ).isEqualTo(
+                                    ErrorCode.PRODUCT_NOT_FOUND
+                            );
+                        }
+                );
 
         verify(
                 wishlistRepository,
@@ -278,11 +315,12 @@ class WishlistServiceTest {
                         20
                 );
 
-        User user = User.local(
-                "wishlist-list@example.com",
-                "찜목록사용자",
-                Gender.NOT_SPECIFIED
-        );
+        User user =
+                User.local(
+                        "wishlist-list@example.com",
+                        "찜목록사용자",
+                        Gender.NOT_SPECIFIED
+                );
 
         Product firstProduct =
                 product(
@@ -311,10 +349,12 @@ class WishlistServiceTest {
                 );
 
         when(
-                wishlistRepository.findAllByUser_Id(
-                        userId,
-                        pageable
-                )
+                wishlistRepository
+                        .findAllByUser_IdAndProduct_Status(
+                                userId,
+                                ProductStatus.ACTIVE,
+                                pageable
+                        )
         ).thenReturn(
                 new PageImpl<>(
                         List.of(
@@ -377,13 +417,16 @@ class WishlistServiceTest {
                 .hasSize(2);
 
         WishlistItemResponse firstItem =
-                response.items().get(0);
+                response.items()
+                        .get(0);
 
         assertThat(firstItem.productId())
                 .isEqualTo("10");
 
         assertThat(firstItem.name())
-                .isEqualTo("First Wishlist Bag");
+                .isEqualTo(
+                        "First Wishlist Bag"
+                );
 
         assertThat(firstItem.primaryImageUrl())
                 .isEqualTo(
@@ -394,7 +437,8 @@ class WishlistServiceTest {
                 .isTrue();
 
         WishlistItemResponse secondItem =
-                response.items().get(1);
+                response.items()
+                        .get(1);
 
         assertThat(secondItem.productId())
                 .isEqualTo("20");
@@ -408,8 +452,9 @@ class WishlistServiceTest {
                 .isTrue();
 
         verify(wishlistRepository)
-                .findAllByUser_Id(
+                .findAllByUser_IdAndProduct_Status(
                         userId,
+                        ProductStatus.ACTIVE,
                         pageable
                 );
 
@@ -433,10 +478,12 @@ class WishlistServiceTest {
                 );
 
         when(
-                wishlistRepository.findAllByUser_Id(
-                        userId,
-                        pageable
-                )
+                wishlistRepository
+                        .findAllByUser_IdAndProduct_Status(
+                                userId,
+                                ProductStatus.ACTIVE,
+                                pageable
+                        )
         ).thenReturn(
                 new PageImpl<>(
                         List.of(),
@@ -456,6 +503,13 @@ class WishlistServiceTest {
 
         assertThat(response.totalElements())
                 .isZero();
+
+        verify(wishlistRepository)
+                .findAllByUser_IdAndProduct_Status(
+                        userId,
+                        ProductStatus.ACTIVE,
+                        pageable
+                );
 
         verify(
                 productImageRepository,

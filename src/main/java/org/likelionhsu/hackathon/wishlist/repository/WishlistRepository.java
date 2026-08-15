@@ -3,6 +3,7 @@ package org.likelionhsu.hackathon.wishlist.repository;
 import java.util.Collection;
 import java.util.Set;
 
+import org.likelionhsu.hackathon.product.entity.ProductStatus;
 import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,8 +26,9 @@ public interface WishlistRepository
     );
 
     @EntityGraph(attributePaths = "product")
-    Page<Wishlist> findAllByUser_Id(
+    Page<Wishlist> findAllByUser_IdAndProduct_Status(
             Long userId,
+            ProductStatus status,
             Pageable pageable
     );
 

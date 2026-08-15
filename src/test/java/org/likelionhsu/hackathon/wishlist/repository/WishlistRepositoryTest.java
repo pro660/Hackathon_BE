@@ -51,13 +51,17 @@ class WishlistRepositoryTest {
                 "wishlist@example.com",
                 "찜사용자"
         );
+
         Product product = saveProduct(
                 "MCM-WISHLIST-001",
                 "Wishlist Bag"
         );
 
         wishlistRepository.saveAndFlush(
-                Wishlist.create(user, product)
+                Wishlist.create(
+                        user,
+                        product
+                )
         );
 
         boolean exists =
@@ -67,7 +71,8 @@ class WishlistRepositoryTest {
                                 product.getId()
                         );
 
-        assertThat(exists).isTrue();
+        assertThat(exists)
+                .isTrue();
     }
 
     @Test
@@ -76,20 +81,29 @@ class WishlistRepositoryTest {
                 "duplicate@example.com",
                 "중복사용자"
         );
+
         Product product = saveProduct(
                 "MCM-WISHLIST-002",
                 "Duplicate Bag"
         );
 
         wishlistRepository.saveAndFlush(
-                Wishlist.create(user, product)
+                Wishlist.create(
+                        user,
+                        product
+                )
         );
 
         assertThatThrownBy(
                 () -> wishlistRepository.saveAndFlush(
-                        Wishlist.create(user, product)
+                        Wishlist.create(
+                                user,
+                                product
+                        )
                 )
-        ).isInstanceOf(DataIntegrityViolationException.class);
+        ).isInstanceOf(
+                DataIntegrityViolationException.class
+        );
     }
 
     @Test
@@ -98,10 +112,12 @@ class WishlistRepositoryTest {
                 "first@example.com",
                 "첫사용자"
         );
+
         User secondUser = saveUser(
                 "second@example.com",
                 "둘사용자"
         );
+
         Product product = saveProduct(
                 "MCM-WISHLIST-003",
                 "Shared Bag"
@@ -137,13 +153,17 @@ class WishlistRepositoryTest {
                 "delete@example.com",
                 "삭제사용자"
         );
+
         Product product = saveProduct(
                 "MCM-WISHLIST-004",
                 "Delete Bag"
         );
 
         wishlistRepository.saveAndFlush(
-                Wishlist.create(user, product)
+                Wishlist.create(
+                        user,
+                        product
+                )
         );
 
         wishlistRepository
@@ -174,6 +194,7 @@ class WishlistRepositoryTest {
                 "MCM-WISHLIST-005",
                 "First Bag"
         );
+
         Product secondProduct = saveProduct(
                 "MCM-WISHLIST-006",
                 "Second Bag"
@@ -194,18 +215,20 @@ class WishlistRepositoryTest {
         );
 
         var page =
-                wishlistRepository.findAllByUser_Id(
-                        user.getId(),
-                        PageRequest.of(
-                                0,
-                                10,
-                                Sort.by(
-                                        Sort.Order.desc(
-                                                "createdAt"
+                wishlistRepository
+                        .findAllByUser_IdAndProduct_Status(
+                                user.getId(),
+                                ProductStatus.ACTIVE,
+                                PageRequest.of(
+                                        0,
+                                        10,
+                                        Sort.by(
+                                                Sort.Order.desc(
+                                                        "createdAt"
+                                                )
                                         )
                                 )
-                        )
-                );
+                        );
 
         assertThat(page.getTotalElements())
                 .isEqualTo(2);
@@ -213,12 +236,83 @@ class WishlistRepositoryTest {
         assertThat(page.getContent())
                 .extracting(
                         wishlist ->
-                                wishlist.getProduct()
+                                wishlist
+                                        .getProduct()
                                         .getId()
                 )
                 .containsExactlyInAnyOrder(
                         firstProduct.getId(),
                         secondProduct.getId()
+                );
+    }
+
+    @Test
+    void inactiveProductsAreExcludedFromWishlistPage() {
+        User user = saveUser(
+                "status-filter@example.com",
+                "상태필터사용자"
+        );
+
+        Product activeProduct = saveProduct(
+                "MCM-WISHLIST-ACTIVE-001",
+                "Active Wishlist Bag",
+                ProductStatus.ACTIVE
+        );
+
+        Product inactiveProduct = saveProduct(
+                "MCM-WISHLIST-INACTIVE-001",
+                "Inactive Wishlist Bag",
+                ProductStatus.INACTIVE
+        );
+
+        wishlistRepository.saveAndFlush(
+                Wishlist.create(
+                        user,
+                        activeProduct
+                )
+        );
+
+        wishlistRepository.saveAndFlush(
+                Wishlist.create(
+                        user,
+                        inactiveProduct
+                )
+        );
+
+        var page =
+                wishlistRepository
+                        .findAllByUser_IdAndProduct_Status(
+                                user.getId(),
+                                ProductStatus.ACTIVE,
+                                PageRequest.of(
+                                        0,
+                                        10
+                                )
+                        );
+
+        assertThat(page.getTotalElements())
+                .isEqualTo(1);
+
+        assertThat(page.getContent())
+                .extracting(
+                        wishlist ->
+                                wishlist
+                                        .getProduct()
+                                        .getId()
+                )
+                .containsExactly(
+                        activeProduct.getId()
+                );
+
+        assertThat(page.getContent())
+                .extracting(
+                        wishlist ->
+                                wishlist
+                                        .getProduct()
+                                        .getStatus()
+                )
+                .containsOnly(
+                        ProductStatus.ACTIVE
                 );
     }
 
@@ -233,10 +327,12 @@ class WishlistRepositoryTest {
                 "MCM-WISHLIST-007",
                 "First Favorite Bag"
         );
+
         Product secondProduct = saveProduct(
                 "MCM-WISHLIST-008",
                 "Second Favorite Bag"
         );
+
         Product notFavoritedProduct = saveProduct(
                 "MCM-WISHLIST-009",
                 "Not Favorite Bag"
@@ -291,6 +387,18 @@ class WishlistRepositoryTest {
             String sku,
             String name
     ) {
+        return saveProduct(
+                sku,
+                name,
+                ProductStatus.ACTIVE
+        );
+    }
+
+    private Product saveProduct(
+            String sku,
+            String name,
+            ProductStatus status
+    ) {
         return productRepository.saveAndFlush(
                 Product.create(
                         ProductBrand.MCM,
@@ -302,7 +410,7 @@ class WishlistRepositoryTest {
                         ColorGroup.BLACK,
                         MaterialGroup.LEATHER,
                         null,
-                        ProductStatus.ACTIVE
+                        status
                 )
         );
     }

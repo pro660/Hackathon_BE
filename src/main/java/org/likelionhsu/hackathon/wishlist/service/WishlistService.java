@@ -4,22 +4,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.likelionhsu.hackathon.common.response.PageResponse;
-import org.likelionhsu.hackathon.product.entity.ProductImage;
-import org.likelionhsu.hackathon.product.repository.ProductImageRepository;
-import org.likelionhsu.hackathon.wishlist.dto.response.WishlistItemResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import org.likelionhsu.hackathon.auth.domain.User;
 import org.likelionhsu.hackathon.auth.repository.UserRepository;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
+import org.likelionhsu.hackathon.common.response.PageResponse;
 import org.likelionhsu.hackathon.product.entity.Product;
+import org.likelionhsu.hackathon.product.entity.ProductImage;
 import org.likelionhsu.hackathon.product.entity.ProductStatus;
+import org.likelionhsu.hackathon.product.repository.ProductImageRepository;
 import org.likelionhsu.hackathon.product.repository.ProductRepository;
+import org.likelionhsu.hackathon.wishlist.dto.response.WishlistItemResponse;
 import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
 import org.likelionhsu.hackathon.wishlist.repository.WishlistRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,10 +105,12 @@ public class WishlistService {
             Pageable pageable
     ) {
         Page<Wishlist> wishlistPage =
-                wishlistRepository.findAllByUser_Id(
-                        userId,
-                        pageable
-                );
+                wishlistRepository
+                        .findAllByUser_IdAndProduct_Status(
+                                userId,
+                                ProductStatus.ACTIVE,
+                                pageable
+                        );
 
         List<Product> products =
                 wishlistPage
