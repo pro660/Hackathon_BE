@@ -16,6 +16,18 @@ public enum ErrorCode {
             "취향 정보를 수정하는 중 충돌이 발생했습니다. 다시 시도해 주세요."
     ),
 
+    PREFERENCE_REQUIRED(
+            HttpStatus.CONFLICT,
+            "PREFERENCE_REQUIRED",
+            "제품 추천을 받으려면 먼저 취향 정보를 등록해 주세요."
+    ),
+
+    RECOMMENDATION_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "RECOMMENDATION_NOT_FOUND",
+            "추천 결과를 찾을 수 없습니다."
+    ),
+
     REQUEST_BODY_INVALID(
             HttpStatus.BAD_REQUEST,
             "REQUEST_BODY_INVALID",

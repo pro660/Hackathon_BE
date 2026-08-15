@@ -13,6 +13,8 @@ import org.likelionhsu.hackathon.auth.domain.User;
 import org.likelionhsu.hackathon.auth.repository.UserRepository;
 import org.likelionhsu.hackathon.preference.dto.request.PreferenceRequest;
 import org.likelionhsu.hackathon.preference.entity.PreferenceProfile;
+import org.likelionhsu.hackathon.recommendation.entity.Recommendation;
+import org.likelionhsu.hackathon.recommendation.entity.RecommendationProduct;
 import org.likelionhsu.hackathon.product.entity.Product;
 import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +36,9 @@ import org.testcontainers.mysql.MySQLContainer;
         PreferenceProfile.class,
         User.class,
         Product.class,
-        Wishlist.class
+        Wishlist.class,
+        Recommendation.class,
+        RecommendationProduct.class
 })
 class PreferenceServiceIntegrationTest {
 

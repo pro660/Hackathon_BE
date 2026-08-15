@@ -23,6 +23,8 @@ import org.likelionhsu.hackathon.common.enums.ColorGroup;
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
 import org.likelionhsu.hackathon.preference.dto.request.PreferenceRequest;
 import org.likelionhsu.hackathon.preference.entity.PreferenceProfile;
+import org.likelionhsu.hackathon.recommendation.entity.Recommendation;
+import org.likelionhsu.hackathon.recommendation.entity.RecommendationProduct;
 import org.likelionhsu.hackathon.preference.entity.PreferenceStyleTag;
 import org.likelionhsu.hackathon.product.entity.Product;
 import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
@@ -49,7 +51,9 @@ import jakarta.persistence.OptimisticLockException;
         PreferenceProfile.class,
         User.class,
         Product.class,
-        Wishlist.class
+        Wishlist.class,
+        Recommendation.class,
+        RecommendationProduct.class
 })
 class PreferenceConcurrencyIntegrationTest {
 

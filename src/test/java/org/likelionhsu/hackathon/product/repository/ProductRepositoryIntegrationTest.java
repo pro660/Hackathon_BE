@@ -25,6 +25,8 @@ import org.testcontainers.mysql.MySQLContainer;
 
 import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
 import org.likelionhsu.hackathon.preference.entity.PreferenceProfile;
+import org.likelionhsu.hackathon.recommendation.entity.Recommendation;
+import org.likelionhsu.hackathon.recommendation.entity.RecommendationProduct;
 
 @Testcontainers
 @Tag("integration")
@@ -34,7 +36,9 @@ import org.likelionhsu.hackathon.preference.entity.PreferenceProfile;
         Product.class,
         User.class,
         Wishlist.class,
-        PreferenceProfile.class
+        PreferenceProfile.class,
+        Recommendation.class,
+        RecommendationProduct.class
 })
 class ProductRepositoryIntegrationTest {
 

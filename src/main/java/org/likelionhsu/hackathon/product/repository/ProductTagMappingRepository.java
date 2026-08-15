@@ -1,5 +1,6 @@
 package org.likelionhsu.hackathon.product.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.likelionhsu.hackathon.product.entity.ProductTagMapping;
@@ -20,6 +21,16 @@ public interface ProductTagMappingRepository
             """)
     List<ProductTagMapping> findAllWithTagByProductId(
             @Param("productId") Long productId
+    );
+
+    @Query("""
+            select mapping
+            from ProductTagMapping mapping
+            join fetch mapping.productTag
+            where mapping.product.id in :productIds
+            """)
+    List<ProductTagMapping> findAllWithTagByProductIdIn(
+            @Param("productIds") Collection<Long> productIds
     );
 
     @Modifying
