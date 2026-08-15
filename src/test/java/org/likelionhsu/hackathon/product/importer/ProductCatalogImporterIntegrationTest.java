@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.likelionhsu.hackathon.auth.domain.User;
+import org.likelionhsu.hackathon.product.entity.Product;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -34,6 +37,10 @@ import org.testcontainers.mysql.MySQLContainer;
 @SpringBootTest(
         properties = "app.product-import.enabled=false"
 )
+@EntityScan(basePackageClasses = {
+        Product.class,
+        User.class
+})
 class ProductCatalogImporterIntegrationTest {
 
     @Container
