@@ -3,6 +3,7 @@ package org.likelionhsu.hackathon.product.repository;
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
 import org.likelionhsu.hackathon.product.entity.Product;
+import org.likelionhsu.hackathon.product.entity.ProductBrand;
 import org.likelionhsu.hackathon.product.entity.ProductStatus;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -18,6 +19,20 @@ public final class ProductSpecification {
                 criteriaBuilder.equal(
                         root.get("status"),
                         status
+                );
+    }
+
+    public static Specification<Product> hasBrand(
+            ProductBrand brand
+    ) {
+        if (brand == null) {
+            return Specification.unrestricted();
+        }
+
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(
+                        root.get("brand"),
+                        brand
                 );
     }
 
