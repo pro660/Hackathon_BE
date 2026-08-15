@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.likelionhsu.hackathon.auth.domain.User;
+import org.likelionhsu.hackathon.product.entity.Product;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -18,7 +21,6 @@ import org.likelionhsu.hackathon.product.importer.dto.ProductImportImage;
 import org.likelionhsu.hackathon.product.importer.dto.ProductImportItem;
 import org.likelionhsu.hackathon.product.importer.dto.ProductImportTag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -35,10 +37,10 @@ import org.testcontainers.mysql.MySQLContainer;
 @SpringBootTest(
         properties = "app.product-import.enabled=false"
 )
-@EntityScan(
-        basePackages =
-                "org.likelionhsu.hackathon.product.entity"
-)
+@EntityScan(basePackageClasses = {
+        Product.class,
+        User.class
+})
 class ProductCatalogImporterIntegrationTest {
 
     @Container
