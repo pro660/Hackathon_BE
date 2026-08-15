@@ -10,6 +10,12 @@ public enum ErrorCode {
             "입력값을 확인해 주세요."
     ),
 
+    PREFERENCE_UPDATE_CONFLICT(
+            HttpStatus.CONFLICT,
+            "PREFERENCE_UPDATE_CONFLICT",
+            "취향 정보를 수정하는 중 충돌이 발생했습니다. 다시 시도해 주세요."
+    ),
+
     REQUEST_BODY_INVALID(
             HttpStatus.BAD_REQUEST,
             "REQUEST_BODY_INVALID",
