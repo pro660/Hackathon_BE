@@ -1,7 +1,6 @@
 package org.likelionhsu.hackathon.product.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +25,6 @@ import org.testcontainers.mysql.MySQLContainer;
 @Tag("integration")
 @ActiveProfiles("test")
 @SpringBootTest
-@EntityScan(basePackages = "org.likelionhsu.hackathon.product.entity")
 class ProductRepositoryIntegrationTest {
 
     @Container

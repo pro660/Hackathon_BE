@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.likelionhsu.hackathon.product.importer.dto.ProductCatalogImportData;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,10 +21,6 @@ import org.testcontainers.mysql.MySQLContainer;
 @ActiveProfiles("test")
 @SpringBootTest(
         properties = "app.product-import.enabled=false"
-)
-@EntityScan(
-        basePackages =
-                "org.likelionhsu.hackathon.product.entity"
 )
 class ProductCatalogFinalResourceIntegrationTest {
 
