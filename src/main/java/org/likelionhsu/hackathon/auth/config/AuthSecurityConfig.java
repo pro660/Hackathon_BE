@@ -28,7 +28,10 @@ import org.springframework.security.oauth2.server.resource.web.authentication.Be
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(AuthProperties.class)
+@EnableConfigurationProperties({
+        AuthProperties.class,
+        OAuthProperties.class
+})
 public class AuthSecurityConfig {
 
     @Bean
@@ -85,6 +88,7 @@ public class AuthSecurityConfig {
                                 "/api/auth/email-verifications/confirm",
                                 "/api/auth/signup",
                                 "/api/auth/login",
+                                "/api/auth/oauth/signup",
                                 "/api/auth/refresh"
                         ).permitAll()
                         .requestMatchers(

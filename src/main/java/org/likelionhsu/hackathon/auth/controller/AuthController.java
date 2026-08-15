@@ -4,13 +4,17 @@ import org.likelionhsu.hackathon.auth.dto.request.EmailVerificationConfirmReques
 import org.likelionhsu.hackathon.auth.dto.request.EmailVerificationRequest;
 import org.likelionhsu.hackathon.auth.dto.request.LoginRequest;
 import org.likelionhsu.hackathon.auth.dto.request.SignupRequest;
+import org.likelionhsu.hackathon.auth.dto.request.SocialSignupRequest;
 import org.likelionhsu.hackathon.auth.dto.response.AccessTokenResponse;
 import org.likelionhsu.hackathon.auth.dto.response.AuthTokenResponse;
 import org.likelionhsu.hackathon.auth.dto.response.EmailVerificationConfirmResponse;
 import org.likelionhsu.hackathon.auth.dto.response.EmailVerificationResponse;
 import org.likelionhsu.hackathon.auth.dto.response.LoginIdAvailabilityResponse;
+import org.likelionhsu.hackathon.auth.oauth.OAuthCookieService;
 import org.likelionhsu.hackathon.auth.service.AuthService;
 import org.likelionhsu.hackathon.auth.service.EmailVerificationService;
+import org.likelionhsu.hackathon.auth.service.OAuthService;
+import org.likelionhsu.hackathon.auth.service.SocialAuthService;
 import org.likelionhsu.hackathon.auth.support.RefreshCookieService;
 import org.likelionhsu.hackathon.common.response.ApiResponse;
 import org.springframework.http.HttpHeaders;
@@ -24,9 +28,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 
@@ -38,15 +44,24 @@ public class AuthController {
     private final EmailVerificationService emailVerificationService;
     private final AuthService authService;
     private final RefreshCookieService refreshCookieService;
+    private final OAuthService oauthService;
+    private final SocialAuthService socialAuthService;
+    private final OAuthCookieService oauthCookieService;
 
     public AuthController(
             EmailVerificationService emailVerificationService,
             AuthService authService,
-            RefreshCookieService refreshCookieService
+            RefreshCookieService refreshCookieService,
+            OAuthService oauthService,
+            SocialAuthService socialAuthService,
+            OAuthCookieService oauthCookieService
     ) {
         this.emailVerificationService = emailVerificationService;
         this.authService = authService;
         this.refreshCookieService = refreshCookieService;
+        this.oauthService = oauthService;
+        this.socialAuthService = socialAuthService;
+        this.oauthCookieService = oauthCookieService;
     }
 
     @PostMapping("/email-verifications")
@@ -106,6 +121,100 @@ public class AuthController {
         AuthService.AuthResult result = authService.login(request);
         return ResponseEntity
                 .ok()
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        refreshCookieService
+                                .create(result.refreshToken())
+                                .toString()
+                )
+                .body(ApiResponse.success(result.response()));
+    }
+
+    @GetMapping("/oauth/{provider}")
+    public ResponseEntity<Void> startOAuth(
+            @PathVariable String provider
+    ) {
+        OAuthService.StartResult result = oauthService.start(provider);
+        return ResponseEntity
+                .status(HttpStatus.FOUND)
+                .location(result.authorizationUri())
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        oauthCookieService
+                                .createState(result.state())
+                                .toString()
+                )
+                .build();
+    }
+
+    @GetMapping("/oauth/{provider}/callback")
+    public ResponseEntity<Void> oauthCallback(
+            @PathVariable String provider,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String state,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                oauthCookieService.clearState().toString()
+        );
+
+        SocialAuthService.CallbackResult result =
+                oauthService.callback(
+                        provider,
+                        code,
+                        state,
+                        oauthCookieService.readState(request)
+                );
+
+        if (result.type()
+                == SocialAuthService.CallbackType.EXISTING_USER) {
+            return ResponseEntity
+                    .status(HttpStatus.FOUND)
+                    .location(oauthService.successRedirectUri())
+                    .header(
+                            HttpHeaders.SET_COOKIE,
+                            refreshCookieService
+                                    .create(result.refreshToken())
+                                    .toString()
+                    )
+                    .build();
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.FOUND)
+                .location(oauthService.onboardingRedirectUri())
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        oauthCookieService
+                                .createOnboarding(
+                                        result.onboardingToken()
+                                )
+                                .toString()
+                )
+                .build();
+    }
+
+    @PostMapping("/oauth/signup")
+    public ResponseEntity<ApiResponse<AuthTokenResponse>> socialSignup(
+            @Valid @RequestBody SocialSignupRequest signupRequest,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                oauthCookieService.clearOnboarding().toString()
+        );
+
+        SocialAuthService.SignupResult result =
+                socialAuthService.signup(
+                        oauthCookieService.readOnboarding(request),
+                        signupRequest
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
                 .header(
                         HttpHeaders.SET_COOKIE,
                         refreshCookieService
