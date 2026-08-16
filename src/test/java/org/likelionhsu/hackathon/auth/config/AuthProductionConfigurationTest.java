@@ -21,5 +21,14 @@ class AuthProductionConfigurationTest {
 
         assertThat(properties.getProperty("app.auth.jwt-secret"))
                 .isEqualTo("${JWT_SECRET}");
+        assertThat(properties.getProperty(
+                "app.auth.oauth.naver.client-secret"
+        )).isEqualTo("${NAVER_CLIENT_SECRET}");
+        assertThat(properties.getProperty(
+                "app.auth.oauth.kakao.client-secret"
+        )).isEqualTo("${KAKAO_CLIENT_SECRET}");
+        assertThat(properties.getProperty(
+                "app.auth.oauth.success-url"
+        )).isEqualTo("${FRONTEND_OAUTH_SUCCESS_URL}");
     }
 }

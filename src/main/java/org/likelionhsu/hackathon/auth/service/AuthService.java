@@ -21,6 +21,7 @@ import org.likelionhsu.hackathon.auth.dto.response.AuthenticatedUserResponse;
 import org.likelionhsu.hackathon.auth.dto.response.LoginIdAvailabilityResponse;
 import org.likelionhsu.hackathon.auth.repository.EmailVerificationRepository;
 import org.likelionhsu.hackathon.auth.repository.LocalCredentialRepository;
+import org.likelionhsu.hackathon.auth.repository.SocialAccountRepository;
 import org.likelionhsu.hackathon.auth.repository.TermsAgreementRepository;
 import org.likelionhsu.hackathon.auth.repository.UserRepository;
 import org.likelionhsu.hackathon.auth.support.TokenHashService;
@@ -36,6 +37,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final LocalCredentialRepository credentialRepository;
+    private final SocialAccountRepository socialAccountRepository;
     private final TermsAgreementRepository termsAgreementRepository;
     private final EmailVerificationRepository verificationRepository;
     private final AuthTokenService authTokenService;
@@ -46,6 +48,7 @@ public class AuthService {
     public AuthService(
             UserRepository userRepository,
             LocalCredentialRepository credentialRepository,
+            SocialAccountRepository socialAccountRepository,
             TermsAgreementRepository termsAgreementRepository,
             EmailVerificationRepository verificationRepository,
             AuthTokenService authTokenService,
@@ -55,6 +58,7 @@ public class AuthService {
     ) {
         this.userRepository = userRepository;
         this.credentialRepository = credentialRepository;
+        this.socialAccountRepository = socialAccountRepository;
         this.termsAgreementRepository = termsAgreementRepository;
         this.verificationRepository = verificationRepository;
         this.authTokenService = authTokenService;
@@ -94,6 +98,10 @@ public class AuthService {
 
         if (userRepository.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+        if (socialAccountRepository
+                .existsByProviderEmailIgnoreCase(email)) {
+            throw new BusinessException(ErrorCode.SOCIAL_EMAIL_CONFLICT);
         }
         if (credentialRepository.existsByLoginId(loginId)) {
             throw new BusinessException(

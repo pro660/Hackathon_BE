@@ -51,22 +51,18 @@ public class AuthTokenService {
     @Transactional
     public IssuedTokens issue(User user) {
         Instant now = Instant.now(clock);
-        String rawRefreshToken = tokenGenerator.generateToken();
-
-        refreshTokenRepository.save(
-                new RefreshToken(
-                        user,
-                        tokenHashService.sha256(rawRefreshToken),
-                        UUID.randomUUID().toString(),
-                        now.plus(properties.refreshTokenTtl())
-                )
-        );
+        String rawRefreshToken = createRefreshToken(user, now);
 
         return new IssuedTokens(
                 createAccessToken(user, now),
                 rawRefreshToken,
                 properties.accessTokenTtl().toSeconds()
         );
+    }
+
+    @Transactional
+    public String issueRefreshToken(User user) {
+        return createRefreshToken(user, Instant.now(clock));
     }
 
     @Transactional
@@ -129,6 +125,19 @@ public class AuthTokenService {
         return jwtEncoder
                 .encode(JwtEncoderParameters.from(header, claims))
                 .getTokenValue();
+    }
+
+    private String createRefreshToken(User user, Instant now) {
+        String rawRefreshToken = tokenGenerator.generateToken();
+        refreshTokenRepository.save(
+                new RefreshToken(
+                        user,
+                        tokenHashService.sha256(rawRefreshToken),
+                        UUID.randomUUID().toString(),
+                        now.plus(properties.refreshTokenTtl())
+                )
+        );
+        return rawRefreshToken;
     }
 
     private void ensureActive(User user) {

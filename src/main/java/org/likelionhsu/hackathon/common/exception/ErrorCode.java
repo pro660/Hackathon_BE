@@ -64,6 +64,12 @@ public enum ErrorCode {
             "필수 약관에 동의해야 합니다."
     ),
 
+    PROFILE_INCOMPLETE(
+            HttpStatus.BAD_REQUEST,
+            "PROFILE_INCOMPLETE",
+            "필수 프로필 정보를 확인해 주세요."
+    ),
+
     EMAIL_ALREADY_EXISTS(
             HttpStatus.CONFLICT,
             "EMAIL_ALREADY_EXISTS",
@@ -74,6 +80,18 @@ public enum ErrorCode {
             HttpStatus.CONFLICT,
             "LOGIN_ID_ALREADY_EXISTS",
             "이미 사용 중인 로그인 아이디입니다."
+    ),
+
+    SOCIAL_ACCOUNT_ALREADY_EXISTS(
+            HttpStatus.CONFLICT,
+            "SOCIAL_ACCOUNT_ALREADY_EXISTS",
+            "이미 연결된 소셜 계정입니다."
+    ),
+
+    SOCIAL_EMAIL_CONFLICT(
+            HttpStatus.CONFLICT,
+            "SOCIAL_EMAIL_CONFLICT",
+            "이미 가입된 이메일과 소셜 계정이 충돌합니다."
     ),
 
     EMAIL_VERIFICATION_RATE_LIMITED(
@@ -122,6 +140,18 @@ public enum ErrorCode {
             HttpStatus.FORBIDDEN,
             "ORIGIN_NOT_ALLOWED",
             "허용되지 않은 요청 Origin입니다."
+    ),
+
+    OAUTH_STATE_INVALID(
+            HttpStatus.BAD_REQUEST,
+            "OAUTH_STATE_INVALID",
+            "OAuth state가 유효하지 않습니다."
+    ),
+
+    OAUTH_PROVIDER_ERROR(
+            HttpStatus.BAD_GATEWAY,
+            "OAUTH_PROVIDER_ERROR",
+            "소셜 로그인 공급자 연동에 실패했습니다."
     ),
 
     RESOURCE_ACCESS_DENIED(

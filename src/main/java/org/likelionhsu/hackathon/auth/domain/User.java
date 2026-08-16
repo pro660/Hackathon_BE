@@ -74,6 +74,22 @@ public class User extends BaseTimeEntity {
         return user;
     }
 
+    public static User social(
+            String nickname,
+            Gender gender,
+            String notificationEmail
+    ) {
+        User user = new User();
+        user.email = null;
+        user.nickname = nickname;
+        user.gender = gender;
+        user.role = UserRole.USER;
+        user.status = UserStatus.ACTIVE;
+        user.notificationEmail = normalizeEmail(notificationEmail);
+        user.notificationEmailVerified = false;
+        return user;
+    }
+
     public Long getId() {
         return id;
     }
