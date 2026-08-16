@@ -14,6 +14,7 @@ import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
 import org.likelionhsu.hackathon.preference.entity.PreferenceProfile;
 import org.likelionhsu.hackathon.recommendation.entity.Recommendation;
 import org.likelionhsu.hackathon.recommendation.entity.RecommendationProduct;
+import org.likelionhsu.hackathon.useritem.entity.UserItem;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,7 +38,8 @@ import org.testcontainers.mysql.MySQLContainer;
         Wishlist.class,
         PreferenceProfile.class,
         Recommendation.class,
-        RecommendationProduct.class
+        RecommendationProduct.class,
+        UserItem.class
 })
 class ProductCatalogFinalResourceIntegrationTest {
 

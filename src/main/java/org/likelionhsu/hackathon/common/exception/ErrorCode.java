@@ -184,6 +184,18 @@ public enum ErrorCode {
             "해당 작업을 수행할 권한이 없습니다."
     ),
 
+    RESOURCE_VERSION_CONFLICT(
+            HttpStatus.CONFLICT,
+            "RESOURCE_VERSION_CONFLICT",
+            "리소스를 수정하는 중 충돌이 발생했습니다. 다시 시도해 주세요."
+    ),
+
+    MY_ITEM_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "MY_ITEM_NOT_FOUND",
+            "마이 아이템을 찾을 수 없습니다."
+    ),
+
     PRODUCT_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "PRODUCT_NOT_FOUND",
