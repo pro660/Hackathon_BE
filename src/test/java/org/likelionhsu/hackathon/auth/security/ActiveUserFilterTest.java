@@ -1,6 +1,7 @@
 package org.likelionhsu.hackathon.auth.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -97,8 +98,12 @@ class ActiveUserFilterTest {
                 .header("alg", "HS256")
                 .subject(String.valueOf(userId))
                 .build();
+        JwtAuthenticationToken authentication =
+                mock(JwtAuthenticationToken.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getToken()).thenReturn(jwt);
         SecurityContextHolder.getContext().setAuthentication(
-                new JwtAuthenticationToken(jwt)
+                authentication
         );
     }
 }
