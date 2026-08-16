@@ -14,6 +14,7 @@ import org.likelionhsu.hackathon.aijob.repository.AiJobJdbcRepository;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.common.exception.RequestValidationException;
+import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityAiJobDispatcher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -27,18 +28,24 @@ public class AiJobService {
     private final AiJobJdbcRepository aiJobRepository;
     private final AiJobRequestHasher requestHasher;
     private final ObjectMapper objectMapper;
+    private final PurchaseUtilityAiJobDispatcher
+            purchaseUtilityAiJobDispatcher;
     private final String openAiModel;
 
     public AiJobService(
             AiJobJdbcRepository aiJobRepository,
             AiJobRequestHasher requestHasher,
             ObjectMapper objectMapper,
+            PurchaseUtilityAiJobDispatcher
+                    purchaseUtilityAiJobDispatcher,
             @Value("${OPENAI_MODEL:}")
             String openAiModel
     ) {
         this.aiJobRepository = aiJobRepository;
         this.requestHasher = requestHasher;
         this.objectMapper = objectMapper;
+        this.purchaseUtilityAiJobDispatcher =
+                purchaseUtilityAiJobDispatcher;
         this.openAiModel = openAiModel;
     }
 
@@ -98,6 +105,12 @@ public class AiJobService {
                                             "생성한 AI Job을 조회할 수 없습니다."
                                     )
                             );
+
+            purchaseUtilityAiJobDispatcher.dispatch(
+                    userId,
+                    jobId,
+                    Long.valueOf(normalizedProductId)
+            );
 
             return CreationResult.from(created);
         } catch (DataIntegrityViolationException exception) {

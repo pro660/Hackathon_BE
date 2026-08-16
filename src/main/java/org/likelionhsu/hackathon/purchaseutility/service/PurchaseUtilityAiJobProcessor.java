@@ -6,29 +6,30 @@ import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationRe
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationResult;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityAnalysis;
 import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityAnalysisService.RuleAnalysisResult;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 @Service
-@ConditionalOnBean(PurchaseUtilityExplanationPort.class)
 public class PurchaseUtilityAiJobProcessor {
 
     private final PurchaseUtilityAiJobGateway aiJobGateway;
     private final PurchaseUtilityAnalysisService analysisService;
-    private final PurchaseUtilityExplanationPort explanationPort;
+    private final ObjectProvider<PurchaseUtilityExplanationPort>
+            explanationPortProvider;
     private final PurchaseUtilityAiJobCompletionService
             completionService;
 
     public PurchaseUtilityAiJobProcessor(
             PurchaseUtilityAiJobGateway aiJobGateway,
             PurchaseUtilityAnalysisService analysisService,
-            PurchaseUtilityExplanationPort explanationPort,
+            ObjectProvider<PurchaseUtilityExplanationPort>
+                    explanationPortProvider,
             PurchaseUtilityAiJobCompletionService
                     completionService
     ) {
         this.aiJobGateway = aiJobGateway;
         this.analysisService = analysisService;
-        this.explanationPort = explanationPort;
+        this.explanationPortProvider = explanationPortProvider;
         this.completionService = completionService;
     }
 
@@ -65,6 +66,24 @@ public class PurchaseUtilityAiJobProcessor {
         PurchaseUtilityAnalysis analysis =
                 ruleResult.analysis();
 
+        PurchaseUtilityExplanationPort explanationPort =
+                explanationPortProvider.getIfAvailable();
+
+        if (explanationPort == null) {
+            completionService.completeReadyWithFallback(
+                    userId,
+                    jobId,
+                    analysis.getId(),
+                    analysis.getUtilityScore(),
+                    "AI_GENERATION_FAILED",
+                    0
+            );
+
+            return ProcessingResult.fallbackReady(
+                    analysis.getId()
+            );
+        }
+
         PurchaseUtilityExplanationRequest request =
                 PurchaseUtilityExplanationRequest.from(
                         analysis,
@@ -72,7 +91,10 @@ public class PurchaseUtilityAiJobProcessor {
                 );
 
         ExplanationAttempt attempt =
-                generateWithSingleRetry(request);
+                generateWithSingleRetry(
+                        explanationPort,
+                        request
+                );
 
         if (attempt.explanation() == null) {
             completionService.completeReadyWithFallback(
@@ -80,7 +102,8 @@ public class PurchaseUtilityAiJobProcessor {
                     jobId,
                     analysis.getId(),
                     analysis.getUtilityScore(),
-                    null
+                    "AI_GENERATION_FAILED",
+                    attempt.retryCount()
             );
 
             return ProcessingResult.fallbackReady(
@@ -102,6 +125,7 @@ public class PurchaseUtilityAiJobProcessor {
     }
 
     private ExplanationAttempt generateWithSingleRetry(
+            PurchaseUtilityExplanationPort explanationPort,
             PurchaseUtilityExplanationRequest request
     ) {
         try {

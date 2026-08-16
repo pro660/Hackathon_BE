@@ -29,12 +29,15 @@ import org.likelionhsu.hackathon.purchaseutility.entity.snapshot.PurchaseUtility
 import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityAiJobProcessor.ProcessingOutcome;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 
 @ExtendWith(MockitoExtension.class)
 class PurchaseUtilityAiJobProcessorTest {
 
     @Mock PurchaseUtilityAiJobGateway aiJobGateway;
     @Mock PurchaseUtilityAnalysisService analysisService;
+    @Mock ObjectProvider<PurchaseUtilityExplanationPort>
+            explanationPortProvider;
     @Mock PurchaseUtilityExplanationPort explanationPort;
     @Mock PurchaseUtilityAiJobCompletionService completionService;
 
@@ -45,7 +48,7 @@ class PurchaseUtilityAiJobProcessorTest {
         processor = new PurchaseUtilityAiJobProcessor(
                 aiJobGateway,
                 analysisService,
-                explanationPort,
+                explanationPortProvider,
                 completionService
         );
     }
@@ -67,7 +70,7 @@ class PurchaseUtilityAiJobProcessorTest {
 
         verifyNoInteractions(
                 analysisService,
-                explanationPort,
+                explanationPortProvider,
                 completionService
         );
     }
@@ -104,7 +107,10 @@ class PurchaseUtilityAiJobProcessorTest {
                         900L,
                         "활용 가능성을 분석하기 위한 정보가 부족해요."
                 );
-        verifyNoInteractions(explanationPort);
+        verifyNoInteractions(
+                explanationPortProvider,
+                explanationPort
+        );
     }
 
     @Test
@@ -122,6 +128,9 @@ class PurchaseUtilityAiJobProcessorTest {
                         .RuleAnalysisResult
                         .ready(analysis)
         );
+
+        when(explanationPortProvider.getIfAvailable())
+                .thenReturn(explanationPort);
 
         PurchaseUtilityExplanationResult explanation =
                 new PurchaseUtilityExplanationResult(
@@ -172,6 +181,9 @@ class PurchaseUtilityAiJobProcessorTest {
                         .ready(analysis)
         );
 
+        when(explanationPortProvider.getIfAvailable())
+                .thenReturn(explanationPort);
+
         PurchaseUtilityExplanationResult explanation =
                 new PurchaseUtilityExplanationResult(
                         "재시도 성공",
@@ -207,6 +219,53 @@ class PurchaseUtilityAiJobProcessorTest {
     }
 
     @Test
+    void missingAiAdapterKeepsRuleBasedAnalysisWithoutRetry()
+            throws Exception {
+        PurchaseUtilityAnalysis analysis =
+                mock(PurchaseUtilityAnalysis.class);
+        when(analysis.getId()).thenReturn(801L);
+        when(analysis.getUtilityScore())
+                .thenReturn(new BigDecimal("77.00"));
+
+        when(aiJobGateway.claimProcessing(1L, 900L))
+                .thenReturn(true);
+        when(analysisService.createRuleBasedAnalysis(
+                1L,
+                101L,
+                900L
+        )).thenReturn(
+                PurchaseUtilityAnalysisService
+                        .RuleAnalysisResult
+                        .ready(analysis)
+        );
+
+        var result = processor.process(
+                1L,
+                900L,
+                101L,
+                "ko"
+        );
+
+        assertThat(result.outcome())
+                .isEqualTo(
+                        ProcessingOutcome
+                                .READY_RULE_BASED_FALLBACK
+                );
+        assertThat(result.analysisId()).isEqualTo(801L);
+
+        verify(completionService)
+                .completeReadyWithFallback(
+                        1L,
+                        900L,
+                        801L,
+                        new BigDecimal("77.00"),
+                        "AI_GENERATION_FAILED",
+                        0
+                );
+        verifyNoInteractions(explanationPort);
+    }
+
+    @Test
     void repeatedAiFailureKeepsRuleBasedAnalysis() throws Exception {
         PurchaseUtilityAnalysis analysis = analysis(801L);
 
@@ -222,6 +281,8 @@ class PurchaseUtilityAiJobProcessorTest {
                         .ready(analysis)
         );
 
+        when(explanationPortProvider.getIfAvailable())
+                .thenReturn(explanationPort);
         when(explanationPort.generate(
                 any(PurchaseUtilityExplanationRequest.class)
         ))
@@ -248,7 +309,8 @@ class PurchaseUtilityAiJobProcessorTest {
                         900L,
                         801L,
                         new BigDecimal("77.00"),
-                        null
+                        "AI_GENERATION_FAILED",
+                        1
                 );
     }
 

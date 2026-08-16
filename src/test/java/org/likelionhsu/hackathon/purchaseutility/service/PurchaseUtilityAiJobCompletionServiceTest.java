@@ -74,8 +74,8 @@ class PurchaseUtilityAiJobCompletionServiceTest {
                 eq(1L),
                 eq(900L),
                 contains("\"analysisId\":\"801\""),
-                isNull(),
-                eq(1),
+                eq("AI_GENERATION_FAILED"),
+                eq(0),
                 isNull()
         )).thenReturn(true);
 
@@ -84,7 +84,8 @@ class PurchaseUtilityAiJobCompletionServiceTest {
                 900L,
                 801L,
                 new BigDecimal("77.00"),
-                null
+                "AI_GENERATION_FAILED",
+                0
         );
 
         verify(aiJobGateway)
@@ -92,8 +93,8 @@ class PurchaseUtilityAiJobCompletionServiceTest {
                         eq(1L),
                         eq(900L),
                         contains("\"utilityScore\":77.00"),
-                        isNull(),
-                        eq(1),
+                        eq("AI_GENERATION_FAILED"),
+                        eq(0),
                         isNull()
                 );
     }

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
@@ -23,6 +24,7 @@ import org.likelionhsu.hackathon.aijob.dto.response.AiJobResponse;
 import org.likelionhsu.hackathon.aijob.repository.AiJobJdbcRepository;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
+import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityAiJobDispatcher;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DuplicateKeyException;
@@ -37,6 +39,9 @@ class AiJobServiceTest {
     @Mock
     private AiJobJdbcRepository repository;
 
+    @Mock
+    private PurchaseUtilityAiJobDispatcher dispatcher;
+
     private static final Instant NOW =
             Instant.parse("2026-08-17T00:10:00Z");
 
@@ -50,6 +55,7 @@ class AiJobServiceTest {
                 repository,
                 hasher,
                 new ObjectMapper(),
+                dispatcher,
                 "test-model"
         );
     }
@@ -98,6 +104,12 @@ class AiJobServiceTest {
                 .isEqualTo("9001");
         assertThat(result.response().status())
                 .isEqualTo(AiJobStatus.PENDING);
+
+        verify(dispatcher).dispatch(
+                USER_ID,
+                9001L,
+                123L
+        );
     }
 
     @Test
@@ -137,6 +149,7 @@ class AiJobServiceTest {
                 anyString(),
                 anyString()
         );
+        verifyNoInteractions(dispatcher);
     }
 
     @Test

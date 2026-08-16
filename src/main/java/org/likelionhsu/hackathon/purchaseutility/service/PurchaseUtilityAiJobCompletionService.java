@@ -77,7 +77,8 @@ public class PurchaseUtilityAiJobCompletionService {
             Long jobId,
             Long analysisId,
             BigDecimal utilityScore,
-            String errorCode
+            String errorCode,
+            int retryCount
     ) {
         boolean updated =
                 aiJobGateway.markFailed(
@@ -88,7 +89,7 @@ public class PurchaseUtilityAiJobCompletionService {
                                 utilityScore
                         ),
                         errorCode,
-                        1,
+                        retryCount,
                         null
                 );
 
