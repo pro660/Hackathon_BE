@@ -208,6 +208,48 @@ public enum ErrorCode {
             "AI 작업을 찾을 수 없습니다."
     ),
 
+    IMAGE_FILE_INVALID(
+            HttpStatus.BAD_REQUEST,
+            "IMAGE_FILE_INVALID",
+            "올바른 이미지 파일을 업로드해 주세요."
+    ),
+
+    IMAGE_ASSET_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "IMAGE_ASSET_NOT_FOUND",
+            "이미지를 찾을 수 없습니다."
+    ),
+
+    IMAGE_ASSET_STATE_CONFLICT(
+            HttpStatus.CONFLICT,
+            "IMAGE_ASSET_STATE_CONFLICT",
+            "현재 이미지 상태에서는 요청한 작업을 수행할 수 없습니다."
+    ),
+
+    IMAGE_ASSET_IN_USE(
+            HttpStatus.CONFLICT,
+            "IMAGE_ASSET_IN_USE",
+            "현재 사용 중인 이미지는 삭제할 수 없습니다."
+    ),
+
+    IMAGE_FILE_TOO_LARGE(
+            HttpStatus.CONTENT_TOO_LARGE,
+            "IMAGE_FILE_TOO_LARGE",
+            "이미지 파일은 10MB 이하여야 합니다."
+    ),
+
+    IMAGE_FORMAT_UNSUPPORTED(
+            HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+            "IMAGE_FORMAT_UNSUPPORTED",
+            "JPEG 또는 PNG 이미지만 업로드할 수 있습니다."
+    ),
+
+    IMAGE_STORAGE_ERROR(
+            HttpStatus.BAD_GATEWAY,
+            "IMAGE_STORAGE_ERROR",
+            "이미지 저장소 연동에 실패했습니다."
+    ),
+
     MY_ITEM_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "MY_ITEM_NOT_FOUND",

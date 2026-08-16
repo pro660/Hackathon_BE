@@ -163,6 +163,68 @@ public class ImageAssetJdbcRepository {
         ).stream().findFirst();
     }
 
+    public boolean markDeletePending(
+            Long ownerUserId,
+            Long imageAssetId
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                imageAssetId,
+                "imageAssetId는 null일 수 없습니다."
+        );
+
+        int updated = jdbcTemplate.update(
+                """
+                UPDATE image_assets
+                SET status = 'DELETE_PENDING'
+                WHERE id = ?
+                  AND owner_user_id = ?
+                  AND purpose = 'ITEM'
+                  AND status = 'TEMPORARY'
+                  AND user_item_id IS NULL
+                  AND deleted_at IS NULL
+                """,
+                imageAssetId,
+                ownerUserId
+        );
+
+        return updated == 1;
+    }
+
+    public boolean markDeleted(
+            Long ownerUserId,
+            Long imageAssetId
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                imageAssetId,
+                "imageAssetId는 null일 수 없습니다."
+        );
+
+        int updated = jdbcTemplate.update(
+                """
+                UPDATE image_assets
+                SET status = 'DELETED',
+                    deleted_at = CURRENT_TIMESTAMP(6)
+                WHERE id = ?
+                  AND owner_user_id = ?
+                  AND purpose = 'ITEM'
+                  AND status = 'DELETE_PENDING'
+                  AND deleted_at IS NULL
+                """,
+                imageAssetId,
+                ownerUserId
+        );
+
+        return updated == 1;
+    }
+
     private ImageAssetData map(
             ResultSet resultSet,
             int rowNumber

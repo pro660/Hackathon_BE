@@ -194,6 +194,91 @@ class ImageAssetJdbcRepositoryIntegrationTest {
         assertThat(status).isEqualTo("TEMPORARY");
     }
 
+    @Test
+    void temporaryAssetCanBeMarkedDeletePending() {
+        long imageAssetId = createTemporaryItemAsset();
+
+        boolean updated = repository.markDeletePending(
+                userId,
+                imageAssetId
+        );
+
+        assertThat(updated).isTrue();
+
+        ImageAssetData asset = repository
+                .findOwnedItemAsset(userId, imageAssetId)
+                .orElseThrow();
+
+        assertThat(asset.status())
+                .isEqualTo(ImageAssetStatus.DELETE_PENDING);
+        assertThat(asset.deletedAt()).isNull();
+    }
+
+    @Test
+    void anotherUserCannotMarkDeletePending() {
+        long imageAssetId = createTemporaryItemAsset();
+
+        boolean updated = repository.markDeletePending(
+                otherUserId,
+                imageAssetId
+        );
+
+        assertThat(updated).isFalse();
+
+        ImageAssetData asset = repository
+                .findOwnedItemAsset(userId, imageAssetId)
+                .orElseThrow();
+
+        assertThat(asset.status())
+                .isEqualTo(ImageAssetStatus.TEMPORARY);
+    }
+
+    @Test
+    void deletePendingAssetCanBeMarkedDeleted() {
+        long imageAssetId = createTemporaryItemAsset();
+
+        assertThat(
+                repository.markDeletePending(
+                        userId,
+                        imageAssetId
+                )
+        ).isTrue();
+
+        boolean deleted = repository.markDeleted(
+                userId,
+                imageAssetId
+        );
+
+        assertThat(deleted).isTrue();
+
+        ImageAssetData asset = repository
+                .findOwnedItemAsset(userId, imageAssetId)
+                .orElseThrow();
+
+        assertThat(asset.status())
+                .isEqualTo(ImageAssetStatus.DELETED);
+        assertThat(asset.deletedAt()).isNotNull();
+    }
+
+    @Test
+    void temporaryAssetCannotBeMarkedDeletedDirectly() {
+        long imageAssetId = createTemporaryItemAsset();
+
+        boolean deleted = repository.markDeleted(
+                userId,
+                imageAssetId
+        );
+
+        assertThat(deleted).isFalse();
+
+        ImageAssetData asset = repository
+                .findOwnedItemAsset(userId, imageAssetId)
+                .orElseThrow();
+
+        assertThat(asset.status())
+                .isEqualTo(ImageAssetStatus.TEMPORARY);
+    }
+
     private long createTemporaryItemAsset() {
         return repository.createTemporaryItem(
                 userId,
