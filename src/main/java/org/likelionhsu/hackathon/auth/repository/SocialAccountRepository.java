@@ -1,5 +1,6 @@
 package org.likelionhsu.hackathon.auth.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.likelionhsu.hackathon.auth.domain.SocialAccount;
@@ -29,4 +30,14 @@ public interface SocialAccountRepository extends
     );
 
     boolean existsByProviderEmailIgnoreCase(String providerEmail);
+
+    @Query("""
+            select account.provider
+            from SocialAccount account
+            where account.user.id = :userId
+            order by account.provider
+            """)
+    List<SocialProvider> findProvidersByUserId(
+            @Param("userId") Long userId
+    );
 }

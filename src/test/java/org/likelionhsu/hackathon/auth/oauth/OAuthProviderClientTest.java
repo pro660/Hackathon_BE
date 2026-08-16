@@ -28,6 +28,26 @@ class OAuthProviderClientTest {
                 .contains("state=signed.state");
     }
 
+    @Test
+    void 재인증_URL은_공급자별_강제_로그인_옵션을_포함한다() {
+        OAuthProviderClient client =
+                new OAuthProviderClient(properties());
+
+        URI kakao = client.reauthenticationUri(
+                SocialProvider.KAKAO,
+                "signed.state"
+        );
+        URI naver = client.reauthenticationUri(
+                SocialProvider.NAVER,
+                "signed.state"
+        );
+
+        assertThat(kakao.getRawQuery())
+                .contains("prompt=login");
+        assertThat(naver.getRawQuery())
+                .contains("auth_type=reauthenticate");
+    }
+
     private OAuthProperties properties() {
         OAuthProperties.Cookie stateCookie = new OAuthProperties.Cookie(
                 "oauth_state",

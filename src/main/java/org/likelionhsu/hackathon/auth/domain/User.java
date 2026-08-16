@@ -114,6 +114,45 @@ public class User extends BaseTimeEntity {
         return status;
     }
 
+    public void updateProfile(
+            String nickname,
+            Gender gender
+    ) {
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+
+        if (gender != null) {
+            this.gender = gender;
+        }
+    }
+
+    public void beginDeletion() {
+        if (status != UserStatus.ACTIVE) {
+            throw new IllegalStateException(
+                    "활성 사용자만 탈퇴를 시작할 수 있습니다."
+            );
+        }
+
+        status = UserStatus.DELETION_PENDING;
+    }
+
+    public void completeDeletion(Instant deletedAt) {
+        if (status != UserStatus.DELETION_PENDING) {
+            throw new IllegalStateException(
+                    "탈퇴 대기 사용자만 탈퇴를 완료할 수 있습니다."
+            );
+        }
+
+        email = "deleted-" + id + "@invalid.local";
+        nickname = "탈퇴한 사용자";
+        gender = Gender.NOT_SPECIFIED;
+        notificationEmail = null;
+        notificationEmailVerified = false;
+        status = UserStatus.DELETED;
+        this.deletedAt = deletedAt;
+    }
+
     public Long getVersion() {
         return version;
     }

@@ -16,6 +16,12 @@ public enum ErrorCode {
             "취향 정보를 수정하는 중 충돌이 발생했습니다. 다시 시도해 주세요."
     ),
 
+    USER_PROFILE_UPDATE_CONFLICT(
+            HttpStatus.CONFLICT,
+            "USER_PROFILE_UPDATE_CONFLICT",
+            "사용자 정보를 수정하는 중 충돌이 발생했습니다. 다시 시도해 주세요."
+    ),
+
     PREFERENCE_REQUIRED(
             HttpStatus.CONFLICT,
             "PREFERENCE_REQUIRED",
@@ -128,6 +134,24 @@ public enum ErrorCode {
             HttpStatus.UNAUTHORIZED,
             "REFRESH_TOKEN_INVALID",
             "Refresh Token이 유효하지 않습니다."
+    ),
+
+    REAUTHENTICATION_FAILED(
+            HttpStatus.UNAUTHORIZED,
+            "REAUTHENTICATION_FAILED",
+            "계정 재인증에 실패했습니다."
+    ),
+
+    REAUTHENTICATION_METHOD_NOT_AVAILABLE(
+            HttpStatus.CONFLICT,
+            "REAUTHENTICATION_METHOD_NOT_AVAILABLE",
+            "현재 계정에서 사용할 수 없는 재인증 방식입니다."
+    ),
+
+    REAUTH_TOKEN_INVALID(
+            HttpStatus.UNAUTHORIZED,
+            "REAUTH_TOKEN_INVALID",
+            "계정 재인증 토큰이 유효하지 않습니다."
     ),
 
     ACCOUNT_NOT_ACTIVE(

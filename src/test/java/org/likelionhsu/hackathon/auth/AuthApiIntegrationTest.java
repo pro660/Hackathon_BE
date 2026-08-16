@@ -28,8 +28,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import jakarta.servlet.http.Cookie;
 
 @ActiveProfiles("test")
-@SpringBootTest(properties =
-        "app.auth.cookie.name=test_refresh_token")
+@SpringBootTest(properties = {
+        "app.auth.cookie.name=test_refresh_token",
+        "app.auth.reauthentication.cookie.name=test_account_reauth_token"
+})
 @AutoConfigureMockMvc
 @Import(AuthApiIntegrationTest.TestSenderConfig.class)
 class AuthApiIntegrationTest {
@@ -38,6 +40,8 @@ class AuthApiIntegrationTest {
             "http://localhost:3000";
     private static final String REFRESH_COOKIE_NAME =
             "test_refresh_token";
+    private static final String REAUTH_COOKIE_NAME =
+            "test_account_reauth_token";
 
     @Autowired
     private MockMvc mockMvc;
@@ -183,6 +187,34 @@ class AuthApiIntegrationTest {
         assertThat(rotatedRefreshCookie).isNotNull();
         assertThat(rotatedRefreshCookie.getValue())
                 .isNotEqualTo(loginRefreshCookie.getValue());
+
+        MvcResult reauthentication = mockMvc.perform(
+                        post("/api/auth/reauthentications")
+                                .header(
+                                        HttpHeaders.ORIGIN,
+                                        TRUSTED_ORIGIN
+                                )
+                                .header(
+                                        HttpHeaders.AUTHORIZATION,
+                                        "Bearer " + accessToken
+                                )
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                          "password": "password123"
+                                        }
+                                        """)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        Cookie reauthCookie = reauthentication.getResponse()
+                .getCookie(REAUTH_COOKIE_NAME);
+        assertThat(reauthCookie).isNotNull();
+        assertThat(reauthCookie.isHttpOnly()).isTrue();
+        assertThat(reauthCookie.getMaxAge()).isEqualTo(600);
+        assertThat(reauthCookie.getPath())
+                .isEqualTo("/api/users/me");
 
         mockMvc.perform(
                         post("/api/auth/refresh")

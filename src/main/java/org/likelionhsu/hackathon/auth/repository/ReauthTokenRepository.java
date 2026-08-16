@@ -3,6 +3,7 @@ package org.likelionhsu.hackathon.auth.repository;
 import java.util.Optional;
 
 import org.likelionhsu.hackathon.auth.domain.ReauthToken;
+import org.likelionhsu.hackathon.auth.domain.ReauthTokenPurpose;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -22,5 +23,10 @@ public interface ReauthTokenRepository extends
             """)
     Optional<ReauthToken> findByTokenHashForUpdate(
             @Param("tokenHash") String tokenHash
+    );
+
+    void deleteByUser_IdAndPurpose(
+            Long userId,
+            ReauthTokenPurpose purpose
     );
 }

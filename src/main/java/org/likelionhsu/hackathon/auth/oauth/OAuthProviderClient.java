@@ -51,6 +51,26 @@ public class OAuthProviderClient {
                 ))
                 .toUri();
     }
+
+    public URI reauthenticationUri(
+            SocialProvider provider,
+            String state
+    ) {
+        URI authorizationUri = authorizationUri(provider, state);
+        UriComponentsBuilder builder =
+                UriComponentsBuilder.fromUri(authorizationUri);
+
+        switch (provider) {
+            case KAKAO -> builder.queryParam("prompt", "login");
+            case NAVER -> builder.queryParam(
+                    "auth_type",
+                    "reauthenticate"
+            );
+        }
+
+        return builder.build(true).toUri();
+    }
+
     public OAuthProfile fetchProfile(
             SocialProvider provider,
             String code,

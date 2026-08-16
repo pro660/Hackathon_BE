@@ -21,6 +21,7 @@ public class TrustedOriginFilter extends OncePerRequestFilter {
             "/api/auth/signup",
             "/api/auth/login",
             "/api/auth/oauth/signup",
+            "/api/auth/reauthentications",
             "/api/auth/refresh",
             "/api/auth/logout"
     );
