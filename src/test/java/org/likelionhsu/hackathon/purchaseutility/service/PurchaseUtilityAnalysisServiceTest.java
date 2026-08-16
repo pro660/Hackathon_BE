@@ -25,6 +25,7 @@ import org.likelionhsu.hackathon.auth.domain.UserStatus;
 import org.likelionhsu.hackathon.auth.repository.UserRepository;
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
+import org.likelionhsu.hackathon.common.enums.MaterialGroup;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.preference.entity.PreferenceProfile;
@@ -37,6 +38,7 @@ import org.likelionhsu.hackathon.product.entity.ProductTagMapping;
 import org.likelionhsu.hackathon.product.entity.ProductTagType;
 import org.likelionhsu.hackathon.product.repository.ProductRepository;
 import org.likelionhsu.hackathon.product.repository.ProductTagMappingRepository;
+import org.likelionhsu.hackathon.purchaseutility.domain.CareDifficulty;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityAnalysis;
 import org.likelionhsu.hackathon.purchaseutility.repository.PurchaseUtilityAnalysisRepository;
 import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityAnalysisService.RuleAnalysisStatus;
@@ -87,6 +89,8 @@ class PurchaseUtilityAnalysisServiceTest {
                 ItemCategory.BAG,
                 ColorGroup.RED
         );
+        when(product.getMaterial())
+                .thenReturn(MaterialGroup.LEATHER);
         PreferenceProfile preference =
                 preference(
                         List.of(PreferenceStyleTag.CASUAL),
@@ -183,6 +187,14 @@ class PurchaseUtilityAnalysisServiceTest {
                 .isEqualByComparingTo("83.00");
         assertThat(analysis.getCompatibleItemCount())
                 .isEqualTo(2);
+        assertThat(analysis.getCareDifficulty())
+                .isEqualTo(CareDifficulty.HARD);
+        assertThat(analysis.getSummary())
+                .isEqualTo(
+                        "현재 보유 아이템 및 취향과의 활용 가능성이 높은 제품입니다. "
+                                + "보유 아이템 중 2개와 조합할 수 있으며, "
+                                + "관리 난이도는 어려운 편입니다."
+                );
         assertThat(analysis.getAiJobId())
                 .isEqualTo(700L);
         assertThat(analysis.getAnalyzedAt())

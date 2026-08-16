@@ -13,7 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.likelionhsu.hackathon.auth.domain.User;
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
+import org.likelionhsu.hackathon.common.enums.MaterialGroup;
 import org.likelionhsu.hackathon.product.entity.Product;
+import org.likelionhsu.hackathon.purchaseutility.domain.CareDifficulty;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityAnalysis;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityExplanationGenerationType;
 import org.likelionhsu.hackathon.purchaseutility.entity.snapshot.PurchaseUtilityCompatibleItemSnapshot;
@@ -30,6 +32,8 @@ class PurchaseUtilityExplanationRequestTest {
                 .thenReturn(ItemCategory.BAG);
         when(product.getPrimaryColor())
                 .thenReturn(ColorGroup.BROWN);
+        when(product.getMaterial())
+                .thenReturn(MaterialGroup.LEATHER);
 
         PurchaseUtilityFactorSnapshot factors =
                 new PurchaseUtilityFactorSnapshot(
@@ -104,6 +108,8 @@ class PurchaseUtilityExplanationRequestTest {
                 .hasSize(1);
         assertThat(request.compatibleItems().getFirst().myItemId())
                 .isEqualTo("501");
+        assertThat(request.careDifficulty())
+                .isEqualTo(CareDifficulty.HARD);
         assertThat(request.language()).isEqualTo("ko");
         assertThat(
                 analysis

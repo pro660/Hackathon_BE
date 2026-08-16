@@ -87,6 +87,7 @@ public class PurchaseUtilityAnalysisQueryService {
                 ),
                 analysis.getCompatibleItemCount(),
                 compatibleItems,
+                analysis.getCareDifficulty(),
                 analysis.getSummary(),
                 factors.explanationGenerationType(),
                 analysis.getAnalyzedAt()

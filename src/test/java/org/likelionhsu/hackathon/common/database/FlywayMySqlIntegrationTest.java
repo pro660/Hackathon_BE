@@ -150,12 +150,12 @@ class FlywayMySqlIntegrationTest {
         try (ResultSet historyResult = statement.executeQuery("""
                 SELECT COUNT(*)
                 FROM flyway_schema_history
-                WHERE version IN ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13')
+                WHERE version IN ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14')
                   AND success = 1
                 """)) {
 
             historyResult.next();
-            assertThat(historyResult.getInt(1)).isEqualTo(13);
+            assertThat(historyResult.getInt(1)).isEqualTo(14);
         }
 
         try (ResultSet columnResult = statement.executeQuery("""

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
+import org.likelionhsu.hackathon.purchaseutility.domain.CareDifficulty;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityExplanationGenerationType;
 
 public record PurchaseUtilityAnalysisResponse(
@@ -15,6 +16,7 @@ public record PurchaseUtilityAnalysisResponse(
         FactorScoresResponse factors,
         int compatibleItemCount,
         List<CompatibleItemResponse> compatibleItems,
+        CareDifficulty careDifficulty,
         String summary,
         PurchaseUtilityExplanationGenerationType explanationGenerationType,
         Instant analyzedAt
