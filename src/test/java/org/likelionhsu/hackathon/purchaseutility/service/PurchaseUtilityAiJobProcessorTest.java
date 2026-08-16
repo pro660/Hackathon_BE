@@ -3,6 +3,7 @@ package org.likelionhsu.hackathon.purchaseutility.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -22,6 +23,8 @@ import org.likelionhsu.hackathon.common.enums.ItemCategory;
 import org.likelionhsu.hackathon.product.entity.Product;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityAiInputHasher;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityAiJobGateway;
+import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationException;
+import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationException.FailureKind;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationPort;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationRequest;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationResult;
@@ -209,7 +212,10 @@ class PurchaseUtilityAiJobProcessorTest {
         when(explanationPort.generate(
                 any(PurchaseUtilityExplanationRequest.class)
         ))
-                .thenThrow(new RuntimeException("first"))
+                .thenThrow(new PurchaseUtilityExplanationException(
+                        FailureKind.TRANSIENT_PROVIDER,
+                        "first"
+                ))
                 .thenReturn(explanation);
 
         var result = processor.process(
@@ -230,6 +236,9 @@ class PurchaseUtilityAiJobProcessorTest {
                         explanation,
                         1
                 );
+        verify(explanationPort, times(2)).generate(
+                any(PurchaseUtilityExplanationRequest.class)
+        );
     }
 
     @Test
@@ -333,6 +342,112 @@ class PurchaseUtilityAiJobProcessorTest {
     }
 
     @Test
+    void nonRetryableAiFailureFallsBackWithoutRetry() throws Exception {
+        PurchaseUtilityAnalysis analysis = analysis(801L);
+
+        when(aiJobGateway.claimProcessing(1L, 900L))
+                .thenReturn(true);
+        when(analysisService.createRuleBasedAnalysis(
+                1L,
+                101L,
+                900L
+        )).thenReturn(
+                PurchaseUtilityAnalysisService
+                        .RuleAnalysisResult
+                        .ready(analysis)
+        );
+
+        stubCacheMiss();
+
+        when(explanationPortProvider.getIfAvailable())
+                .thenReturn(explanationPort);
+        when(explanationPort.generate(
+                any(PurchaseUtilityExplanationRequest.class)
+        )).thenThrow(new PurchaseUtilityExplanationException(
+                FailureKind.NON_RETRYABLE_PROVIDER,
+                "bad request"
+        ));
+
+        var result = processor.process(
+                1L,
+                900L,
+                101L,
+                "ko"
+        );
+
+        assertThat(result.outcome())
+                .isEqualTo(
+                        ProcessingOutcome
+                                .READY_RULE_BASED_FALLBACK
+                );
+        assertThat(result.analysisId()).isEqualTo(801L);
+
+        verify(completionService)
+                .completeReadyWithFallback(
+                        1L,
+                        900L,
+                        801L,
+                        new BigDecimal("77.00"),
+                        "AI_GENERATION_FAILED",
+                        0
+                );
+        verify(explanationPort).generate(
+                any(PurchaseUtilityExplanationRequest.class)
+        );
+    }
+
+    @Test
+    void unexpectedRuntimeFailureFallsBackWithoutRetry() throws Exception {
+        PurchaseUtilityAnalysis analysis = analysis(801L);
+
+        when(aiJobGateway.claimProcessing(1L, 900L))
+                .thenReturn(true);
+        when(analysisService.createRuleBasedAnalysis(
+                1L,
+                101L,
+                900L
+        )).thenReturn(
+                PurchaseUtilityAnalysisService
+                        .RuleAnalysisResult
+                        .ready(analysis)
+        );
+
+        stubCacheMiss();
+
+        when(explanationPortProvider.getIfAvailable())
+                .thenReturn(explanationPort);
+        when(explanationPort.generate(
+                any(PurchaseUtilityExplanationRequest.class)
+        )).thenThrow(new IllegalStateException("unexpected"));
+
+        var result = processor.process(
+                1L,
+                900L,
+                101L,
+                "ko"
+        );
+
+        assertThat(result.outcome())
+                .isEqualTo(
+                        ProcessingOutcome
+                                .READY_RULE_BASED_FALLBACK
+                );
+
+        verify(completionService)
+                .completeReadyWithFallback(
+                        1L,
+                        900L,
+                        801L,
+                        new BigDecimal("77.00"),
+                        "AI_GENERATION_FAILED",
+                        0
+                );
+        verify(explanationPort).generate(
+                any(PurchaseUtilityExplanationRequest.class)
+        );
+    }
+
+    @Test
     void repeatedAiFailureKeepsRuleBasedAnalysis() throws Exception {
         PurchaseUtilityAnalysis analysis = analysis(801L);
 
@@ -355,8 +470,14 @@ class PurchaseUtilityAiJobProcessorTest {
         when(explanationPort.generate(
                 any(PurchaseUtilityExplanationRequest.class)
         ))
-                .thenThrow(new RuntimeException("first"))
-                .thenThrow(new RuntimeException("second"));
+                .thenThrow(new PurchaseUtilityExplanationException(
+                        FailureKind.INVALID_RESPONSE,
+                        "first"
+                ))
+                .thenThrow(new PurchaseUtilityExplanationException(
+                        FailureKind.TRANSIENT_PROVIDER,
+                        "second"
+                ));
 
         var result = processor.process(
                 1L,
@@ -381,6 +502,9 @@ class PurchaseUtilityAiJobProcessorTest {
                         "AI_GENERATION_FAILED",
                         1
                 );
+        verify(explanationPort, times(2)).generate(
+                any(PurchaseUtilityExplanationRequest.class)
+        );
     }
 
     private void stubCacheMiss() {

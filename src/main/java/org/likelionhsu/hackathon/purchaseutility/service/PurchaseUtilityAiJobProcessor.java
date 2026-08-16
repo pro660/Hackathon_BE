@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityAiInputHasher;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityAiJobGateway;
+import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationException;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationPort;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationRequest;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationResult;
@@ -170,7 +171,14 @@ public class PurchaseUtilityAiJobProcessor {
                     explanationPort.generate(request),
                     0
             );
-        } catch (RuntimeException firstFailure) {
+        } catch (PurchaseUtilityExplanationException firstFailure) {
+            if (!firstFailure.isRetryable()) {
+                return new ExplanationAttempt(
+                        null,
+                        0
+                );
+            }
+
             try {
                 return new ExplanationAttempt(
                         explanationPort.generate(request),
@@ -182,6 +190,11 @@ public class PurchaseUtilityAiJobProcessor {
                         1
                 );
             }
+        } catch (RuntimeException unexpectedFailure) {
+            return new ExplanationAttempt(
+                    null,
+                    0
+            );
         }
     }
 
