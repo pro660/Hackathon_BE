@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
+import org.likelionhsu.hackathon.purchaseutility.domain.CareDifficulty;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityAnalysis;
 import org.likelionhsu.hackathon.purchaseutility.entity.snapshot.PurchaseUtilityCompatibleItemSnapshot;
 import org.likelionhsu.hackathon.purchaseutility.entity.snapshot.PurchaseUtilityFactorSnapshot;
@@ -18,6 +19,7 @@ public record PurchaseUtilityExplanationRequest(
         FactorScores factors,
         int compatibleItemCount,
         List<CompatibleItemContext> compatibleItems,
+        CareDifficulty careDifficulty,
         String language
 ) {
 
@@ -82,6 +84,7 @@ public record PurchaseUtilityExplanationRequest(
                 ),
                 analysis.getCompatibleItemCount(),
                 compatibleItems,
+                analysis.getCareDifficulty(),
                 normalizedLanguage
         );
     }

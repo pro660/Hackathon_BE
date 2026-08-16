@@ -9,10 +9,14 @@ import org.hibernate.type.SqlTypes;
 import org.likelionhsu.hackathon.auth.domain.User;
 import org.likelionhsu.hackathon.common.entity.BaseTimeEntity;
 import org.likelionhsu.hackathon.product.entity.Product;
+import org.likelionhsu.hackathon.purchaseutility.domain.CareDifficulty;
+import org.likelionhsu.hackathon.purchaseutility.domain.CareDifficultyResolver;
 import org.likelionhsu.hackathon.purchaseutility.entity.snapshot.PurchaseUtilityFactorSnapshot;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,6 +56,14 @@ public class PurchaseUtilityAnalysis extends BaseTimeEntity {
     @Column(name = "factor_json", nullable = false)
     private PurchaseUtilityFactorSnapshot factorJson;
 
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "care_difficulty",
+            nullable = false,
+            length = 20
+    )
+    private CareDifficulty careDifficulty;
+
     @Column(name = "summary", length = 1500)
     private String summary;
 
@@ -79,6 +91,8 @@ public class PurchaseUtilityAnalysis extends BaseTimeEntity {
         this.utilityScore = utilityScore;
         this.compatibleItemCount = compatibleItemCount;
         this.factorJson = factorJson;
+        this.careDifficulty =
+                CareDifficultyResolver.resolve(product.getMaterial());
         this.summary = summary;
         this.aiJobId = aiJobId;
         this.analyzedAt = analyzedAt;
@@ -156,6 +170,10 @@ public class PurchaseUtilityAnalysis extends BaseTimeEntity {
 
     public PurchaseUtilityFactorSnapshot getFactorJson() {
         return factorJson;
+    }
+
+    public CareDifficulty getCareDifficulty() {
+        return careDifficulty;
     }
 
     public String getSummary() {

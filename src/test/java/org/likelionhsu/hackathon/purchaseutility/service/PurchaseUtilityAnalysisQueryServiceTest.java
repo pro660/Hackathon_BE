@@ -21,6 +21,7 @@ import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.product.entity.Product;
 import org.likelionhsu.hackathon.product.entity.ProductImage;
 import org.likelionhsu.hackathon.product.repository.ProductImageRepository;
+import org.likelionhsu.hackathon.purchaseutility.domain.CareDifficulty;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityAnalysis;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityExplanationGenerationType;
 import org.likelionhsu.hackathon.purchaseutility.entity.snapshot.PurchaseUtilityCompatibleItemSnapshot;
@@ -63,6 +64,8 @@ class PurchaseUtilityAnalysisQueryServiceTest {
                 .thenReturn(new BigDecimal("77.00"));
         when(analysis.getCompatibleItemCount()).thenReturn(2);
         when(analysis.getFactorJson()).thenReturn(factors);
+        when(analysis.getCareDifficulty())
+                .thenReturn(CareDifficulty.MODERATE);
         when(analysis.getSummary()).thenReturn("활용도가 높은 편입니다.");
         when(analysis.getAnalyzedAt())
                 .thenReturn(
@@ -119,6 +122,8 @@ class PurchaseUtilityAnalysisQueryServiceTest {
                 .isEqualTo("베이지 재킷");
         assertThat(response.compatibleItems().getFirst().imageUrl())
                 .isEqualTo("https://example.com/item.webp");
+        assertThat(response.careDifficulty())
+                .isEqualTo(CareDifficulty.MODERATE);
         assertThat(response.explanationGenerationType())
                 .isEqualTo(
                         PurchaseUtilityExplanationGenerationType.RULE_BASED

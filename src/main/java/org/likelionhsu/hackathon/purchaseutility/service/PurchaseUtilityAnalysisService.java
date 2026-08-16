@@ -1,5 +1,6 @@
 package org.likelionhsu.hackathon.purchaseutility.service;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
@@ -20,6 +21,8 @@ import org.likelionhsu.hackathon.product.entity.ProductTagType;
 import org.likelionhsu.hackathon.product.repository.ProductRepository;
 import org.likelionhsu.hackathon.product.repository.ProductTagMappingRepository;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityAnalysis;
+import org.likelionhsu.hackathon.purchaseutility.domain.CareDifficulty;
+import org.likelionhsu.hackathon.purchaseutility.domain.CareDifficultyResolver;
 import org.likelionhsu.hackathon.purchaseutility.repository.PurchaseUtilityAnalysisRepository;
 import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityScorer.PurchaseUtilityScoreResult;
 import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityScorer.UserItemCandidate;
@@ -36,9 +39,6 @@ public class PurchaseUtilityAnalysisService {
 
     private static final String INSUFFICIENT_DATA_MESSAGE =
             "활용 가능성을 분석하기 위한 정보가 부족해요.";
-
-    private static final String RULE_BASED_SUMMARY =
-            "보유 아이템과의 조합 및 취향 정보를 기준으로 분석한 결과입니다.";
 
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
@@ -170,6 +170,18 @@ public class PurchaseUtilityAnalysisService {
                         candidates
                 );
 
+        CareDifficulty careDifficulty =
+                CareDifficultyResolver.resolve(
+                        product.getMaterial()
+                );
+
+        String ruleBasedSummary =
+                createRuleBasedSummary(
+                        scoreResult.total(),
+                        scoreResult.compatibleItemCount(),
+                        careDifficulty
+                );
+
         PurchaseUtilityAnalysis analysis =
                 analysisRepository.save(
                         PurchaseUtilityAnalysis.createRuleBased(
@@ -178,13 +190,52 @@ public class PurchaseUtilityAnalysisService {
                                 scoreResult.total(),
                                 scoreResult.compatibleItemCount(),
                                 scoreResult.factors(),
-                                RULE_BASED_SUMMARY,
+                                ruleBasedSummary,
                                 aiJobId,
                                 Instant.now(clock)
                         )
                 );
 
         return RuleAnalysisResult.ready(analysis);
+    }
+
+    private String createRuleBasedSummary(
+            BigDecimal utilityScore,
+            int compatibleItemCount,
+            CareDifficulty careDifficulty
+    ) {
+        String utilizationSummary;
+
+        if (utilityScore.compareTo(BigDecimal.valueOf(80)) >= 0) {
+            utilizationSummary =
+                    "현재 보유 아이템 및 취향과의 활용 가능성이 높은 제품입니다.";
+        } else if (
+                utilityScore.compareTo(BigDecimal.valueOf(60)) >= 0
+        ) {
+            utilizationSummary =
+                    "현재 보유 아이템 및 취향과 어느 정도 활용하기 좋은 제품입니다.";
+        } else {
+            utilizationSummary =
+                    "현재 보유 아이템 및 취향을 기준으로 활용 범위가 비교적 제한적인 제품입니다.";
+        }
+
+        String detailSummary =
+                switch (careDifficulty) {
+                    case EASY ->
+                            "보유 아이템 중 %d개와 조합할 수 있으며, 관리 난이도는 쉬운 편입니다.";
+                    case MODERATE ->
+                            "보유 아이템 중 %d개와 조합할 수 있으며, 관리 난이도는 보통 수준입니다.";
+                    case HARD ->
+                            "보유 아이템 중 %d개와 조합할 수 있으며, 관리 난이도는 어려운 편입니다.";
+                    case UNKNOWN ->
+                            "보유 아이템 중 %d개와 조합할 수 있습니다.";
+                };
+
+        return utilizationSummary
+                + " "
+                + detailSummary.formatted(
+                        compatibleItemCount
+                );
     }
 
     private User findActiveUser(Long userId) {
