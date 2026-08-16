@@ -18,6 +18,7 @@ import org.likelionhsu.hackathon.recommendation.entity.RecommendationProduct;
 import org.likelionhsu.hackathon.preference.entity.PreferenceStyleTag;
 import org.likelionhsu.hackathon.product.entity.Product;
 import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
+import org.likelionhsu.hackathon.useritem.entity.UserItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,7 +42,8 @@ import jakarta.persistence.EntityManager;
         Product.class,
         Wishlist.class,
         Recommendation.class,
-        RecommendationProduct.class
+        RecommendationProduct.class,
+        UserItem.class
 })
 class PreferenceRepositoryIntegrationTest {
 

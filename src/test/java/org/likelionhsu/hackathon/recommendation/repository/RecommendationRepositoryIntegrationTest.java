@@ -30,6 +30,7 @@ import org.likelionhsu.hackathon.recommendation.entity.snapshot.RecommendationSc
 
 import org.likelionhsu.hackathon.preference.entity.PreferenceProfile;
 import org.likelionhsu.hackathon.wishlist.entity.Wishlist;
+import org.likelionhsu.hackathon.useritem.entity.UserItem;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,8 @@ import jakarta.persistence.EntityManager;
         User.class,
         Product.class,
         Wishlist.class,
-        PreferenceProfile.class
+        PreferenceProfile.class,
+        UserItem.class
 })
 class RecommendationRepositoryIntegrationTest {
 
