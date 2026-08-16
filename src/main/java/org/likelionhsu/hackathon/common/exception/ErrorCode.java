@@ -34,6 +34,12 @@ public enum ErrorCode {
             "추천 결과를 찾을 수 없습니다."
     ),
 
+    PURCHASE_UTILITY_ANALYSIS_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "PURCHASE_UTILITY_ANALYSIS_NOT_FOUND",
+            "구매 활용성 분석 결과를 찾을 수 없습니다."
+    ),
+
     REQUEST_BODY_INVALID(
             HttpStatus.BAD_REQUEST,
             "REQUEST_BODY_INVALID",
