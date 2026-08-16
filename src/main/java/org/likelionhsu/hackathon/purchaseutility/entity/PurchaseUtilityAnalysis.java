@@ -2,6 +2,7 @@ package org.likelionhsu.hackathon.purchaseutility.entity;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -103,6 +104,34 @@ public class PurchaseUtilityAnalysis extends BaseTimeEntity {
                 aiJobId,
                 analyzedAt
         );
+    }
+
+    public void applyAiExplanation(
+            String aiSummary
+    ) {
+        String normalizedSummary =
+                Objects.requireNonNull(
+                        aiSummary,
+                        "aiSummary는 null일 수 없습니다."
+                ).trim();
+
+        if (normalizedSummary.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "aiSummary는 비어 있을 수 없습니다."
+            );
+        }
+
+        if (normalizedSummary.length() > 1500) {
+            throw new IllegalArgumentException(
+                    "aiSummary는 1500자를 초과할 수 없습니다."
+            );
+        }
+
+        this.summary = normalizedSummary;
+        this.factorJson =
+                factorJson.withExplanationGenerationType(
+                        PurchaseUtilityExplanationGenerationType.AI
+                );
     }
 
     public Long getId() {

@@ -14,6 +14,20 @@ public record PurchaseUtilityFactorSnapshot(
         CategoryCombinationFactor categoryCombination
 ) {
 
+    public PurchaseUtilityFactorSnapshot
+    withExplanationGenerationType(
+            PurchaseUtilityExplanationGenerationType generationType
+    ) {
+        return new PurchaseUtilityFactorSnapshot(
+                ruleVersion,
+                generationType,
+                preference,
+                itemCombination,
+                season,
+                categoryCombination
+        );
+    }
+
     public record PreferenceFactor(
             BigDecimal score,
             BigDecimal maxScore,
