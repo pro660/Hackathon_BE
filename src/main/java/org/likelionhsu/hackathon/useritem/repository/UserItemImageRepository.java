@@ -25,6 +25,28 @@ public class UserItemImageRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public boolean lockOwnedActiveItem(
+            Long userId,
+            Long userItemId
+    ) {
+        List<Long> lockedIds = jdbcTemplate.query(
+                """
+                SELECT id
+                FROM user_items
+                WHERE id = ?
+                  AND user_id = ?
+                  AND deleted_at IS NULL
+                FOR UPDATE NOWAIT
+                """,
+                (resultSet, rowNumber) ->
+                        resultSet.getLong("id"),
+                userItemId,
+                userId
+        );
+
+        return !lockedIds.isEmpty();
+    }
+
     public List<UserItemImageData> findActiveImages(
             Long userId,
             Long userItemId

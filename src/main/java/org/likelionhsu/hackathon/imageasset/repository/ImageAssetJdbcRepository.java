@@ -163,6 +163,169 @@ public class ImageAssetJdbcRepository {
         ).stream().findFirst();
     }
 
+    public Optional<ImageAssetData> lockOwnedItemAsset(
+            Long ownerUserId,
+            Long imageAssetId
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                imageAssetId,
+                "imageAssetId는 null일 수 없습니다."
+        );
+
+        return jdbcTemplate.query(
+                SELECT_SQL
+                        + """
+                         WHERE id = ?
+                           AND owner_user_id = ?
+                           AND purpose = 'ITEM'
+                         FOR UPDATE NOWAIT
+                        """,
+                this::map,
+                imageAssetId,
+                ownerUserId
+        ).stream().findFirst();
+    }
+
+    public java.util.List<ImageAssetData>
+    findActiveOwnedItemAssetsForUpdate(
+            Long ownerUserId,
+            Long userItemId
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                userItemId,
+                "userItemId는 null일 수 없습니다."
+        );
+
+        return jdbcTemplate.query(
+                SELECT_SQL
+                        + """
+                         WHERE owner_user_id = ?
+                           AND user_item_id = ?
+                           AND purpose = 'ITEM'
+                           AND status = 'ACTIVE'
+                           AND deleted_at IS NULL
+                         ORDER BY sort_order ASC, id ASC
+                         FOR UPDATE
+                        """,
+                this::map,
+                ownerUserId,
+                userItemId
+        );
+    }
+
+    public int markActiveImagesDeletePending(
+            Long ownerUserId,
+            Long userItemId
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                userItemId,
+                "userItemId는 null일 수 없습니다."
+        );
+
+        return jdbcTemplate.update(
+                """
+                UPDATE image_assets
+                SET status = 'DELETE_PENDING'
+                WHERE owner_user_id = ?
+                  AND user_item_id = ?
+                  AND purpose = 'ITEM'
+                  AND status = 'ACTIVE'
+                  AND deleted_at IS NULL
+                """,
+                ownerUserId,
+                userItemId
+        );
+    }
+
+    public boolean activateTemporaryForItem(
+            Long ownerUserId,
+            Long imageAssetId,
+            Long userItemId
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                imageAssetId,
+                "imageAssetId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                userItemId,
+                "userItemId는 null일 수 없습니다."
+        );
+
+        int updated = jdbcTemplate.update(
+                """
+                UPDATE image_assets
+                SET user_item_id = ?,
+                    status = 'ACTIVE',
+                    sort_order = 0,
+                    activated_at = CURRENT_TIMESTAMP(6)
+                WHERE id = ?
+                  AND owner_user_id = ?
+                  AND purpose = 'ITEM'
+                  AND status = 'TEMPORARY'
+                  AND user_item_id IS NULL
+                  AND deleted_at IS NULL
+                """,
+                userItemId,
+                imageAssetId,
+                ownerUserId
+        );
+
+        return updated == 1;
+    }
+
+    public boolean markLinkedActiveDeletePending(
+            Long ownerUserId,
+            Long userItemId,
+            Long imageAssetId
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                userItemId,
+                "userItemId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                imageAssetId,
+                "imageAssetId는 null일 수 없습니다."
+        );
+
+        int updated = jdbcTemplate.update(
+                """
+                UPDATE image_assets
+                SET status = 'DELETE_PENDING'
+                WHERE id = ?
+                  AND owner_user_id = ?
+                  AND user_item_id = ?
+                  AND purpose = 'ITEM'
+                  AND status = 'ACTIVE'
+                  AND deleted_at IS NULL
+                """,
+                imageAssetId,
+                ownerUserId,
+                userItemId
+        );
+
+        return updated == 1;
+    }
+
     public boolean markDeletePending(
             Long ownerUserId,
             Long imageAssetId
