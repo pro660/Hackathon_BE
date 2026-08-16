@@ -5,9 +5,11 @@ import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.likelionhsu.hackathon.auth.repository.UserRepository;
+import org.likelionhsu.hackathon.auth.security.ActiveUserFilter;
 import org.likelionhsu.hackathon.auth.security.RestAccessDeniedHandler;
 import org.likelionhsu.hackathon.auth.security.RestAuthenticationEntryPoint;
-import org.likelionhsu.hackathon.auth.security.ActiveUserFilter;
+import org.likelionhsu.hackathon.auth.security.SecurityErrorWriter;
 import org.likelionhsu.hackathon.auth.security.TrustedOriginFilter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +41,17 @@ public class AuthSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public ActiveUserFilter activeUserFilter(
+            UserRepository userRepository,
+            SecurityErrorWriter errorWriter
+    ) {
+        return new ActiveUserFilter(
+                userRepository,
+                errorWriter
+        );
     }
 
     @Bean

@@ -47,7 +47,7 @@ class ActiveUserFilterTest {
         MockFilterChain chain = new MockFilterChain();
 
         new ActiveUserFilter(userRepository, errorWriter)
-                .doFilter(
+                .doFilterInternal(
                         new MockHttpServletRequest(),
                         new MockHttpServletResponse(),
                         chain
@@ -67,7 +67,7 @@ class ActiveUserFilterTest {
                 new MockHttpServletResponse();
 
         new ActiveUserFilter(userRepository, errorWriter)
-                .doFilter(
+                .doFilterInternal(
                         new MockHttpServletRequest(),
                         response,
                         new MockFilterChain()
