@@ -196,6 +196,12 @@ public enum ErrorCode {
             "리소스를 수정하는 중 충돌이 발생했습니다. 다시 시도해 주세요."
     ),
 
+    IDEMPOTENCY_KEY_CONFLICT(
+            HttpStatus.CONFLICT,
+            "IDEMPOTENCY_KEY_CONFLICT",
+            "동일한 Idempotency-Key에 다른 요청이 사용되었습니다."
+    ),
+
     MY_ITEM_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "MY_ITEM_NOT_FOUND",
