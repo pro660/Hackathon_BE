@@ -191,6 +191,92 @@ class PurchaseUtilityAiJobGatewayIntegrationTest {
     }
 
     @Test
+    void processingJobCanStoreDeterministicInputHash() {
+        long jobId = gateway.createPending(
+                userId,
+                "purchase-utility-key-input-hash",
+                "gpt-model",
+                "purchase-utility-v1",
+                "a".repeat(64)
+        );
+
+        assertThat(
+                gateway.claimProcessing(userId, jobId)
+        ).isTrue();
+
+        String inputHash = "c".repeat(64);
+
+        assertThat(
+                gateway.updateInputHashIfProcessing(
+                        userId,
+                        jobId,
+                        inputHash
+                )
+        ).isTrue();
+
+        assertThat(
+                gateway.findOwned(userId, jobId)
+                        .orElseThrow()
+                        .inputHash()
+        ).isEqualTo(inputHash);
+    }
+
+    @Test
+    void recentSucceededCacheUsesDatabaseClockForTwentyFourHours() {
+        String inputHash = "d".repeat(64);
+
+        long jobId = gateway.createPending(
+                userId,
+                "purchase-utility-key-cache",
+                "gpt-model",
+                "purchase-utility-v1",
+                inputHash
+        );
+
+        assertThat(
+                gateway.claimProcessing(userId, jobId)
+        ).isTrue();
+        assertThat(
+                gateway.markSucceeded(
+                        userId,
+                        jobId,
+                        "{\"analysisId\":\"901\"}",
+                        100,
+                        30,
+                        500L
+                )
+        ).isTrue();
+
+        assertThat(
+                gateway.findRecentSucceededByInputHash(
+                        userId,
+                        inputHash,
+                        "purchase-utility-v1",
+                        "gpt-model"
+                )
+        ).isPresent();
+
+        jdbcTemplate.update(
+                """
+                UPDATE ai_jobs
+                SET completed_at =
+                    CURRENT_TIMESTAMP(6) - INTERVAL 25 HOUR
+                WHERE id = ?
+                """,
+                jobId
+        );
+
+        assertThat(
+                gateway.findRecentSucceededByInputHash(
+                        userId,
+                        inputHash,
+                        "purchase-utility-v1",
+                        "gpt-model"
+                )
+        ).isEmpty();
+    }
+
+    @Test
     void processingJobCanFailWithRuleBasedFallback() {
         long jobId = gateway.createPending(
                 userId,

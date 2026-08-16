@@ -1,5 +1,8 @@
 package org.likelionhsu.hackathon.purchaseutility.service;
 
+import java.util.Optional;
+
+import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityAiInputHasher;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityAiJobGateway;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationPort;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationRequest;
@@ -14,6 +17,8 @@ public class PurchaseUtilityAiJobProcessor {
 
     private final PurchaseUtilityAiJobGateway aiJobGateway;
     private final PurchaseUtilityAnalysisService analysisService;
+    private final PurchaseUtilityAiInputHasher inputHasher;
+    private final PurchaseUtilityAiSummaryCacheService cacheService;
     private final ObjectProvider<PurchaseUtilityExplanationPort>
             explanationPortProvider;
     private final PurchaseUtilityAiJobCompletionService
@@ -22,6 +27,8 @@ public class PurchaseUtilityAiJobProcessor {
     public PurchaseUtilityAiJobProcessor(
             PurchaseUtilityAiJobGateway aiJobGateway,
             PurchaseUtilityAnalysisService analysisService,
+            PurchaseUtilityAiInputHasher inputHasher,
+            PurchaseUtilityAiSummaryCacheService cacheService,
             ObjectProvider<PurchaseUtilityExplanationPort>
                     explanationPortProvider,
             PurchaseUtilityAiJobCompletionService
@@ -29,6 +36,8 @@ public class PurchaseUtilityAiJobProcessor {
     ) {
         this.aiJobGateway = aiJobGateway;
         this.analysisService = analysisService;
+        this.inputHasher = inputHasher;
+        this.cacheService = cacheService;
         this.explanationPortProvider = explanationPortProvider;
         this.completionService = completionService;
     }
@@ -66,6 +75,40 @@ public class PurchaseUtilityAiJobProcessor {
         PurchaseUtilityAnalysis analysis =
                 ruleResult.analysis();
 
+        PurchaseUtilityExplanationRequest request =
+                PurchaseUtilityExplanationRequest.from(
+                        analysis,
+                        language
+                );
+
+        String inputHash = inputHasher.hash(request);
+
+        Optional<String> cachedSummary =
+                cacheService.storeInputHashAndFindReusableSummary(
+                        userId,
+                        jobId,
+                        inputHash
+                );
+
+        if (cachedSummary.isPresent()) {
+            completionService.completeReadyWithAi(
+                    userId,
+                    jobId,
+                    analysis.getId(),
+                    new PurchaseUtilityExplanationResult(
+                            cachedSummary.orElseThrow(),
+                            null,
+                            null,
+                            null
+                    ),
+                    0
+            );
+
+            return ProcessingResult.cachedReady(
+                    analysis.getId()
+            );
+        }
+
         PurchaseUtilityExplanationPort explanationPort =
                 explanationPortProvider.getIfAvailable();
 
@@ -83,12 +126,6 @@ public class PurchaseUtilityAiJobProcessor {
                     analysis.getId()
             );
         }
-
-        PurchaseUtilityExplanationRequest request =
-                PurchaseUtilityExplanationRequest.from(
-                        analysis,
-                        language
-                );
 
         ExplanationAttempt attempt =
                 generateWithSingleRetry(
@@ -158,6 +195,7 @@ public class PurchaseUtilityAiJobProcessor {
         NOT_CLAIMED,
         INSUFFICIENT_DATA,
         READY_AI,
+        READY_CACHED,
         READY_RULE_BASED_FALLBACK
     }
 
@@ -185,6 +223,15 @@ public class PurchaseUtilityAiJobProcessor {
         ) {
             return new ProcessingResult(
                     ProcessingOutcome.READY_AI,
+                    analysisId
+            );
+        }
+
+        public static ProcessingResult cachedReady(
+                Long analysisId
+        ) {
+            return new ProcessingResult(
+                    ProcessingOutcome.READY_CACHED,
                     analysisId
             );
         }

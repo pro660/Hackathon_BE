@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import org.likelionhsu.hackathon.auth.domain.User;
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
 import org.likelionhsu.hackathon.product.entity.Product;
+import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityAiInputHasher;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityAiJobGateway;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationPort;
 import org.likelionhsu.hackathon.purchaseutility.ai.PurchaseUtilityExplanationRequest;
@@ -36,6 +38,8 @@ class PurchaseUtilityAiJobProcessorTest {
 
     @Mock PurchaseUtilityAiJobGateway aiJobGateway;
     @Mock PurchaseUtilityAnalysisService analysisService;
+    @Mock PurchaseUtilityAiInputHasher inputHasher;
+    @Mock PurchaseUtilityAiSummaryCacheService cacheService;
     @Mock ObjectProvider<PurchaseUtilityExplanationPort>
             explanationPortProvider;
     @Mock PurchaseUtilityExplanationPort explanationPort;
@@ -48,6 +52,8 @@ class PurchaseUtilityAiJobProcessorTest {
         processor = new PurchaseUtilityAiJobProcessor(
                 aiJobGateway,
                 analysisService,
+                inputHasher,
+                cacheService,
                 explanationPortProvider,
                 completionService
         );
@@ -70,6 +76,8 @@ class PurchaseUtilityAiJobProcessorTest {
 
         verifyNoInteractions(
                 analysisService,
+                inputHasher,
+                cacheService,
                 explanationPortProvider,
                 completionService
         );
@@ -108,6 +116,8 @@ class PurchaseUtilityAiJobProcessorTest {
                         "활용 가능성을 분석하기 위한 정보가 부족해요."
                 );
         verifyNoInteractions(
+                inputHasher,
+                cacheService,
                 explanationPortProvider,
                 explanationPort
         );
@@ -128,6 +138,8 @@ class PurchaseUtilityAiJobProcessorTest {
                         .RuleAnalysisResult
                         .ready(analysis)
         );
+
+        stubCacheMiss();
 
         when(explanationPortProvider.getIfAvailable())
                 .thenReturn(explanationPort);
@@ -181,6 +193,8 @@ class PurchaseUtilityAiJobProcessorTest {
                         .ready(analysis)
         );
 
+        stubCacheMiss();
+
         when(explanationPortProvider.getIfAvailable())
                 .thenReturn(explanationPort);
 
@@ -219,13 +233,9 @@ class PurchaseUtilityAiJobProcessorTest {
     }
 
     @Test
-    void missingAiAdapterKeepsRuleBasedAnalysisWithoutRetry()
+    void recentMatchingSummaryCompletesWithoutAiCall()
             throws Exception {
-        PurchaseUtilityAnalysis analysis =
-                mock(PurchaseUtilityAnalysis.class);
-        when(analysis.getId()).thenReturn(801L);
-        when(analysis.getUtilityScore())
-                .thenReturn(new BigDecimal("77.00"));
+        PurchaseUtilityAnalysis analysis = analysis(801L);
 
         when(aiJobGateway.claimProcessing(1L, 900L))
                 .thenReturn(true);
@@ -238,6 +248,63 @@ class PurchaseUtilityAiJobProcessorTest {
                         .RuleAnalysisResult
                         .ready(analysis)
         );
+        when(inputHasher.hash(
+                any(PurchaseUtilityExplanationRequest.class)
+        )).thenReturn("a".repeat(64));
+        when(cacheService.storeInputHashAndFindReusableSummary(
+                1L,
+                900L,
+                "a".repeat(64)
+        )).thenReturn(Optional.of("캐시된 AI 설명"));
+
+        var result = processor.process(
+                1L,
+                900L,
+                101L,
+                "ko"
+        );
+
+        assertThat(result.outcome())
+                .isEqualTo(ProcessingOutcome.READY_CACHED);
+        assertThat(result.analysisId()).isEqualTo(801L);
+
+        verify(completionService)
+                .completeReadyWithAi(
+                        1L,
+                        900L,
+                        801L,
+                        new PurchaseUtilityExplanationResult(
+                                "캐시된 AI 설명",
+                                null,
+                                null,
+                                null
+                        ),
+                        0
+                );
+        verifyNoInteractions(
+                explanationPortProvider,
+                explanationPort
+        );
+    }
+
+    @Test
+    void missingAiAdapterKeepsRuleBasedAnalysisWithoutRetry()
+            throws Exception {
+        PurchaseUtilityAnalysis analysis = analysis(801L);
+
+        when(aiJobGateway.claimProcessing(1L, 900L))
+                .thenReturn(true);
+        when(analysisService.createRuleBasedAnalysis(
+                1L,
+                101L,
+                900L
+        )).thenReturn(
+                PurchaseUtilityAnalysisService
+                        .RuleAnalysisResult
+                        .ready(analysis)
+        );
+
+        stubCacheMiss();
 
         var result = processor.process(
                 1L,
@@ -281,6 +348,8 @@ class PurchaseUtilityAiJobProcessorTest {
                         .ready(analysis)
         );
 
+        stubCacheMiss();
+
         when(explanationPortProvider.getIfAvailable())
                 .thenReturn(explanationPort);
         when(explanationPort.generate(
@@ -312,6 +381,17 @@ class PurchaseUtilityAiJobProcessorTest {
                         "AI_GENERATION_FAILED",
                         1
                 );
+    }
+
+    private void stubCacheMiss() {
+        when(inputHasher.hash(
+                any(PurchaseUtilityExplanationRequest.class)
+        )).thenReturn("a".repeat(64));
+        when(cacheService.storeInputHashAndFindReusableSummary(
+                1L,
+                900L,
+                "a".repeat(64)
+        )).thenReturn(Optional.empty());
     }
 
     private PurchaseUtilityAnalysis analysis(

@@ -158,6 +158,37 @@ public class PurchaseUtilityAiJobGateway {
         return updated == 1;
     }
 
+    public boolean updateInputHashIfProcessing(
+            Long userId,
+            Long jobId,
+            String inputHash
+    ) {
+        requireText(inputHash, "inputHash");
+
+        if (!inputHash.matches("[0-9a-f]{64}")) {
+            throw new IllegalArgumentException(
+                    "inputHash는 64자리 소문자 SHA-256이어야 합니다."
+            );
+        }
+
+        int updated = jdbcTemplate.update(
+                """
+                UPDATE ai_jobs
+                SET input_hash = ?,
+                    updated_at = CURRENT_TIMESTAMP(6)
+                WHERE id = ?
+                  AND user_id = ?
+                  AND type = 'PURCHASE_UTILITY'
+                  AND status = 'PROCESSING'
+                """,
+                inputHash,
+                jobId,
+                userId
+        );
+
+        return updated == 1;
+    }
+
     public boolean markSucceeded(
             Long userId,
             Long jobId,
@@ -265,6 +296,39 @@ public class PurchaseUtilityAiJobGateway {
         );
 
         return updated == 1;
+    }
+
+    public Optional<PurchaseUtilityAiJobData>
+    findRecentSucceededByInputHash(
+            Long userId,
+            String inputHash,
+            String promptVersion,
+            String model
+    ) {
+        requireText(inputHash, "inputHash");
+        requireText(promptVersion, "promptVersion");
+        requireText(model, "model");
+
+        return jdbcTemplate.query(
+                selectSql()
+                        + """
+                         WHERE user_id = ?
+                           AND type = 'PURCHASE_UTILITY'
+                           AND input_hash = ?
+                           AND prompt_version = ?
+                           AND model = ?
+                           AND status = 'SUCCEEDED'
+                           AND completed_at >=
+                               CURRENT_TIMESTAMP(6) - INTERVAL 24 HOUR
+                         ORDER BY completed_at DESC, id DESC
+                         LIMIT 1
+                        """,
+                this::map,
+                userId,
+                inputHash,
+                promptVersion,
+                model
+        ).stream().findFirst();
     }
 
     public Optional<PurchaseUtilityAiJobData>

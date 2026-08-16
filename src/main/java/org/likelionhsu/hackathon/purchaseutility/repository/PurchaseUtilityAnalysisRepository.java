@@ -41,6 +41,27 @@ public class PurchaseUtilityAnalysisRepository {
     }
 
     @Transactional(readOnly = true)
+    public Optional<PurchaseUtilityAnalysis> findByAiJobIdAndUser_Id(
+            Long aiJobId,
+            Long userId
+    ) {
+        return entityManager.createQuery(
+                        """
+                        SELECT analysis
+                        FROM PurchaseUtilityAnalysis analysis
+                        WHERE analysis.aiJobId = :aiJobId
+                          AND analysis.user.id = :userId
+                        """,
+                        PurchaseUtilityAnalysis.class
+                )
+                .setParameter("aiJobId", aiJobId)
+                .setParameter("userId", userId)
+                .setMaxResults(1)
+                .getResultStream()
+                .findFirst();
+    }
+
+    @Transactional(readOnly = true)
     public Optional<PurchaseUtilityAnalysis> findByIdAndUser_Id(
             Long analysisId,
             Long userId
