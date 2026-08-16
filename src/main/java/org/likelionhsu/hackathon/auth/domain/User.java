@@ -114,6 +114,19 @@ public class User extends BaseTimeEntity {
         return status;
     }
 
+    public void updateProfile(
+            String nickname,
+            Gender gender
+    ) {
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+
+        if (gender != null) {
+            this.gender = gender;
+        }
+    }
+
     public Long getVersion() {
         return version;
     }

@@ -16,6 +16,12 @@ public enum ErrorCode {
             "취향 정보를 수정하는 중 충돌이 발생했습니다. 다시 시도해 주세요."
     ),
 
+    USER_PROFILE_UPDATE_CONFLICT(
+            HttpStatus.CONFLICT,
+            "USER_PROFILE_UPDATE_CONFLICT",
+            "사용자 정보를 수정하는 중 충돌이 발생했습니다. 다시 시도해 주세요."
+    ),
+
     PREFERENCE_REQUIRED(
             HttpStatus.CONFLICT,
             "PREFERENCE_REQUIRED",
