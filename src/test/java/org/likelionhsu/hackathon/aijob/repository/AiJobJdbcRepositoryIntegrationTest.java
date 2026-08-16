@@ -108,6 +108,131 @@ class AiJobJdbcRepositoryIntegrationTest {
     }
 
     @Test
+    void stalePendingAndProcessingJobsCanBeTimedOutSafely() {
+        long pendingId = repository.createPending(
+                userId,
+                AiJobType.PURCHASE_UTILITY,
+                "stale-pending-key",
+                "d".repeat(64),
+                "configured-model",
+                "purchase-utility-summary-v1"
+        );
+
+        long processingId = repository.createPending(
+                userId,
+                AiJobType.PURCHASE_UTILITY,
+                "stale-processing-key",
+                "e".repeat(64),
+                "configured-model",
+                "purchase-utility-summary-v1"
+        );
+
+        long freshId = repository.createPending(
+                userId,
+                AiJobType.PURCHASE_UTILITY,
+                "fresh-pending-key",
+                "f".repeat(64),
+                "configured-model",
+                "purchase-utility-summary-v1"
+        );
+
+        jdbcTemplate.update(
+                """
+                UPDATE ai_jobs
+                SET created_at =
+                        DATE_SUB(
+                            CURRENT_TIMESTAMP(6),
+                            INTERVAL 3 MINUTE
+                        ),
+                    updated_at = CURRENT_TIMESTAMP(6)
+                WHERE id = ?
+                """,
+                pendingId
+        );
+
+        jdbcTemplate.update(
+                """
+                UPDATE ai_jobs
+                SET status = 'PROCESSING',
+                    started_at =
+                        DATE_SUB(
+                            CURRENT_TIMESTAMP(6),
+                            INTERVAL 3 MINUTE
+                        ),
+                    updated_at = CURRENT_TIMESTAMP(6)
+                WHERE id = ?
+                """,
+                processingId
+        );
+
+        assertThat(
+                repository.markTimedOutIfStale(
+                        userId,
+                        pendingId
+                )
+        ).isTrue();
+
+        assertThat(
+                repository.markTimedOutIfStale(
+                        userId,
+                        processingId
+                )
+        ).isTrue();
+
+        assertThat(
+                repository.markTimedOutIfStale(
+                        userId,
+                        freshId
+                )
+        ).isFalse();
+
+        AiJobData pending = repository
+                .findOwned(
+                        userId,
+                        pendingId
+                )
+                .orElseThrow();
+
+        AiJobData processing = repository
+                .findOwned(
+                        userId,
+                        processingId
+                )
+                .orElseThrow();
+
+        AiJobData fresh = repository
+                .findOwned(
+                        userId,
+                        freshId
+                )
+                .orElseThrow();
+
+        assertThat(pending.status())
+                .isEqualTo(AiJobStatus.FAILED);
+        assertThat(pending.errorCode())
+                .isEqualTo("AI_JOB_TIMEOUT");
+        assertThat(pending.completedAt())
+                .isNotNull();
+
+        assertThat(processing.status())
+                .isEqualTo(AiJobStatus.FAILED);
+        assertThat(processing.errorCode())
+                .isEqualTo("AI_JOB_TIMEOUT");
+        assertThat(processing.completedAt())
+                .isNotNull();
+
+        assertThat(fresh.status())
+                .isEqualTo(AiJobStatus.PENDING);
+
+        assertThat(
+                repository.markTimedOutIfStale(
+                        userId,
+                        pendingId
+                )
+        ).isFalse();
+    }
+
+    @Test
     void pendingJobStoresRequestHashAndStartsWithoutInputHash() {
         String requestHash = "c".repeat(64);
 

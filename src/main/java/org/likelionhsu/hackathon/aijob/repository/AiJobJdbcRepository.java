@@ -168,6 +168,47 @@ public class AiJobJdbcRepository {
         ).stream().findFirst();
     }
 
+    public boolean markTimedOutIfStale(
+            Long userId,
+            Long jobId
+    ) {
+        Objects.requireNonNull(userId, "userId는 null일 수 없습니다.");
+        Objects.requireNonNull(jobId, "jobId는 null일 수 없습니다.");
+
+        int updated = jdbcTemplate.update(
+                """
+                UPDATE ai_jobs
+                SET status = 'FAILED',
+                    result_json = NULL,
+                    error_code = 'AI_JOB_TIMEOUT',
+                    completed_at = CURRENT_TIMESTAMP(6),
+                    updated_at = CURRENT_TIMESTAMP(6)
+                WHERE id = ?
+                  AND user_id = ?
+                  AND (
+                        (
+                            status = 'PENDING'
+                            AND created_at <=
+                                CURRENT_TIMESTAMP(6)
+                                - INTERVAL 2 MINUTE
+                        )
+                        OR
+                        (
+                            status = 'PROCESSING'
+                            AND started_at IS NOT NULL
+                            AND started_at <=
+                                CURRENT_TIMESTAMP(6)
+                                - INTERVAL 2 MINUTE
+                        )
+                  )
+                """,
+                jobId,
+                userId
+        );
+
+        return updated == 1;
+    }
+
     private AiJobData map(
             ResultSet resultSet,
             int rowNumber

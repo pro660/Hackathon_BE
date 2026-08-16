@@ -2,12 +2,15 @@ package org.likelionhsu.hackathon.aijob.controller;
 
 import org.likelionhsu.hackathon.aijob.dto.request.AiJobCreateRequest;
 import org.likelionhsu.hackathon.aijob.dto.response.AiJobCreateResponse;
+import org.likelionhsu.hackathon.aijob.dto.response.AiJobResponse;
 import org.likelionhsu.hackathon.aijob.service.AiJobService;
 import org.likelionhsu.hackathon.common.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -78,5 +81,22 @@ public class AiJobController {
                                 result.response()
                         )
                 );
+    }
+
+    @Operation(
+            summary = "AI 작업 조회",
+            description = "현재 로그인 사용자가 생성한 AI 작업 상태와 결과를 조회합니다."
+    )
+    @GetMapping("/{jobId}")
+    public ApiResponse<AiJobResponse> getAiJob(
+            @PathVariable Long jobId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ApiResponse.success(
+                aiJobService.get(
+                        Long.valueOf(jwt.getSubject()),
+                        jobId
+                )
+        );
     }
 }

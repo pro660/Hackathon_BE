@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import java.time.Instant;
 import java.util.Optional;
 
+import tools.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +19,7 @@ import org.likelionhsu.hackathon.aijob.domain.AiJobData;
 import org.likelionhsu.hackathon.aijob.domain.AiJobStatus;
 import org.likelionhsu.hackathon.aijob.domain.AiJobType;
 import org.likelionhsu.hackathon.aijob.dto.request.AiJobCreateRequest;
+import org.likelionhsu.hackathon.aijob.dto.response.AiJobResponse;
 import org.likelionhsu.hackathon.aijob.repository.AiJobJdbcRepository;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
@@ -34,6 +37,9 @@ class AiJobServiceTest {
     @Mock
     private AiJobJdbcRepository repository;
 
+    private static final Instant NOW =
+            Instant.parse("2026-08-17T00:10:00Z");
+
     private AiJobRequestHasher hasher;
     private AiJobService service;
 
@@ -43,6 +49,7 @@ class AiJobServiceTest {
         service = new AiJobService(
                 repository,
                 hasher,
+                new ObjectMapper(),
                 "test-model"
         );
     }
@@ -243,6 +250,190 @@ class AiJobServiceTest {
         assertThat(result.accepted()).isTrue();
     }
 
+    @Test
+    void stalePendingReplayBecomesFailed() {
+        String requestHash =
+                hasher.hashPurchaseUtility("123");
+
+        AiJobData stale =
+                job(
+                        9001L,
+                        AiJobStatus.PENDING,
+                        requestHash,
+                        Instant.parse(
+                                "2026-08-17T00:07:59Z"
+                        ),
+                        null,
+                        null,
+                        null,
+                        null
+                );
+
+        AiJobData failed =
+                job(
+                        9001L,
+                        AiJobStatus.FAILED,
+                        requestHash,
+                        stale.createdAt(),
+                        null,
+                        NOW,
+                        null,
+                        "AI_JOB_TIMEOUT"
+                );
+
+        when(repository.findByUserAndIdempotencyKey(
+                USER_ID,
+                IDEMPOTENCY_KEY
+        )).thenReturn(Optional.of(stale));
+
+        when(repository.markTimedOutIfStale(
+                USER_ID,
+                9001L
+        )).thenReturn(true);
+
+        when(repository.findOwned(
+                USER_ID,
+                9001L
+        )).thenReturn(Optional.of(failed));
+
+        AiJobService.CreationResult result =
+                service.create(
+                        USER_ID,
+                        IDEMPOTENCY_KEY,
+                        request("123")
+                );
+
+        assertThat(result.accepted()).isFalse();
+        assertThat(result.response().status())
+                .isEqualTo(AiJobStatus.FAILED);
+    }
+
+    @Test
+    void getReturnsOwnedSucceededJobWithParsedResult() {
+        String requestHash =
+                hasher.hashPurchaseUtility("123");
+
+        AiJobData succeeded =
+                job(
+                        9001L,
+                        AiJobStatus.SUCCEEDED,
+                        requestHash,
+                        Instant.parse(
+                                "2026-08-17T00:09:00Z"
+                        ),
+                        null,
+                        NOW,
+                        "{\"analysisId\":\"31\"}",
+                        null
+                );
+
+        when(repository.findOwned(
+                USER_ID,
+                9001L
+        )).thenReturn(Optional.of(succeeded));
+
+        AiJobResponse response =
+                service.get(
+                        USER_ID,
+                        9001L
+                );
+
+        assertThat(response.status())
+                .isEqualTo(AiJobStatus.SUCCEEDED);
+        assertThat(
+                response.result()
+                        .get("analysisId")
+                        .asText()
+        ).isEqualTo("31");
+        assertThat(response.fallback()).isNull();
+        assertThat(response.error()).isNull();
+    }
+
+    @Test
+    void getStaleProcessingReturnsTimeoutFailure() {
+        String requestHash =
+                hasher.hashPurchaseUtility("123");
+
+        AiJobData processing =
+                job(
+                        9001L,
+                        AiJobStatus.PROCESSING,
+                        requestHash,
+                        Instant.parse(
+                                "2026-08-17T00:07:00Z"
+                        ),
+                        Instant.parse(
+                                "2026-08-17T00:07:30Z"
+                        ),
+                        null,
+                        null,
+                        null
+                );
+
+        AiJobData failed =
+                job(
+                        9001L,
+                        AiJobStatus.FAILED,
+                        requestHash,
+                        processing.createdAt(),
+                        processing.startedAt(),
+                        NOW,
+                        null,
+                        "AI_JOB_TIMEOUT"
+                );
+
+        when(repository.findOwned(
+                USER_ID,
+                9001L
+        ))
+                .thenReturn(Optional.of(processing))
+                .thenReturn(Optional.of(failed));
+
+        when(repository.markTimedOutIfStale(
+                USER_ID,
+                9001L
+        )).thenReturn(true);
+
+        AiJobResponse response =
+                service.get(
+                        USER_ID,
+                        9001L
+                );
+
+        assertThat(response.status())
+                .isEqualTo(AiJobStatus.FAILED);
+        assertThat(response.error().code())
+                .isEqualTo("AI_JOB_TIMEOUT");
+        assertThat(response.error().message())
+                .isEqualTo(
+                        "AI 작업 처리 시간이 초과되었습니다."
+                );
+    }
+
+    @Test
+    void getMissingOrOtherUsersJobIsNotFound() {
+        when(repository.findOwned(
+                USER_ID,
+                9999L
+        )).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                service.get(
+                        USER_ID,
+                        9999L
+                )
+        )
+                .isInstanceOf(BusinessException.class)
+                .satisfies(exception ->
+                        assertThat(
+                                ((BusinessException) exception)
+                                        .getErrorCode()
+                        ).isEqualTo(
+                                ErrorCode.AI_JOB_NOT_FOUND
+                        )
+                );
+    }
+
     private AiJobCreateRequest request(
             String productId
     ) {
@@ -261,9 +452,42 @@ class AiJobServiceTest {
     ) {
         Instant createdAt =
                 Instant.parse(
-                        "2026-08-17T00:00:00Z"
+                        "2026-08-17T00:09:00Z"
                 );
 
+        Instant startedAt =
+                status == AiJobStatus.PROCESSING
+                        ? createdAt
+                        : null;
+
+        Instant completedAt =
+                status == AiJobStatus.SUCCEEDED
+                        || status == AiJobStatus.FAILED
+                        ? createdAt.plusSeconds(30)
+                        : null;
+
+        return job(
+                jobId,
+                status,
+                requestHash,
+                createdAt,
+                startedAt,
+                completedAt,
+                null,
+                null
+        );
+    }
+
+    private AiJobData job(
+            Long jobId,
+            AiJobStatus status,
+            String requestHash,
+            Instant createdAt,
+            Instant startedAt,
+            Instant completedAt,
+            String resultJson,
+            String errorCode
+    ) {
         return new AiJobData(
                 jobId,
                 USER_ID,
@@ -274,20 +498,15 @@ class AiJobServiceTest {
                 "test-model",
                 "purchase-utility-summary-v1",
                 null,
-                null,
+                resultJson,
                 null,
                 null,
                 null,
                 null,
                 0,
-                null,
-                status == AiJobStatus.PROCESSING
-                        ? createdAt
-                        : null,
-                status == AiJobStatus.SUCCEEDED
-                        || status == AiJobStatus.FAILED
-                        ? createdAt.plusSeconds(3)
-                        : null,
+                errorCode,
+                startedAt,
+                completedAt,
                 createdAt,
                 createdAt
         );

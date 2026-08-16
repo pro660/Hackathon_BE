@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -11,12 +12,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.Instant;
 import java.util.List;
 
+import tools.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.likelionhsu.hackathon.aijob.domain.AiJobStatus;
 import org.likelionhsu.hackathon.aijob.domain.AiJobType;
 import org.likelionhsu.hackathon.aijob.dto.request.AiJobCreateRequest;
 import org.likelionhsu.hackathon.aijob.dto.response.AiJobCreateResponse;
+import org.likelionhsu.hackathon.aijob.dto.response.AiJobResponse;
 import org.likelionhsu.hackathon.aijob.service.AiJobService;
 import org.likelionhsu.hackathon.auth.security.TrustedOriginFilter;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
@@ -244,6 +248,73 @@ class AiJobControllerTest {
                 .andExpect(jsonPath("$.error.code")
                         .value(
                                 "IDEMPOTENCY_KEY_CONFLICT"
+                        ));
+    }
+
+    @Test
+    void getOwnedJobReturns200() throws Exception {
+        authenticate(USER_ID);
+
+        when(aiJobService.get(
+                USER_ID,
+                9001L
+        )).thenReturn(
+                new AiJobResponse(
+                        "9001",
+                        AiJobType.PURCHASE_UTILITY,
+                        AiJobStatus.SUCCEEDED,
+                        new ObjectMapper().readTree(
+                                "{\"analysisId\":\"31\"}"
+                        ),
+                        null,
+                        null,
+                        Instant.parse(
+                                "2026-08-17T00:00:00Z"
+                        ),
+                        Instant.parse(
+                                "2026-08-17T00:00:03Z"
+                        )
+                )
+        );
+
+        mockMvc.perform(
+                        get("/api/ai-jobs/9001")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success")
+                        .value(true))
+                .andExpect(jsonPath("$.data.jobId")
+                        .value("9001"))
+                .andExpect(jsonPath("$.data.status")
+                        .value("SUCCEEDED"))
+                .andExpect(jsonPath(
+                        "$.data.result.analysisId"
+                ).value("31"));
+    }
+
+    @Test
+    void getMissingOrOtherUsersJobReturns404()
+            throws Exception {
+        authenticate(USER_ID);
+
+        when(aiJobService.get(
+                USER_ID,
+                9999L
+        )).thenThrow(
+                new BusinessException(
+                        ErrorCode.AI_JOB_NOT_FOUND
+                )
+        );
+
+        mockMvc.perform(
+                        get("/api/ai-jobs/9999")
+                )
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.code")
+                        .value("AI_JOB_NOT_FOUND"))
+                .andExpect(jsonPath("$.error.message")
+                        .value(
+                                "AI 작업을 찾을 수 없습니다."
                         ));
     }
 

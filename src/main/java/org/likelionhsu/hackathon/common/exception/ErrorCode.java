@@ -202,6 +202,12 @@ public enum ErrorCode {
             "동일한 Idempotency-Key에 다른 요청이 사용되었습니다."
     ),
 
+    AI_JOB_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "AI_JOB_NOT_FOUND",
+            "AI 작업을 찾을 수 없습니다."
+    ),
+
     MY_ITEM_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "MY_ITEM_NOT_FOUND",

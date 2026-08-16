@@ -2,11 +2,14 @@ package org.likelionhsu.hackathon.aijob.service;
 
 import java.util.Objects;
 
+import tools.jackson.databind.ObjectMapper;
+
 import org.likelionhsu.hackathon.aijob.domain.AiJobData;
 import org.likelionhsu.hackathon.aijob.domain.AiJobStatus;
 import org.likelionhsu.hackathon.aijob.domain.AiJobType;
 import org.likelionhsu.hackathon.aijob.dto.request.AiJobCreateRequest;
 import org.likelionhsu.hackathon.aijob.dto.response.AiJobCreateResponse;
+import org.likelionhsu.hackathon.aijob.dto.response.AiJobResponse;
 import org.likelionhsu.hackathon.aijob.repository.AiJobJdbcRepository;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
@@ -23,16 +26,19 @@ public class AiJobService {
 
     private final AiJobJdbcRepository aiJobRepository;
     private final AiJobRequestHasher requestHasher;
+    private final ObjectMapper objectMapper;
     private final String openAiModel;
 
     public AiJobService(
             AiJobJdbcRepository aiJobRepository,
             AiJobRequestHasher requestHasher,
+            ObjectMapper objectMapper,
             @Value("${OPENAI_MODEL:}")
             String openAiModel
     ) {
         this.aiJobRepository = aiJobRepository;
         this.requestHasher = requestHasher;
+        this.objectMapper = objectMapper;
         this.openAiModel = openAiModel;
     }
 
@@ -110,6 +116,37 @@ public class AiJobService {
         }
     }
 
+    public AiJobResponse get(
+            Long userId,
+            Long jobId
+    ) {
+        Objects.requireNonNull(
+                userId,
+                "userId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                jobId,
+                "jobId는 null일 수 없습니다."
+        );
+
+        AiJobData job =
+                aiJobRepository
+                        .findOwned(
+                                userId,
+                                jobId
+                        )
+                        .orElseThrow(() ->
+                                new BusinessException(
+                                        ErrorCode.AI_JOB_NOT_FOUND
+                                )
+                        );
+
+        return AiJobResponse.from(
+                refreshStaleIfNeeded(job),
+                objectMapper
+        );
+    }
+
     private CreationResult resolveExisting(
             AiJobData existing,
             String requestHash
@@ -120,7 +157,39 @@ public class AiJobService {
             );
         }
 
-        return CreationResult.from(existing);
+        return CreationResult.from(
+                refreshStaleIfNeeded(existing)
+        );
+    }
+
+    private AiJobData refreshStaleIfNeeded(
+            AiJobData job
+    ) {
+        if (job.status() != AiJobStatus.PENDING
+                && job.status() != AiJobStatus.PROCESSING) {
+            return job;
+        }
+
+        boolean timedOut =
+                aiJobRepository.markTimedOutIfStale(
+                        job.userId(),
+                        job.id()
+                );
+
+        if (!timedOut) {
+            return job;
+        }
+
+        return aiJobRepository
+                .findOwned(
+                        job.userId(),
+                        job.id()
+                )
+                .orElseThrow(() ->
+                        new BusinessException(
+                                ErrorCode.AI_JOB_NOT_FOUND
+                        )
+                );
     }
 
     private String normalizePurchaseUtilityProductId(
