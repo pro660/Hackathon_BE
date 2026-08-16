@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.likelionhsu.hackathon.auth.domain.Gender;
 import org.likelionhsu.hackathon.auth.domain.SocialProvider;
+import org.likelionhsu.hackathon.auth.domain.SocialAccount;
 import org.likelionhsu.hackathon.auth.domain.User;
 import org.likelionhsu.hackathon.auth.oauth.OAuthProfile;
 import org.likelionhsu.hackathon.auth.oauth.OAuthProviderClient;
@@ -46,7 +47,9 @@ import jakarta.servlet.http.Cookie;
         "app.auth.oauth.success-url=http://localhost:3000/oauth/success",
         "app.auth.oauth.onboarding-url=http://localhost:3000/oauth/onboarding",
         "app.auth.oauth.state-cookie.name=test_oauth_state",
-        "app.auth.oauth.onboarding-cookie.name=test_social_onboarding_token"
+        "app.auth.oauth.onboarding-cookie.name=test_social_onboarding_token",
+        "app.auth.reauthentication.success-url=http://localhost:3000/account/reauthentication/success",
+        "app.auth.reauthentication.cookie.name=test_account_reauth_token"
 })
 @AutoConfigureMockMvc
 class OAuthApiIntegrationTest {
@@ -57,6 +60,8 @@ class OAuthApiIntegrationTest {
     private static final String ONBOARDING_COOKIE =
             "test_social_onboarding_token";
     private static final String REFRESH_COOKIE = "test_refresh_token";
+    private static final String REAUTH_COOKIE =
+            "test_account_reauth_token";
 
     @Autowired
     private MockMvc mockMvc;
@@ -333,6 +338,74 @@ class OAuthApiIntegrationTest {
 
         assertThat(pendingRepository.count()).isZero();
         assertThat(socialAccountRepository.count()).isZero();
+    }
+
+    @Test
+    void 소셜_재인증은_탈퇴용_일회성_Cookie를_발급한다()
+            throws Exception {
+        User user = userRepository.saveAndFlush(
+                User.social(
+                        "소셜사용자",
+                        Gender.NOT_SPECIFIED,
+                        null
+                )
+        );
+        socialAccountRepository.saveAndFlush(
+                new SocialAccount(
+                        user,
+                        SocialProvider.KAKAO,
+                        "kakao-user-300",
+                        null
+                )
+        );
+        when(providerClient.reauthenticationUri(
+                eq(SocialProvider.KAKAO),
+                anyString()
+        )).thenAnswer(invocation -> URI.create(
+                "https://kauth.kakao.com/oauth/authorize?state="
+                        + invocation.getArgument(1, String.class)
+        ));
+        when(providerClient.fetchProfile(
+                eq(SocialProvider.KAKAO),
+                eq("authorization-code"),
+                anyString()
+        )).thenReturn(new OAuthProfile(
+                SocialProvider.KAKAO,
+                "kakao-user-300",
+                null
+        ));
+
+        MvcResult start = mockMvc.perform(get(
+                        "/api/auth/oauth/kakao/reauthentication"
+                ))
+                .andExpect(status().isFound())
+                .andReturn();
+        Cookie stateCookie = start.getResponse()
+                .getCookie(STATE_COOKIE);
+
+        MvcResult callback = mockMvc.perform(
+                        get("/api/auth/oauth/kakao/callback")
+                                .param("code", "authorization-code")
+                                .param(
+                                        "state",
+                                        stateCookie.getValue()
+                                )
+                                .cookie(stateCookie)
+                )
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl(
+                        "http://localhost:3000/account/reauthentication/success"
+                ))
+                .andReturn();
+
+        Cookie reauthCookie = callback.getResponse()
+                .getCookie(REAUTH_COOKIE);
+        assertThat(reauthCookie).isNotNull();
+        assertThat(reauthCookie.isHttpOnly()).isTrue();
+        assertThat(reauthCookie.getMaxAge()).isEqualTo(600);
+        assertThat(reauthCookie.getPath())
+                .isEqualTo("/api/users/me");
+        assertThat(reauthTokenRepository.count()).isEqualTo(1);
     }
 
     @Test

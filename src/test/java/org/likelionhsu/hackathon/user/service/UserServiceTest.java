@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,9 @@ import org.likelionhsu.hackathon.auth.domain.Gender;
 import org.likelionhsu.hackathon.auth.domain.User;
 import org.likelionhsu.hackathon.auth.domain.UserStatus;
 import org.likelionhsu.hackathon.auth.repository.UserRepository;
+import org.likelionhsu.hackathon.auth.repository.LocalCredentialRepository;
+import org.likelionhsu.hackathon.auth.repository.SocialAccountRepository;
+import org.likelionhsu.hackathon.auth.domain.SocialProvider;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.common.exception.RequestValidationException;
@@ -32,11 +36,21 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private LocalCredentialRepository localCredentialRepository;
+
+    @Mock
+    private SocialAccountRepository socialAccountRepository;
+
     private UserService userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository);
+        userService = new UserService(
+                userRepository,
+                localCredentialRepository,
+                socialAccountRepository
+        );
     }
 
     @Test
@@ -51,6 +65,24 @@ class UserServiceTest {
         assertThat(response.userId()).isEqualTo("1");
         assertThat(response.nickname()).isEqualTo("기존닉네임");
         assertThat(response.gender()).isEqualTo(Gender.NOT_SPECIFIED);
+    }
+
+    @Test
+    void authenticationMethodsAreReturned() {
+        User user = createUser();
+        when(userRepository.findById(USER_ID))
+                .thenReturn(Optional.of(user));
+        when(localCredentialRepository.existsByUser_Id(USER_ID))
+                .thenReturn(true);
+        when(socialAccountRepository
+                .findProvidersByUserId(USER_ID))
+                .thenReturn(List.of(SocialProvider.KAKAO));
+
+        UserProfileResponse response =
+                userService.getMyProfile(USER_ID);
+
+        assertThat(response.authenticationMethods())
+                .containsExactly("LOCAL", "KAKAO");
     }
 
     @Test

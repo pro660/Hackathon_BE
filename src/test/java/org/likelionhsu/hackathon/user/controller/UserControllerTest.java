@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,6 +24,9 @@ import org.likelionhsu.hackathon.common.exception.RequestValidationException;
 import org.likelionhsu.hackathon.user.dto.request.UserProfileUpdateRequest;
 import org.likelionhsu.hackathon.user.dto.response.UserProfileResponse;
 import org.likelionhsu.hackathon.user.service.UserService;
+import org.likelionhsu.hackathon.user.service.AccountDeletionService;
+import org.likelionhsu.hackathon.auth.support.ReauthenticationCookieService;
+import org.likelionhsu.hackathon.auth.support.RefreshCookieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -31,6 +35,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -62,6 +67,16 @@ class UserControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private AccountDeletionService accountDeletionService;
+
+    @MockitoBean
+    private ReauthenticationCookieService
+            reauthenticationCookieService;
+
+    @MockitoBean
+    private RefreshCookieService refreshCookieService;
+
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
@@ -80,6 +95,9 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data.userId").value("1"))
                 .andExpect(jsonPath("$.data.nickname").value("오늘뭐입지"))
                 .andExpect(jsonPath("$.data.gender").value("NOT_SPECIFIED"))
+                .andExpect(jsonPath(
+                        "$.data.authenticationMethods[0]"
+                ).value("LOCAL"))
                 .andExpect(jsonPath("$.data.email").doesNotExist())
                 .andExpect(jsonPath("$.data.status").doesNotExist())
                 .andExpect(jsonPath("$.data.version").doesNotExist());
@@ -199,11 +217,36 @@ class UserControllerTest {
                 );
     }
 
+    @Test
+    void verifiedAccountDeletionReturns204AndClearsCookies()
+            throws Exception {
+        authenticate(USER_ID);
+        when(reauthenticationCookieService.read(any()))
+                .thenReturn("raw-token");
+        when(reauthenticationCookieService.clear())
+                .thenReturn(ResponseCookie.from(
+                        "account_reauth_token",
+                        ""
+                ).build());
+        when(refreshCookieService.clear())
+                .thenReturn(ResponseCookie.from(
+                        "refresh_token",
+                        ""
+                ).build());
+
+        mockMvc.perform(delete("/api/users/me"))
+                .andExpect(status().isNoContent());
+
+        verify(accountDeletionService)
+                .deleteAccount(USER_ID, "raw-token");
+    }
+
     private UserProfileResponse profileResponse() {
         return new UserProfileResponse(
                 "1",
                 "오늘뭐입지",
-                Gender.NOT_SPECIFIED
+                Gender.NOT_SPECIFIED,
+                List.of("LOCAL")
         );
     }
 

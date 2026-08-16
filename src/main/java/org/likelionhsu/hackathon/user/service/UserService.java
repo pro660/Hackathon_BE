@@ -1,8 +1,13 @@
 package org.likelionhsu.hackathon.user.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.likelionhsu.hackathon.auth.domain.User;
 import org.likelionhsu.hackathon.auth.domain.UserStatus;
 import org.likelionhsu.hackathon.auth.repository.UserRepository;
+import org.likelionhsu.hackathon.auth.repository.LocalCredentialRepository;
+import org.likelionhsu.hackathon.auth.repository.SocialAccountRepository;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.common.exception.RequestValidationException;
@@ -18,9 +23,20 @@ import jakarta.persistence.OptimisticLockException;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final LocalCredentialRepository
+            localCredentialRepository;
+    private final SocialAccountRepository
+            socialAccountRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(
+            UserRepository userRepository,
+            LocalCredentialRepository localCredentialRepository,
+            SocialAccountRepository socialAccountRepository
+    ) {
         this.userRepository = userRepository;
+        this.localCredentialRepository =
+                localCredentialRepository;
+        this.socialAccountRepository = socialAccountRepository;
     }
 
     @Transactional(readOnly = true)
@@ -108,7 +124,24 @@ public class UserService {
         return new UserProfileResponse(
                 String.valueOf(user.getId()),
                 user.getNickname(),
-                user.getGender()
+                user.getGender(),
+                authenticationMethods(user.getId())
         );
+    }
+
+    private List<String> authenticationMethods(Long userId) {
+        List<String> methods = new ArrayList<>();
+
+        if (localCredentialRepository.existsByUser_Id(userId)) {
+            methods.add("LOCAL");
+        }
+
+        socialAccountRepository.findProvidersByUserId(userId)
+                .stream()
+                .distinct()
+                .map(Enum::name)
+                .forEach(methods::add);
+
+        return methods;
     }
 }

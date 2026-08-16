@@ -136,6 +136,24 @@ public enum ErrorCode {
             "Refresh Token이 유효하지 않습니다."
     ),
 
+    REAUTHENTICATION_FAILED(
+            HttpStatus.UNAUTHORIZED,
+            "REAUTHENTICATION_FAILED",
+            "계정 재인증에 실패했습니다."
+    ),
+
+    REAUTHENTICATION_METHOD_NOT_AVAILABLE(
+            HttpStatus.CONFLICT,
+            "REAUTHENTICATION_METHOD_NOT_AVAILABLE",
+            "현재 계정에서 사용할 수 없는 재인증 방식입니다."
+    ),
+
+    REAUTH_TOKEN_INVALID(
+            HttpStatus.UNAUTHORIZED,
+            "REAUTH_TOKEN_INVALID",
+            "계정 재인증 토큰이 유효하지 않습니다."
+    ),
+
     ACCOUNT_NOT_ACTIVE(
             HttpStatus.FORBIDDEN,
             "ACCOUNT_NOT_ACTIVE",

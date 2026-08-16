@@ -30,5 +30,13 @@ class AuthProductionConfigurationTest {
         assertThat(properties.getProperty(
                 "app.auth.oauth.success-url"
         )).isEqualTo("${FRONTEND_OAUTH_SUCCESS_URL}");
+        assertThat(properties.getProperty(
+                "app.auth.reauthentication.success-url"
+        )).isEqualTo(
+                "${FRONTEND_REAUTHENTICATION_SUCCESS_URL}"
+        );
+        assertThat(properties.getProperty(
+                "app.auth.reauthentication.cookie.secure"
+        )).isEqualTo("true");
     }
 }

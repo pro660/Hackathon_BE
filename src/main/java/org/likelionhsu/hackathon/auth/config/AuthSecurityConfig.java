@@ -7,6 +7,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.likelionhsu.hackathon.auth.security.RestAccessDeniedHandler;
 import org.likelionhsu.hackathon.auth.security.RestAuthenticationEntryPoint;
+import org.likelionhsu.hackathon.auth.security.ActiveUserFilter;
 import org.likelionhsu.hackathon.auth.security.TrustedOriginFilter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +31,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({
         AuthProperties.class,
-        OAuthProperties.class
+        OAuthProperties.class,
+        ReauthenticationProperties.class
 })
 public class AuthSecurityConfig {
 
@@ -65,6 +67,7 @@ public class AuthSecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedOriginFilter trustedOriginFilter,
+            ActiveUserFilter activeUserFilter,
             RestAuthenticationEntryPoint authenticationEntryPoint,
             RestAccessDeniedHandler accessDeniedHandler
     ) throws Exception {
@@ -109,6 +112,10 @@ public class AuthSecurityConfig {
                 )
                 .addFilterBefore(
                         trustedOriginFilter,
+                        BearerTokenAuthenticationFilter.class
+                )
+                .addFilterAfter(
+                        activeUserFilter,
                         BearerTokenAuthenticationFilter.class
                 );
 

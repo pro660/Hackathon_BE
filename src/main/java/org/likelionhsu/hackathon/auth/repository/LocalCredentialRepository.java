@@ -21,4 +21,16 @@ public interface LocalCredentialRepository extends
     Optional<LocalCredential> findWithUserByLoginId(
             @Param("loginId") String loginId
     );
+
+    @Query("""
+            select credential
+            from LocalCredential credential
+            join fetch credential.user
+            where credential.user.id = :userId
+            """)
+    Optional<LocalCredential> findWithUserByUserId(
+            @Param("userId") Long userId
+    );
+
+    boolean existsByUser_Id(Long userId);
 }

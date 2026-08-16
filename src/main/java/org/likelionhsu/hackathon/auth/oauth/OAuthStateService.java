@@ -20,6 +20,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class OAuthStateService {
 
+    private static final String LOGIN_FLOW = "login";
+    private static final String ACCOUNT_DELETE_FLOW =
+            "account-delete";
+
     private static final Base64.Encoder BASE64_ENCODER =
             Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder BASE64_DECODER =
@@ -47,7 +51,17 @@ public class OAuthStateService {
     }
 
     public String create() {
+        return create(LOGIN_FLOW);
+    }
+
+    public String createAccountDeleteReauthentication() {
+        return create(ACCOUNT_DELETE_FLOW);
+    }
+
+    private String create(String flow) {
         String payload = Instant.now(clock).getEpochSecond()
+                + "."
+                + flow
                 + "."
                 + tokenGenerator.generateToken();
         String encodedPayload = BASE64_ENCODER.encodeToString(
@@ -56,6 +70,13 @@ public class OAuthStateService {
         return encodedPayload
                 + "."
                 + BASE64_ENCODER.encodeToString(sign(encodedPayload));
+    }
+
+    public boolean isAccountDeleteReauthentication(String state) {
+        String payload = decodePayload(state);
+        String[] values = payload.split("\\.", 3);
+        return values.length == 3
+                && ACCOUNT_DELETE_FLOW.equals(values[1]);
     }
 
     public void validate(String queryState, String cookieState) {
@@ -91,10 +112,7 @@ public class OAuthStateService {
 
         long issuedAtEpochSecond;
         try {
-            String payload = new String(
-                    BASE64_DECODER.decode(parts[0]),
-                    StandardCharsets.UTF_8
-            );
+            String payload = decodePayload(queryState);
             issuedAtEpochSecond = Long.parseLong(
                     payload.substring(0, payload.indexOf('.'))
             );
@@ -107,6 +125,18 @@ public class OAuthStateService {
         if (issuedAt.isAfter(now)
                 || !issuedAt.plus(oauthProperties.stateTtl())
                 .isAfter(now)) {
+            throw invalidState();
+        }
+    }
+
+    private String decodePayload(String state) {
+        try {
+            String encodedPayload = state.split("\\.", 2)[0];
+            return new String(
+                    BASE64_DECODER.decode(encodedPayload),
+                    StandardCharsets.UTF_8
+            );
+        } catch (RuntimeException exception) {
             throw invalidState();
         }
     }
