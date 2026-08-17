@@ -190,6 +190,43 @@ public class ImageAssetJdbcRepository {
         ).stream().findFirst();
     }
 
+    public boolean bindAiJobToTemporaryItemAsset(
+            Long ownerUserId,
+            Long imageAssetId,
+            Long aiJobId
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                imageAssetId,
+                "imageAssetId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                aiJobId,
+                "aiJobId는 null일 수 없습니다."
+        );
+
+        int updated = jdbcTemplate.update(
+                """
+                UPDATE image_assets
+                SET ai_job_id = ?
+                WHERE id = ?
+                  AND owner_user_id = ?
+                  AND purpose = 'ITEM'
+                  AND status = 'TEMPORARY'
+                  AND user_item_id IS NULL
+                  AND deleted_at IS NULL
+                """,
+                aiJobId,
+                imageAssetId,
+                ownerUserId
+        );
+
+        return updated == 1;
+    }
+
     public java.util.List<ImageAssetData>
     findActiveOwnedItemAssetsForUpdate(
             Long ownerUserId,

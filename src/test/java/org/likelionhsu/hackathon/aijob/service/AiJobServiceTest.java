@@ -40,6 +40,10 @@ class AiJobServiceTest {
     private AiJobJdbcRepository repository;
 
     @Mock
+    private ItemAnalysisAiJobCreationService
+            itemAnalysisAiJobCreationService;
+
+    @Mock
     private PurchaseUtilityAiJobDispatcher dispatcher;
 
     private static final Instant NOW =
@@ -55,6 +59,7 @@ class AiJobServiceTest {
                 repository,
                 hasher,
                 new ObjectMapper(),
+                itemAnalysisAiJobCreationService,
                 dispatcher,
                 "test-model"
         );

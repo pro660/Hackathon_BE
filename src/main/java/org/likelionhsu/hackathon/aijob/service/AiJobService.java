@@ -24,10 +24,14 @@ public class AiJobService {
 
     private static final String PURCHASE_UTILITY_PROMPT_VERSION =
             "purchase-utility-summary-v1";
+    private static final String ITEM_ANALYSIS_PROMPT_VERSION =
+            "item-analysis-v1";
 
     private final AiJobJdbcRepository aiJobRepository;
     private final AiJobRequestHasher requestHasher;
     private final ObjectMapper objectMapper;
+    private final ItemAnalysisAiJobCreationService
+            itemAnalysisAiJobCreationService;
     private final PurchaseUtilityAiJobDispatcher
             purchaseUtilityAiJobDispatcher;
     private final String openAiModel;
@@ -36,6 +40,8 @@ public class AiJobService {
             AiJobJdbcRepository aiJobRepository,
             AiJobRequestHasher requestHasher,
             ObjectMapper objectMapper,
+            ItemAnalysisAiJobCreationService
+                    itemAnalysisAiJobCreationService,
             PurchaseUtilityAiJobDispatcher
                     purchaseUtilityAiJobDispatcher,
             @Value("${OPENAI_MODEL:}")
@@ -44,6 +50,8 @@ public class AiJobService {
         this.aiJobRepository = aiJobRepository;
         this.requestHasher = requestHasher;
         this.objectMapper = objectMapper;
+        this.itemAnalysisAiJobCreationService =
+                itemAnalysisAiJobCreationService;
         this.purchaseUtilityAiJobDispatcher =
                 purchaseUtilityAiJobDispatcher;
         this.openAiModel = openAiModel;
@@ -58,6 +66,16 @@ public class AiJobService {
                 userId,
                 "userId는 null일 수 없습니다."
         );
+
+        if (request != null
+                && request.type()
+                == AiJobType.ITEM_ANALYSIS) {
+            return createItemAnalysis(
+                    userId,
+                    idempotencyKey,
+                    request
+            );
+        }
 
         String normalizedProductId =
                 normalizePurchaseUtilityProductId(request);
@@ -111,6 +129,66 @@ public class AiJobService {
                     jobId,
                     Long.valueOf(normalizedProductId)
             );
+
+            return CreationResult.from(created);
+        } catch (DataIntegrityViolationException exception) {
+            return aiJobRepository
+                    .findByUserAndIdempotencyKey(
+                            userId,
+                            idempotencyKey
+                    )
+                    .map(job ->
+                            resolveExisting(
+                                    job,
+                                    requestHash
+                            )
+                    )
+                    .orElseThrow(() -> exception);
+        }
+    }
+
+    private CreationResult createItemAnalysis(
+            Long userId,
+            String idempotencyKey,
+            AiJobCreateRequest request
+    ) {
+        String normalizedImageAssetId =
+                normalizeItemAnalysisImageAssetId(request);
+
+        String requestHash =
+                requestHasher.hashItemAnalysis(
+                        normalizedImageAssetId
+                );
+
+        var existing =
+                aiJobRepository
+                        .findByUserAndIdempotencyKey(
+                                userId,
+                                idempotencyKey
+                        );
+
+        if (existing.isPresent()) {
+            return resolveExisting(
+                    existing.get(),
+                    requestHash
+            );
+        }
+
+        String model = requireConfiguredModel();
+
+        try {
+            AiJobData created =
+                    itemAnalysisAiJobCreationService
+                            .createPendingAndBind(
+                                    userId,
+                                    Long.valueOf(
+                                            normalizedImageAssetId
+                                    ),
+                                    idempotencyKey,
+                                    requestHash,
+                                    model,
+                                    ITEM_ANALYSIS_PROMPT_VERSION
+                            );
 
             return CreationResult.from(created);
         } catch (DataIntegrityViolationException exception) {
@@ -242,6 +320,50 @@ public class AiJobService {
         } catch (NumberFormatException exception) {
             throw new RequestValidationException(
                     "context.productId",
+                    "1 이상의 정수로 입력해 주세요."
+            );
+        }
+    }
+
+    private String normalizeItemAnalysisImageAssetId(
+            AiJobCreateRequest request
+    ) {
+        if (request == null
+                || request.type()
+                != AiJobType.ITEM_ANALYSIS
+                || request.context() == null) {
+            throw new BusinessException(
+                    ErrorCode.REQUEST_BODY_INVALID
+            );
+        }
+
+        String rawImageAssetId =
+                request.context().imageAssetId();
+
+        if (rawImageAssetId == null
+                || rawImageAssetId.isBlank()) {
+            throw new RequestValidationException(
+                    "context.imageAssetId",
+                    "필수 입력값입니다."
+            );
+        }
+
+        try {
+            long imageAssetId =
+                    Long.parseLong(
+                            rawImageAssetId.trim()
+                    );
+
+            if (imageAssetId <= 0L) {
+                throw new NumberFormatException(
+                        "imageAssetId must be positive"
+                );
+            }
+
+            return String.valueOf(imageAssetId);
+        } catch (NumberFormatException exception) {
+            throw new RequestValidationException(
+                    "context.imageAssetId",
                     "1 이상의 정수로 입력해 주세요."
             );
         }
