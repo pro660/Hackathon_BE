@@ -15,6 +15,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.likelionhsu.hackathon.cart.repository.CartItemJdbcRepository;
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
 import org.likelionhsu.hackathon.common.enums.MaterialGroup;
@@ -56,6 +57,9 @@ class ProductServiceTest {
     @Mock
     private WishlistRepository wishlistRepository;
 
+    @Mock
+    private CartItemJdbcRepository cartItemRepository;
+
     private ProductService productService;
 
     @BeforeEach
@@ -65,7 +69,8 @@ class ProductServiceTest {
                         productRepository,
                         productImageRepository,
                         productTagMappingRepository,
-                        wishlistRepository
+                        wishlistRepository,
+                        cartItemRepository
                 );
     }
 
@@ -276,6 +281,14 @@ class ProductServiceTest {
         ).thenReturn(true);
 
         when(
+                cartItemRepository
+                        .existsByUser_IdAndProduct_Id(
+                                1L,
+                                1L
+                        )
+        ).thenReturn(true);
+
+        when(
                 productImageRepository
                         .findAllByProduct_IdOrderBySortOrderAsc(
                                 1L
@@ -311,6 +324,9 @@ class ProductServiceTest {
                 .hasSize(1);
 
         assertThat(response.favorited())
+                .isTrue();
+
+        assertThat(response.inCart())
                 .isTrue();
 
         assertThat(
@@ -359,6 +375,14 @@ class ProductServiceTest {
         ).thenReturn(false);
 
         when(
+                cartItemRepository
+                        .existsByUser_IdAndProduct_Id(
+                                1L,
+                                1L
+                        )
+        ).thenReturn(false);
+
+        when(
                 productImageRepository
                         .findAllByProduct_IdOrderBySortOrderAsc(
                                 1L
@@ -399,6 +423,9 @@ class ProductServiceTest {
 
         assertThat(response.favorited())
                 .isFalse();
+
+        assertThat(response.inCart())
+                .isFalse();
     }
 
     @Test
@@ -435,6 +462,14 @@ class ProductServiceTest {
 
         verify(
                 wishlistRepository,
+                never()
+        ).existsByUser_IdAndProduct_Id(
+                any(),
+                any()
+        );
+
+        verify(
+                cartItemRepository,
                 never()
         ).existsByUser_IdAndProduct_Id(
                 any(),

@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.likelionhsu.hackathon.cart.repository.CartItemJdbcRepository;
 import org.likelionhsu.hackathon.common.enums.ColorGroup;
 import org.likelionhsu.hackathon.common.enums.ItemCategory;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
@@ -40,17 +41,20 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final ProductTagMappingRepository productTagMappingRepository;
     private final WishlistRepository wishlistRepository;
+    private final CartItemJdbcRepository cartItemRepository;
 
     public ProductService(
             ProductRepository productRepository,
             ProductImageRepository productImageRepository,
             ProductTagMappingRepository productTagMappingRepository,
-            WishlistRepository wishlistRepository
+            WishlistRepository wishlistRepository,
+            CartItemJdbcRepository cartItemRepository
     ) {
         this.productRepository = productRepository;
         this.productImageRepository = productImageRepository;
         this.productTagMappingRepository = productTagMappingRepository;
         this.wishlistRepository = wishlistRepository;
+        this.cartItemRepository = cartItemRepository;
     }
 
     public PageResponse<ProductListItemResponse> getProducts(
@@ -145,6 +149,13 @@ public class ProductService {
                                 productId
                         );
 
+        boolean inCart =
+                cartItemRepository
+                        .existsByUser_IdAndProduct_Id(
+                                userId,
+                                productId
+                        );
+
         List<ProductImageResponse> images =
                 productImageRepository
                         .findAllByProduct_IdOrderBySortOrderAsc(
@@ -176,7 +187,8 @@ public class ProductService {
                 product.getProductUrl(),
                 images,
                 tags,
-                favorited
+                favorited,
+                inCart
         );
     }
 
