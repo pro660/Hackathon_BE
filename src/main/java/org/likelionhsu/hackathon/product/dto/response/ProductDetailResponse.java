@@ -20,6 +20,7 @@ public record ProductDetailResponse(
         String productUrl,
         List<ProductImageResponse> images,
         ProductTagsResponse tags,
-        boolean favorited
+        boolean favorited,
+        boolean inCart
 ) {
 }

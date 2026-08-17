@@ -277,6 +277,7 @@ class ProductControllerTest {
                                 List.of("DAILY"),
                                 List.of("SPACIOUS")
                         ),
+                        true,
                         true
                 );
 
@@ -315,6 +316,10 @@ class ProductControllerTest {
                 )
                 .andExpect(
                         jsonPath("$.data.favorited")
+                                .value(true)
+                )
+                .andExpect(
+                        jsonPath("$.data.inCart")
                                 .value(true)
                 );
 
