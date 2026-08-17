@@ -1,0 +1,214 @@
+{
+  "materials": {
+    "LEATHER": {
+      "materialLabel": "가죽",
+      "summaryTitle": "가죽 소재 맞춤 관리",
+      "summaryDescription": "표면의 먼지와 수분을 오래 방치하지 말고, 건조하고 통풍되는 환경에서 형태를 유지해 보관해 주세요.",
+      "routines": [
+        {
+          "type": "CLEANING",
+          "intervalValue": 3,
+          "intervalUnit": "MONTH",
+          "title": "가죽 클리닝",
+          "description": "부드럽고 마른 천으로 표면의 먼지와 가벼운 오염을 정리하고 전체 상태를 점검해 주세요."
+        },
+        {
+          "type": "CONDITIONING",
+          "intervalValue": 6,
+          "intervalUnit": "MONTH",
+          "title": "가죽 컨디셔닝",
+          "description": "제품의 공식 관리 안내와 사용 가능한 가죽 전용 관리 제품을 확인한 뒤 눈에 띄지 않는 부분부터 소량으로 관리해 주세요."
+        }
+      ],
+      "storageGuide": {
+        "avoidEnvironments": [
+          "직사광선과 강한 열원 가까이 두지 마세요.",
+          "비, 음료, 땀 등 수분에 오래 노출하지 마세요.",
+          "거친 표면과 반복적으로 마찰되거나 눌린 채 보관하지 마세요."
+        ],
+        "humidityManagement": [
+          "젖었을 때 문지르거나 강한 열로 말리지 말고 통풍되는 그늘에서 자연 건조해 주세요.",
+          "장기간 밀폐하기보다 습기가 차지 않는 건조한 환경을 유지해 주세요."
+        ],
+        "recommendedStorage": [
+          "내용물을 비우고 형태가 무너지지 않도록 부드러운 충전재를 넣어 보관해 주세요.",
+          "통풍 가능한 더스트백을 사용하고 다른 제품에 눌리지 않도록 공간을 확보해 주세요."
+        ]
+      }
+    },
+    "SYNTHETIC_LEATHER": {
+      "materialLabel": "합성가죽",
+      "summaryTitle": "합성가죽 소재 맞춤 관리",
+      "summaryDescription": "표면 오염을 부드럽게 제거하고 고온, 강한 마찰, 장시간의 습기 노출을 피해 주세요.",
+      "routines": [
+        {
+          "type": "CLEANING",
+          "intervalValue": 3,
+          "intervalUnit": "MONTH",
+          "title": "합성가죽 클리닝",
+          "description": "부드러운 마른 천으로 먼지와 표면 오염을 정리하고 갈라짐이나 들뜸이 없는지 점검해 주세요."
+        }
+      ],
+      "storageGuide": {
+        "avoidEnvironments": [
+          "난방기구, 차량 내부 등 고온 환경에 오래 두지 마세요.",
+          "거친 소재와 강하게 마찰되는 환경을 피하세요."
+        ],
+        "humidityManagement": [
+          "젖었을 때 표면의 물기를 가볍게 제거한 뒤 그늘에서 충분히 말려 주세요.",
+          "습기가 갇히는 비닐 안에 장기간 밀폐하지 마세요."
+        ],
+        "recommendedStorage": [
+          "형태가 눌리지 않도록 공간을 두고 보관해 주세요.",
+          "통풍이 되는 더스트백이나 수납 공간을 이용해 주세요."
+        ]
+      }
+    },
+    "CANVAS": {
+      "materialLabel": "캔버스",
+      "summaryTitle": "캔버스 소재 맞춤 관리",
+      "summaryDescription": "먼지와 얼룩이 섬유에 오래 남지 않도록 가볍게 정리하고 강한 마찰과 과도한 수분을 피해 주세요.",
+      "routines": [
+        {
+          "type": "CLEANING",
+          "intervalValue": 3,
+          "intervalUnit": "MONTH",
+          "title": "캔버스 클리닝",
+          "description": "마른 부드러운 브러시나 천으로 표면 먼지를 가볍게 제거하고 얼룩과 마모 상태를 점검해 주세요."
+        }
+      ],
+      "storageGuide": {
+        "avoidEnvironments": [
+          "바닥이나 거친 표면과 직접 마찰되는 상태로 두지 마세요.",
+          "장시간의 직사광선과 강한 압력을 피해 주세요."
+        ],
+        "humidityManagement": [
+          "젖은 상태로 접거나 밀폐하지 말고 통풍되는 그늘에서 완전히 말려 주세요.",
+          "습한 장마철에는 수납 공간의 환기를 주기적으로 확인해 주세요."
+        ],
+        "recommendedStorage": [
+          "형태를 유지할 수 있도록 가볍게 충전한 뒤 세워서 보관해 주세요.",
+          "먼지가 쌓이지 않도록 통풍 가능한 커버를 사용해 주세요."
+        ]
+      }
+    },
+    "FABRIC": {
+      "materialLabel": "패브릭",
+      "summaryTitle": "패브릭 소재 맞춤 관리",
+      "summaryDescription": "섬유 사이에 먼지와 습기가 오래 머물지 않도록 자주 환기하고 오염을 가볍게 정리해 주세요.",
+      "routines": [
+        {
+          "type": "CLEANING",
+          "intervalValue": 2,
+          "intervalUnit": "MONTH",
+          "title": "패브릭 클리닝",
+          "description": "제품의 케어 라벨을 먼저 확인하고 표면의 먼지와 가벼운 오염을 소재에 맞는 방법으로 정리해 주세요."
+        }
+      ],
+      "storageGuide": {
+        "avoidEnvironments": [
+          "오염된 표면이나 색 이염 가능성이 큰 소재와 장시간 맞닿지 않게 해 주세요.",
+          "강한 직사광선에 장기간 노출하지 마세요."
+        ],
+        "humidityManagement": [
+          "착용이나 사용 후 습기가 남았다면 충분히 건조한 뒤 수납해 주세요.",
+          "밀폐된 공간은 주기적으로 환기해 주세요."
+        ],
+        "recommendedStorage": [
+          "제품 케어 라벨의 접기 또는 걸기 권장 방식을 우선해 주세요.",
+          "먼지가 쌓이지 않으면서 통풍이 가능한 수납 환경을 사용해 주세요."
+        ]
+      }
+    },
+    "NYLON": {
+      "materialLabel": "나일론",
+      "summaryTitle": "나일론 소재 맞춤 관리",
+      "summaryDescription": "표면 오염을 오래 방치하지 말고 날카로운 물체, 과도한 열, 강한 마찰을 피해 주세요.",
+      "routines": [
+        {
+          "type": "CLEANING",
+          "intervalValue": 3,
+          "intervalUnit": "MONTH",
+          "title": "나일론 클리닝",
+          "description": "부드러운 천으로 표면 먼지와 오염을 확인하고 봉제선이나 코팅 손상이 없는지 함께 점검해 주세요."
+        }
+      ],
+      "storageGuide": {
+        "avoidEnvironments": [
+          "날카로운 물체나 거친 표면과의 마찰을 피하세요.",
+          "열원 가까이 또는 고온의 차량 내부에 장시간 두지 마세요."
+        ],
+        "humidityManagement": [
+          "젖은 경우 물기를 제거한 뒤 통풍되는 그늘에서 충분히 말려 주세요.",
+          "완전히 마르기 전에 밀폐 보관하지 마세요."
+        ],
+        "recommendedStorage": [
+          "접힘 자국이 강하게 남지 않도록 형태를 편 상태로 보관해 주세요.",
+          "다른 무거운 물건에 눌리지 않도록 공간을 확보해 주세요."
+        ]
+      }
+    },
+    "METAL": {
+      "materialLabel": "메탈",
+      "summaryTitle": "메탈 소재 맞춤 관리",
+      "summaryDescription": "금속 장식의 수분과 오염을 정리하고 긁힘, 변색, 연결 부위의 느슨함을 주기적으로 점검해 주세요.",
+      "routines": [
+        {
+          "type": "CLEANING",
+          "intervalValue": 6,
+          "intervalUnit": "MONTH",
+          "title": "메탈 클리닝 및 점검",
+          "description": "부드러운 마른 천으로 금속 표면을 닦고 변색, 긁힘, 연결 부위의 이상 여부를 확인해 주세요."
+        }
+      ],
+      "storageGuide": {
+        "avoidEnvironments": [
+          "향수, 화장품, 세정제 등 화학 성분에 직접 닿지 않게 해 주세요.",
+          "다른 단단한 금속과 맞닿아 긁히는 상태를 피하세요."
+        ],
+        "humidityManagement": [
+          "물기나 땀이 묻은 상태로 오래 두지 말고 부드러운 천으로 닦아 주세요.",
+          "습도가 높은 공간에 장기간 방치하지 마세요."
+        ],
+        "recommendedStorage": [
+          "금속 장식끼리 부딪히지 않도록 부드러운 천이나 파우치로 분리해 주세요.",
+          "제품 본체가 눌리지 않는 건조한 공간에 보관해 주세요."
+        ]
+      }
+    },
+    "OTHER": {
+      "materialLabel": "기타 소재",
+      "summaryTitle": "소재별 관리 안내 확인이 필요해요",
+      "summaryDescription": "정확한 소재 특성이 확인되지 않아 정기 관리 주기는 제공하지 않습니다. 제품의 케어 라벨과 공식 관리 안내를 우선 확인해 주세요.",
+      "routines": [],
+      "storageGuide": {
+        "avoidEnvironments": [
+          "직사광선, 과도한 열, 강한 마찰 환경을 피하세요."
+        ],
+        "humidityManagement": [
+          "젖거나 습한 상태로 장기간 밀폐하지 말고 충분히 건조해 주세요."
+        ],
+        "recommendedStorage": [
+          "제품의 케어 라벨과 공식 보관 안내를 우선해 주세요."
+        ]
+      }
+    },
+    "UNKNOWN": {
+      "materialLabel": "알 수 없는 소재",
+      "summaryTitle": "소재를 확인하면 더 정확한 관리가 가능해요",
+      "summaryDescription": "소재가 아직 확정되지 않아 정기 관리 주기는 제공하지 않습니다. 제품의 케어 라벨이나 공식 정보를 확인해 소재를 업데이트해 주세요.",
+      "routines": [],
+      "storageGuide": {
+        "avoidEnvironments": [
+          "소재를 확인하기 전에는 강한 세정제, 열, 과도한 수분을 사용하지 마세요."
+        ],
+        "humidityManagement": [
+          "젖은 상태라면 강한 열을 사용하지 말고 통풍되는 곳에서 충분히 건조해 주세요."
+        ],
+        "recommendedStorage": [
+          "형태가 눌리지 않는 건조하고 통풍되는 공간에 임시 보관해 주세요."
+        ]
+      }
+    }
+  }
+}

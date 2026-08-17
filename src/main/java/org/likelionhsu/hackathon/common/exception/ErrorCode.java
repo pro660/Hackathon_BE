@@ -268,6 +268,12 @@ public enum ErrorCode {
             "이미지 저장소 연동에 실패했습니다."
     ),
 
+    NOTIFICATION_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "NOTIFICATION_NOT_FOUND",
+            "알림을 찾을 수 없습니다."
+    ),
+
     MY_ITEM_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "MY_ITEM_NOT_FOUND",
