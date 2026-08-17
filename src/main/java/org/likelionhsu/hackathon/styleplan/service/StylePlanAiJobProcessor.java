@@ -78,6 +78,23 @@ public class StylePlanAiJobProcessor {
             );
         }
 
+        java.util.Optional<String> cachedResult =
+                aiJobGateway.findReusableResultJson(
+                        userId,
+                        jobId,
+                        inputHash
+                );
+
+        if (cachedResult.isPresent()) {
+            completionService.completeCached(
+                    userId,
+                    jobId,
+                    cachedResult.orElseThrow()
+            );
+
+            return ProcessingResult.cached();
+        }
+
         StylePlanPreview fallback =
                 fallbackService.build(
                         jobId,
@@ -217,6 +234,7 @@ public class StylePlanAiJobProcessor {
     public enum ProcessingOutcome {
         NOT_CLAIMED,
         AI,
+        CACHED,
         FALLBACK
     }
 
@@ -233,6 +251,12 @@ public class StylePlanAiJobProcessor {
         public static ProcessingResult ai() {
             return new ProcessingResult(
                     ProcessingOutcome.AI
+            );
+        }
+
+        public static ProcessingResult cached() {
+            return new ProcessingResult(
+                    ProcessingOutcome.CACHED
             );
         }
 

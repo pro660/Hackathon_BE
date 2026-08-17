@@ -44,6 +44,8 @@ public class AiJobService {
             purchaseUtilityAiJobDispatcher;
     private final StylePlanAiJobDispatcher
             stylePlanAiJobDispatcher;
+    private final AiJobCreationPolicyService
+            creationPolicyService;
     private final String openAiModel;
 
     @Autowired
@@ -59,6 +61,8 @@ public class AiJobService {
                     purchaseUtilityAiJobDispatcher,
             StylePlanAiJobDispatcher
                     stylePlanAiJobDispatcher,
+            AiJobCreationPolicyService
+                    creationPolicyService,
             @Value("${OPENAI_MODEL:}")
             String openAiModel
     ) {
@@ -73,14 +77,42 @@ public class AiJobService {
                 purchaseUtilityAiJobDispatcher;
         this.stylePlanAiJobDispatcher =
                 stylePlanAiJobDispatcher;
+        this.creationPolicyService =
+                creationPolicyService;
         this.openAiModel = openAiModel;
     }
 
     /*
-     * Existing unit-test compatibility constructor.
-     * Production has exactly one public constructor above, so Spring uses
-     * the full dependency set including STYLE_PLAN.
+     * Existing unit-test compatibility constructors.
+     * Production uses the @Autowired constructor above.
      */
+    AiJobService(
+            AiJobJdbcRepository aiJobRepository,
+            AiJobRequestHasher requestHasher,
+            ObjectMapper objectMapper,
+            ItemAnalysisAiJobCreationService
+                    itemAnalysisAiJobCreationService,
+            ItemAnalysisAiJobDispatcher
+                    itemAnalysisAiJobDispatcher,
+            PurchaseUtilityAiJobDispatcher
+                    purchaseUtilityAiJobDispatcher,
+            StylePlanAiJobDispatcher
+                    stylePlanAiJobDispatcher,
+            String openAiModel
+    ) {
+        this(
+                aiJobRepository,
+                requestHasher,
+                objectMapper,
+                itemAnalysisAiJobCreationService,
+                itemAnalysisAiJobDispatcher,
+                purchaseUtilityAiJobDispatcher,
+                stylePlanAiJobDispatcher,
+                null,
+                openAiModel
+        );
+    }
+
     AiJobService(
             AiJobJdbcRepository aiJobRepository,
             AiJobRequestHasher requestHasher,
@@ -100,6 +132,7 @@ public class AiJobService {
                 itemAnalysisAiJobCreationService,
                 itemAnalysisAiJobDispatcher,
                 purchaseUtilityAiJobDispatcher,
+                null,
                 null,
                 openAiModel
         );
@@ -169,13 +202,17 @@ public class AiJobService {
         String model = requireConfiguredModel();
 
         try {
-            long jobId = aiJobRepository.createPending(
+            long jobId = createWithinPolicy(
                     userId,
-                    AiJobType.PURCHASE_UTILITY,
                     idempotencyKey,
-                    requestHash,
-                    model,
-                    PURCHASE_UTILITY_PROMPT_VERSION
+                    () -> aiJobRepository.createPending(
+                            userId,
+                            AiJobType.PURCHASE_UTILITY,
+                            idempotencyKey,
+                            requestHash,
+                            model,
+                            PURCHASE_UTILITY_PROMPT_VERSION
+                    )
             );
 
             AiJobData created = aiJobRepository
@@ -236,15 +273,19 @@ public class AiJobService {
                     Long.valueOf(normalizedImageAssetId);
 
             AiJobData created =
-                    itemAnalysisAiJobCreationService
-                            .createPendingAndBind(
-                                    userId,
-                                    imageAssetId,
-                                    idempotencyKey,
-                                    requestHash,
-                                    model,
-                                    ITEM_ANALYSIS_PROMPT_VERSION
-                            );
+                    createWithinPolicy(
+                            userId,
+                            idempotencyKey,
+                            () -> itemAnalysisAiJobCreationService
+                                    .createPendingAndBind(
+                                            userId,
+                                            imageAssetId,
+                                            idempotencyKey,
+                                            requestHash,
+                                            model,
+                                            ITEM_ANALYSIS_PROMPT_VERSION
+                                    )
+                    );
 
             itemAnalysisAiJobDispatcher.dispatch(
                     userId,
@@ -295,13 +336,17 @@ public class AiJobService {
         String model = requireConfiguredModel();
 
         try {
-            long jobId = aiJobRepository.createPending(
+            long jobId = createWithinPolicy(
                     userId,
-                    AiJobType.STYLE_PLAN,
                     idempotencyKey,
-                    requestHash,
-                    model,
-                    STYLE_PLAN_PROMPT_VERSION
+                    () -> aiJobRepository.createPending(
+                            userId,
+                            AiJobType.STYLE_PLAN,
+                            idempotencyKey,
+                            requestHash,
+                            model,
+                            STYLE_PLAN_PROMPT_VERSION
+                    )
             );
 
             AiJobData created = aiJobRepository
@@ -477,6 +522,22 @@ public class AiJobService {
                     "1 이상의 정수로 입력해 주세요."
             );
         }
+    }
+
+    private <T> T createWithinPolicy(
+            Long userId,
+            String idempotencyKey,
+            java.util.function.Supplier<T> creation
+    ) {
+        if (creationPolicyService == null) {
+            return creation.get();
+        }
+
+        return creationPolicyService.execute(
+                userId,
+                idempotencyKey,
+                creation
+        );
     }
 
     private String requireConfiguredModel() {

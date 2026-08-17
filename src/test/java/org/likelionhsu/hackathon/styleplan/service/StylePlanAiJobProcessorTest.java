@@ -79,6 +79,11 @@ class StylePlanAiJobProcessorTest {
                 9201L,
                 fixture.inputHash()
         )).thenReturn(true);
+        when(gateway.findReusableResultJson(
+                1L,
+                9201L,
+                fixture.inputHash()
+        )).thenReturn(java.util.Optional.empty());
         when(fallbackService.build(
                 9201L,
                 fixture.context()
@@ -143,6 +148,11 @@ class StylePlanAiJobProcessorTest {
                 9201L,
                 fixture.inputHash()
         )).thenReturn(true);
+        when(gateway.findReusableResultJson(
+                1L,
+                9201L,
+                fixture.inputHash()
+        )).thenReturn(java.util.Optional.empty());
         when(fallbackService.build(
                 9201L,
                 fixture.context()
@@ -205,6 +215,11 @@ class StylePlanAiJobProcessorTest {
                 9201L,
                 fixture.inputHash()
         )).thenReturn(true);
+        when(gateway.findReusableResultJson(
+                1L,
+                9201L,
+                fixture.inputHash()
+        )).thenReturn(java.util.Optional.empty());
         when(fallbackService.build(
                 9201L,
                 fixture.context()
@@ -257,6 +272,11 @@ class StylePlanAiJobProcessorTest {
                 9201L,
                 fixture.inputHash()
         )).thenReturn(true);
+        when(gateway.findReusableResultJson(
+                1L,
+                9201L,
+                fixture.inputHash()
+        )).thenReturn(java.util.Optional.empty());
         when(fallbackService.build(
                 9201L,
                 fixture.context()
@@ -282,6 +302,60 @@ class StylePlanAiJobProcessorTest {
                 0
         );
         verifyNoInteractions(port);
+    }
+
+    @Test
+    void reusableTwentyFourHourResultSkipsOpenAiAndFallback() {
+        Fixture fixture = fixture();
+        String cachedJson =
+                "{\"previewId\":\"job:9201\","
+                        + "\"title\":\"캐시 룩\","
+                        + "\"description\":\"cached\","
+                        + "\"ownedItems\":[],"
+                        + "\"recommendedProducts\":[],"
+                        + "\"generationType\":\"AI\"}";
+
+        when(gateway.claimProcessing(1L, 9201L))
+                .thenReturn(true);
+        when(contextService.prepare(
+                1L,
+                fixture.request()
+        )).thenReturn(fixture.context());
+        when(inputHasher.hash(fixture.context()))
+                .thenReturn(fixture.inputHash());
+        when(gateway.updateInputHashIfProcessing(
+                1L,
+                9201L,
+                fixture.inputHash()
+        )).thenReturn(true);
+        when(gateway.findReusableResultJson(
+                1L,
+                9201L,
+                fixture.inputHash()
+        )).thenReturn(
+                java.util.Optional.of(cachedJson)
+        );
+
+        var result = processor.process(
+                1L,
+                9201L,
+                fixture.request()
+        );
+
+        assertThat(result.outcome()).isEqualTo(
+                StylePlanAiJobProcessor
+                        .ProcessingOutcome.CACHED
+        );
+
+        verify(completionService).completeCached(
+                1L,
+                9201L,
+                cachedJson
+        );
+        verifyNoInteractions(fallbackService);
+        verifyNoInteractions(portProvider);
+        verifyNoInteractions(port);
+        verifyNoInteractions(assembler);
     }
 
     @Test

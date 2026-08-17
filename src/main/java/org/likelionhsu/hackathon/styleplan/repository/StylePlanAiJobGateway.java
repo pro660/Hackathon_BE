@@ -73,6 +73,63 @@ public class StylePlanAiJobGateway {
         return updated == 1;
     }
 
+    public java.util.Optional<String> findReusableResultJson(
+            Long userId,
+            Long jobId,
+            String inputHash
+    ) {
+        Objects.requireNonNull(
+                userId,
+                "userId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                jobId,
+                "jobId는 null일 수 없습니다."
+        );
+
+        if (inputHash == null
+                || !inputHash.matches("[0-9a-f]{64}")) {
+            throw new IllegalArgumentException(
+                    "inputHash는 64자리 소문자 SHA-256이어야 합니다."
+            );
+        }
+
+        return jdbcTemplate.query(
+                """
+                SELECT JSON_SET(
+                           cached.result_json,
+                           '$.previewId',
+                           CONCAT('job:', current_job.id)
+                       ) AS result_json
+                FROM ai_jobs current_job
+                JOIN ai_jobs cached
+                  ON cached.user_id = current_job.user_id
+                 AND cached.type = current_job.type
+                 AND cached.input_hash = ?
+                 AND cached.prompt_version =
+                     current_job.prompt_version
+                 AND cached.model = current_job.model
+                 AND cached.status = 'SUCCEEDED'
+                 AND cached.id <> current_job.id
+                 AND cached.completed_at >=
+                     CURRENT_TIMESTAMP(6) - INTERVAL 24 HOUR
+                WHERE current_job.id = ?
+                  AND current_job.user_id = ?
+                  AND current_job.type = ?
+                  AND current_job.status = 'PROCESSING'
+                ORDER BY cached.completed_at DESC,
+                         cached.id DESC
+                LIMIT 1
+                """,
+                (resultSet, rowNumber) ->
+                        resultSet.getString("result_json"),
+                inputHash,
+                jobId,
+                userId,
+                JOB_TYPE
+        ).stream().findFirst();
+    }
+
     public boolean markSucceeded(
             Long userId,
             Long jobId,

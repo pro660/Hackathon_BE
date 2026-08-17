@@ -42,6 +42,24 @@ public class StylePlanAiJobCompletionService {
         requireUpdated(updated);
     }
 
+    public void completeCached(
+            Long userId,
+            Long jobId,
+            String cachedResultJson
+    ) {
+        boolean updated = aiJobGateway.markSucceeded(
+                userId,
+                jobId,
+                cachedResultJson,
+                null,
+                null,
+                null,
+                0
+        );
+
+        requireUpdated(updated);
+    }
+
     public void completeFallback(
             Long userId,
             Long jobId,
