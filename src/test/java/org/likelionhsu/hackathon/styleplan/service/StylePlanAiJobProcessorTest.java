@@ -2,6 +2,7 @@ package org.likelionhsu.hackathon.styleplan.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -23,6 +24,13 @@ class StylePlanAiJobProcessorTest {
     private StylePlanAiJobGateway gateway;
 
     @Mock
+    private StylePlanRecommendationContextService
+            contextService;
+
+    @Mock
+    private StylePlanInputHasher inputHasher;
+
+    @Mock
     private StylePlanFallbackService fallbackService;
 
     private StylePlanAiJobProcessor processor;
@@ -31,6 +39,8 @@ class StylePlanAiJobProcessorTest {
     void setUp() {
         processor = new StylePlanAiJobProcessor(
                 gateway,
+                contextService,
+                inputHasher,
                 fallbackService,
                 new ObjectMapper()
         );
@@ -45,6 +55,16 @@ class StylePlanAiJobProcessorTest {
                         null,
                         true,
                         "ko"
+                );
+
+        StylePlanRecommendationContext context =
+                new StylePlanRecommendationContext(
+                        request,
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of()
                 );
 
         StylePlanPreview preview =
@@ -63,21 +83,19 @@ class StylePlanAiJobProcessorTest {
 
         when(gateway.claimProcessing(1L, 9201L))
                 .thenReturn(true);
-        when(fallbackService.build(
-                1L,
-                9201L,
-                request
-        )).thenReturn(
-                new StylePlanFallbackService.BuildResult(
-                        preview,
-                        inputHash
-                )
-        );
+        when(contextService.prepare(1L, request))
+                .thenReturn(context);
+        when(inputHasher.hash(context))
+                .thenReturn(inputHash);
         when(gateway.updateInputHashIfProcessing(
                 1L,
                 9201L,
                 inputHash
         )).thenReturn(true);
+        when(fallbackService.build(
+                9201L,
+                context
+        )).thenReturn(preview);
         when(gateway.markFailedWithFallback(
                 org.mockito.ArgumentMatchers.eq(1L),
                 org.mockito.ArgumentMatchers.eq(9201L),
@@ -99,11 +117,6 @@ class StylePlanAiJobProcessorTest {
                         .ProcessingOutcome.FALLBACK
         );
 
-        verify(gateway).updateInputHashIfProcessing(
-                1L,
-                9201L,
-                inputHash
-        );
         verify(gateway).markFailedWithFallback(
                 org.mockito.ArgumentMatchers.eq(1L),
                 org.mockito.ArgumentMatchers.eq(9201L),
@@ -141,5 +154,9 @@ class StylePlanAiJobProcessorTest {
                 StylePlanAiJobProcessor
                         .ProcessingOutcome.NOT_CLAIMED
         );
+
+        verifyNoInteractions(contextService);
+        verifyNoInteractions(inputHasher);
+        verifyNoInteractions(fallbackService);
     }
 }

@@ -4,20 +4,20 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
-import java.util.List;
 
-import org.likelionhsu.hackathon.useritem.entity.UserItem;
 import org.springframework.stereotype.Component;
 
 @Component
 public class StylePlanInputHasher {
 
     public String hash(
-            StylePlanJobRequest request,
-            List<UserItem> items
+            StylePlanRecommendationContext context
     ) {
         StringBuilder canonical =
                 new StringBuilder();
+
+        StylePlanJobRequest request =
+                context.request();
 
         canonical.append(request.occasion())
                 .append('|')
@@ -30,26 +30,65 @@ public class StylePlanInputHasher {
                 .append('|')
                 .append(request.prioritizeOwnedItems())
                 .append('|')
-                .append(request.language());
+                .append(request.language())
+                .append("|prefStyle:")
+                .append(String.join(
+                        ",",
+                        context.preferredStyleTags()
+                ))
+                .append("|prefColor:")
+                .append(String.join(
+                        ",",
+                        context.preferredColors()
+                ))
+                .append("|prefCategory:")
+                .append(String.join(
+                        ",",
+                        context.preferredCategories()
+                ));
 
-        items.stream()
-                .sorted((left, right) ->
-                        left.getId().compareTo(
-                                right.getId()
-                        )
-                )
-                .forEach(item -> canonical
+        context.ownedItems().forEach(item ->
+                canonical
                         .append("|item:")
-                        .append(item.getId())
+                        .append(item.myItemId())
                         .append(':')
-                        .append(item.getVersion())
+                        .append(item.version())
                         .append(':')
-                        .append(item.getCategory())
+                        .append(item.name())
                         .append(':')
-                        .append(item.getPrimaryColor())
+                        .append(item.category())
                         .append(':')
-                        .append(item.getMaterial())
-                );
+                        .append(item.primaryColor())
+                        .append(':')
+                        .append(item.material())
+                        .append(':')
+                        .append(item.imageUrl())
+                        .append(':')
+                        .append(item.score())
+        );
+
+        context.productCandidates().forEach(product ->
+                canonical
+                        .append("|product:")
+                        .append(product.productId())
+                        .append(':')
+                        .append(product.name())
+                        .append(':')
+                        .append(product.category())
+                        .append(':')
+                        .append(product.primaryColor())
+                        .append(':')
+                        .append(product.material())
+                        .append(':')
+                        .append(product.imageUrl())
+                        .append(':')
+                        .append(String.join(
+                                ",",
+                                product.tags()
+                        ))
+                        .append(':')
+                        .append(product.score())
+        );
 
         return sha256(canonical.toString());
     }

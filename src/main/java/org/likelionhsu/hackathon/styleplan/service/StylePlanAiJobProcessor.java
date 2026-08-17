@@ -3,6 +3,7 @@ package org.likelionhsu.hackathon.styleplan.service;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+import org.likelionhsu.hackathon.styleplan.dto.StylePlanPreview;
 import org.likelionhsu.hackathon.styleplan.repository.StylePlanAiJobGateway;
 import org.springframework.stereotype.Service;
 
@@ -13,15 +14,23 @@ public class StylePlanAiJobProcessor {
             "AI_STYLE_PLAN_FAILED";
 
     private final StylePlanAiJobGateway aiJobGateway;
+    private final StylePlanRecommendationContextService
+            contextService;
+    private final StylePlanInputHasher inputHasher;
     private final StylePlanFallbackService fallbackService;
     private final ObjectMapper objectMapper;
 
     public StylePlanAiJobProcessor(
             StylePlanAiJobGateway aiJobGateway,
+            StylePlanRecommendationContextService
+                    contextService,
+            StylePlanInputHasher inputHasher,
             StylePlanFallbackService fallbackService,
             ObjectMapper objectMapper
     ) {
         this.aiJobGateway = aiJobGateway;
+        this.contextService = contextService;
+        this.inputHasher = inputHasher;
         this.fallbackService = fallbackService;
         this.objectMapper = objectMapper;
     }
@@ -38,28 +47,36 @@ public class StylePlanAiJobProcessor {
             return ProcessingResult.notClaimed();
         }
 
-        StylePlanFallbackService.BuildResult fallback =
-                fallbackService.build(
+        StylePlanRecommendationContext context =
+                contextService.prepare(
                         userId,
-                        jobId,
                         request
                 );
+
+        String inputHash =
+                inputHasher.hash(context);
 
         if (!aiJobGateway.updateInputHashIfProcessing(
                 userId,
                 jobId,
-                fallback.inputHash()
+                inputHash
         )) {
             throw new IllegalStateException(
                     "STYLE_PLAN input_hash 저장에 실패했습니다."
             );
         }
 
+        StylePlanPreview fallback =
+                fallbackService.build(
+                        jobId,
+                        context
+                );
+
         boolean updated =
                 aiJobGateway.markFailedWithFallback(
                         userId,
                         jobId,
-                        serialize(fallback.preview()),
+                        serialize(fallback),
                         STYLE_PLAN_FAILED_ERROR_CODE
                 );
 

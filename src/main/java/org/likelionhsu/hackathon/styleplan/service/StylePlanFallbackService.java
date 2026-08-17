@@ -1,104 +1,144 @@
 package org.likelionhsu.hackathon.styleplan.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.likelionhsu.hackathon.styleplan.dto.StylePlanPreview;
-import org.likelionhsu.hackathon.useritem.entity.UserItem;
-import org.likelionhsu.hackathon.useritem.repository.UserItemRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StylePlanFallbackService {
 
-    private static final int MAX_OWNED_ITEMS = 10;
+    private static final int MAX_RECOMMENDED_PRODUCTS = 3;
 
-    private final UserItemRepository userItemRepository;
-    private final StylePlanInputHasher inputHasher;
-
-    public StylePlanFallbackService(
-            UserItemRepository userItemRepository,
-            StylePlanInputHasher inputHasher
-    ) {
-        this.userItemRepository = userItemRepository;
-        this.inputHasher = inputHasher;
-    }
-
-    @Transactional(readOnly = true)
-    public BuildResult build(
-            Long userId,
+    public StylePlanPreview build(
             Long jobId,
-            StylePlanJobRequest request
+            StylePlanRecommendationContext context
     ) {
-        List<UserItem> activeItems =
-                userItemRepository
-                        .findAllByUser_IdAndDeletedAtIsNullOrderByIdAsc(
-                                userId
-                        );
-
         List<StylePlanPreview.OwnedItem> ownedItems =
-                activeItems.stream()
-                        .limit(MAX_OWNED_ITEMS)
-                        .map(item ->
-                                new StylePlanPreview.OwnedItem(
-                                        String.valueOf(item.getId()),
-                                        item.getName(),
-                                        null,
-                                        item.getCategory().name(),
-                                        0
-                                )
-                        )
-                        .toList();
+                toOwnedItems(context);
 
-        ownedItems = withSortOrder(ownedItems);
+        List<StylePlanPreview.RecommendedProduct>
+                recommendedProducts =
+                toRecommendedProducts(context);
 
-        StylePlanPreview preview =
-                new StylePlanPreview(
-                        "job:" + jobId,
-                        titleFor(request.occasion()),
-                        descriptionFor(
-                                request,
-                                ownedItems.size()
-                        ),
-                        ownedItems,
-                        List.of(),
-                        "RULE_BASED"
-                );
-
-        return new BuildResult(
-                preview,
-                inputHasher.hash(
-                        request,
-                        activeItems
-                )
+        return new StylePlanPreview(
+                "job:" + jobId,
+                titleFor(context.request().occasion()),
+                descriptionFor(
+                        context,
+                        ownedItems.size(),
+                        recommendedProducts.size()
+                ),
+                ownedItems,
+                recommendedProducts,
+                "RULE_BASED"
         );
     }
 
     private List<StylePlanPreview.OwnedItem>
-            withSortOrder(
-            List<StylePlanPreview.OwnedItem> items
+            toOwnedItems(
+            StylePlanRecommendationContext context
     ) {
-        java.util.ArrayList<StylePlanPreview.OwnedItem>
-                result = new java.util.ArrayList<>();
+        List<StylePlanPreview.OwnedItem> result =
+                new ArrayList<>();
 
         for (int index = 0;
-             index < items.size();
+             index < context.ownedItems().size();
              index++) {
-            StylePlanPreview.OwnedItem item =
-                    items.get(index);
+            var item =
+                    context.ownedItems().get(index);
 
             result.add(
                     new StylePlanPreview.OwnedItem(
                             item.myItemId(),
                             item.name(),
                             item.imageUrl(),
-                            item.role(),
+                            roleFor(item.category()),
                             index
                     )
             );
         }
 
         return List.copyOf(result);
+    }
+
+    private String roleFor(String category) {
+        return switch (category) {
+            case "BAG" -> "BAG";
+            case "SHOES" -> "SHOES";
+            case "LEATHER_GOODS",
+                 "FASHION_ACCESSORY" -> "ACCESSORY";
+            case "CLOTHING" -> "MAIN";
+            default -> "MAIN";
+        };
+    }
+
+    private List<StylePlanPreview.RecommendedProduct>
+            toRecommendedProducts(
+            StylePlanRecommendationContext context
+    ) {
+        List<StylePlanPreview.RecommendedProduct>
+                result = new ArrayList<>();
+
+        int count = Math.min(
+                MAX_RECOMMENDED_PRODUCTS,
+                context.productCandidates().size()
+        );
+
+        for (int index = 0;
+             index < count;
+             index++) {
+            var product =
+                    context.productCandidates().get(index);
+
+            result.add(
+                    new StylePlanPreview.RecommendedProduct(
+                            product.productId(),
+                            product.name(),
+                            product.imageUrl(),
+                            index + 1,
+                            reasonFor(
+                                    product,
+                                    context.request()
+                            )
+                    )
+            );
+        }
+
+        return List.copyOf(result);
+    }
+
+    private String reasonFor(
+            StylePlanRecommendationContext.ProductCandidate
+                    product,
+            StylePlanJobRequest request
+    ) {
+        boolean styleMatch =
+                request.styleTags()
+                        .stream()
+                        .anyMatch(
+                                product.tags()::contains
+                        );
+
+        boolean occasionMatch =
+                product.tags().contains(
+                        request.occasion()
+                );
+
+        if (styleMatch && occasionMatch) {
+            return "요청한 분위기와 상황 조건에 모두 잘 맞는 상품이에요.";
+        }
+
+        if (styleMatch) {
+            return "요청한 분위기와 잘 맞는 상품이에요.";
+        }
+
+        if (occasionMatch) {
+            return "선택한 상황에 활용하기 좋은 상품이에요.";
+        }
+
+        return "취향과 현재 보유 아이템 정보를 기준으로 고른 상품이에요.";
     }
 
     private String titleFor(String occasion) {
@@ -114,29 +154,27 @@ public class StylePlanFallbackService {
     }
 
     private String descriptionFor(
-            StylePlanJobRequest request,
-            int itemCount
+            StylePlanRecommendationContext context,
+            int itemCount,
+            int productCount
     ) {
         String styles = String.join(
                 ", ",
-                request.styleTags()
+                context.request().styleTags()
         );
 
         if (itemCount == 0) {
             return styles
-                    + " 분위기를 기준으로 추천했지만 "
-                    + "현재 등록된 보유 아이템이 없습니다.";
+                    + " 분위기를 기준으로 MCM 상품 "
+                    + productCount
+                    + "개를 골랐어요.";
         }
 
         return styles
                 + " 분위기와 보유 아이템 "
                 + itemCount
-                + "개를 중심으로 구성한 기본 추천입니다.";
-    }
-
-    public record BuildResult(
-            StylePlanPreview preview,
-            String inputHash
-    ) {
+                + "개를 중심으로 MCM 상품 "
+                + productCount
+                + "개를 함께 골랐어요.";
     }
 }
