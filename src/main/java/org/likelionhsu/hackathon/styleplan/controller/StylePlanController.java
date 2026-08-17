@@ -9,6 +9,7 @@ import org.likelionhsu.hackathon.common.response.ApiResponse;
 import org.likelionhsu.hackathon.common.response.PageResponse;
 import org.likelionhsu.hackathon.styleplan.domain.StylePlanStatus;
 import org.likelionhsu.hackathon.styleplan.dto.request.StylePlanCreateRequest;
+import org.likelionhsu.hackathon.styleplan.dto.request.StylePlanUpdateRequest;
 import org.likelionhsu.hackathon.styleplan.dto.response.StylePlanCreateResponse;
 import org.likelionhsu.hackathon.styleplan.dto.response.StylePlanDetailResponse;
 import org.likelionhsu.hackathon.styleplan.dto.response.StylePlanListItemResponse;
@@ -20,7 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -137,6 +140,56 @@ public class StylePlanController {
                         stylePlanId
                 )
         );
+    }
+
+    @Operation(
+            summary = "스마트 착용 추천 수정",
+            description = """
+                    현재 로그인 사용자의 스타일 플랜 metadata를 수정합니다.
+                    수정 가능 필드는 title, plannedAt, status이며 조합 자체는 변경하지 않습니다.
+                    version 기반 optimistic locking을 사용합니다.
+                    plannedAt을 null로 명시하면 저장된 일정을 제거합니다.
+                    """
+    )
+    @PatchMapping("/{stylePlanId}")
+    public ApiResponse<StylePlanDetailResponse> updateStylePlan(
+            @PathVariable
+            @Min(value = 1, message = "1 이상이어야 합니다.")
+            Long stylePlanId,
+            @Valid @RequestBody
+            StylePlanUpdateRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ApiResponse.success(
+                stylePlanService.updateStylePlan(
+                        Long.valueOf(jwt.getSubject()),
+                        stylePlanId,
+                        request
+                )
+        );
+    }
+
+    @Operation(
+            summary = "스마트 착용 추천 삭제",
+            description = """
+                    현재 로그인 사용자의 스타일 플랜을 Hard Delete합니다.
+                    style_plan_items, style_plan_products, style_plan_places 연결 Row는 DB cascade로 함께 삭제됩니다.
+                    UserItem, Product, Place 원본은 삭제하지 않습니다.
+                    """
+    )
+    @DeleteMapping("/{stylePlanId}")
+    public ResponseEntity<Void> deleteStylePlan(
+            @PathVariable
+            @Min(value = 1, message = "1 이상이어야 합니다.")
+            Long stylePlanId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        stylePlanService.deleteStylePlan(
+                Long.valueOf(jwt.getSubject()),
+                stylePlanId
+        );
+
+        return ResponseEntity.noContent().build();
     }
 
     private Sort parseSort(List<String> sortValues) {

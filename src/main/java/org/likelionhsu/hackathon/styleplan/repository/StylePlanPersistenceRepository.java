@@ -199,4 +199,50 @@ public class StylePlanPersistenceRepository {
                 reason
         );
     }
+
+    public int updateMetadata(
+            Long userId,
+            Long stylePlanId,
+            String title,
+            Instant plannedAt,
+            StylePlanStatus status,
+            long expectedVersion
+    ) {
+        return jdbcTemplate.update(
+                """
+                UPDATE style_plans
+                SET title = ?,
+                    planned_at = ?,
+                    status = ?,
+                    version = version + 1,
+                    updated_at = CURRENT_TIMESTAMP(6)
+                WHERE id = ?
+                  AND user_id = ?
+                  AND version = ?
+                """,
+                title,
+                plannedAt == null
+                        ? null
+                        : Timestamp.from(plannedAt),
+                status.name(),
+                stylePlanId,
+                userId,
+                expectedVersion
+        );
+    }
+
+    public int deleteOwnedPlan(
+            Long userId,
+            Long stylePlanId
+    ) {
+        return jdbcTemplate.update(
+                """
+                DELETE FROM style_plans
+                WHERE id = ?
+                  AND user_id = ?
+                """,
+                stylePlanId,
+                userId
+        );
+    }
 }

@@ -17,6 +17,7 @@ import org.likelionhsu.hackathon.product.repository.ProductRepository;
 import org.likelionhsu.hackathon.styleplan.domain.StylePlanGenerationType;
 import org.likelionhsu.hackathon.styleplan.domain.StylePlanStatus;
 import org.likelionhsu.hackathon.styleplan.dto.request.StylePlanCreateRequest;
+import org.likelionhsu.hackathon.styleplan.dto.request.StylePlanUpdateRequest;
 import org.likelionhsu.hackathon.styleplan.dto.response.StylePlanCreateResponse;
 import org.likelionhsu.hackathon.styleplan.dto.response.StylePlanDetailResponse;
 import org.likelionhsu.hackathon.styleplan.dto.response.StylePlanListItemResponse;
@@ -168,6 +169,135 @@ public class StylePlanService {
                 header.version(),
                 header.createdAt(),
                 header.updatedAt()
+        );
+    }
+
+    @Transactional
+    public StylePlanDetailResponse updateStylePlan(
+            Long userId,
+            Long stylePlanId,
+            StylePlanUpdateRequest request
+    ) {
+        if (!request.hasChanges()) {
+            throw new RequestValidationException(
+                    "request",
+                    "수정할 필드를 하나 이상 입력해 주세요."
+            );
+        }
+
+        StylePlanQueryRepository.Header current =
+                requireOwnedHeader(
+                        userId,
+                        stylePlanId
+                );
+
+        if (!request.getVersion().equals(
+                current.version()
+        )) {
+            throw versionConflict();
+        }
+
+        String title = request.isTitlePresent()
+                ? requireTitle(request.getTitle())
+                : current.title();
+
+        StylePlanStatus status =
+                request.isStatusPresent()
+                        ? requireStatus(
+                                request.getStatus()
+                        )
+                        : current.status();
+
+        int updated =
+                persistenceRepository.updateMetadata(
+                        userId,
+                        stylePlanId,
+                        title,
+                        request.isPlannedAtPresent()
+                                ? request.getPlannedAt()
+                                : current.plannedAt(),
+                        status,
+                        request.getVersion()
+                );
+
+        if (updated == 0) {
+            if (queryRepository.findHeader(
+                    userId,
+                    stylePlanId
+            ).isEmpty()) {
+                throw stylePlanNotFound();
+            }
+
+            throw versionConflict();
+        }
+
+        return getStylePlan(
+                userId,
+                stylePlanId
+        );
+    }
+
+    @Transactional
+    public void deleteStylePlan(
+            Long userId,
+            Long stylePlanId
+    ) {
+        int deleted =
+                persistenceRepository.deleteOwnedPlan(
+                        userId,
+                        stylePlanId
+                );
+
+        if (deleted == 0) {
+            throw stylePlanNotFound();
+        }
+    }
+
+    private StylePlanQueryRepository.Header
+            requireOwnedHeader(
+            Long userId,
+            Long stylePlanId
+    ) {
+        return queryRepository.findHeader(
+                userId,
+                stylePlanId
+        ).orElseThrow(this::stylePlanNotFound);
+    }
+
+    private String requireTitle(String title) {
+        if (title == null
+                || title.isBlank()) {
+            throw new RequestValidationException(
+                    "title",
+                    "필수 입력값입니다."
+            );
+        }
+
+        return title;
+    }
+
+    private StylePlanStatus requireStatus(
+            StylePlanStatus status
+    ) {
+        if (status == null) {
+            throw new RequestValidationException(
+                    "status",
+                    "필수 입력값입니다."
+            );
+        }
+
+        return status;
+    }
+
+    private BusinessException stylePlanNotFound() {
+        return new BusinessException(
+                ErrorCode.STYLE_PLAN_NOT_FOUND
+        );
+    }
+
+    private BusinessException versionConflict() {
+        return new BusinessException(
+                ErrorCode.RESOURCE_VERSION_CONFLICT
         );
     }
 
