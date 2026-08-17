@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.likelionhsu.hackathon.place.domain.PlaceCategory;
 import org.likelionhsu.hackathon.styleplan.domain.StyleItemRole;
 import org.likelionhsu.hackathon.styleplan.domain.StylePlanGenerationType;
 import org.likelionhsu.hackathon.styleplan.domain.StylePlanOccasion;
@@ -234,6 +235,54 @@ public class StylePlanQueryRepository {
                         resultSet.getInt("rank_order"),
                         resultSet.getString("reason")
                 ),
+                stylePlanId
+        );
+    }
+
+    public List<StylePlanDetailResponse.Place> findPlaces(
+            Long userId,
+            Long stylePlanId
+    ) {
+        return jdbcTemplate.query(
+                """
+                SELECT
+                    p.id AS place_id,
+                    p.name,
+                    p.category_name,
+                    p.road_address,
+                    p.latitude,
+                    p.longitude,
+                    p.place_url,
+                    spp.rank_order,
+                    spp.reason,
+                    CASE WHEN EXISTS (
+                        SELECT 1
+                        FROM saved_places saved
+                        WHERE saved.user_id = ?
+                          AND saved.place_id = p.id
+                    ) THEN TRUE ELSE FALSE END AS saved
+                FROM style_plan_places spp
+                JOIN places p
+                  ON p.id = spp.place_id
+                WHERE spp.style_plan_id = ?
+                ORDER BY spp.rank_order ASC, spp.id ASC
+                """,
+                (resultSet, rowNumber) -> new StylePlanDetailResponse.Place(
+                        String.valueOf(resultSet.getLong("place_id")),
+                        resultSet.getString("name"),
+                        PlaceCategory.fromCategoryName(
+                                resultSet.getString("category_name")
+                        ),
+                        resultSet.getString("category_name"),
+                        resultSet.getString("road_address"),
+                        resultSet.getBigDecimal("latitude"),
+                        resultSet.getBigDecimal("longitude"),
+                        resultSet.getString("place_url"),
+                        resultSet.getInt("rank_order"),
+                        resultSet.getString("reason"),
+                        resultSet.getBoolean("saved")
+                ),
+                userId,
                 stylePlanId
         );
     }
