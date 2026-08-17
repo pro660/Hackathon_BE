@@ -17,6 +17,8 @@ public record AiJobErrorResponse(
                     "AI 작업 처리 시간이 초과되었습니다.";
             case "AI_GENERATION_FAILED" ->
                     "AI 설명 생성에 실패했습니다.";
+            case "AI_ITEM_ANALYSIS_FAILED" ->
+                    "아이템 이미지 분석에 실패했습니다.";
             default ->
                     "AI 작업 처리 중 오류가 발생했습니다.";
         };

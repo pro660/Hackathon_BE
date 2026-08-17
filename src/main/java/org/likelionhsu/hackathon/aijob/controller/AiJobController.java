@@ -41,7 +41,7 @@ public class AiJobController {
 
     @Operation(
             summary = "AI 작업 생성",
-            description = "구매 전 활용 가능성 AI 작업을 멱등하게 생성합니다."
+            description = "PURCHASE_UTILITY(productId) 또는 ITEM_ANALYSIS(imageAssetId) AI 작업을 Idempotency-Key 기준으로 멱등하게 생성합니다."
     )
     @PostMapping
     public ResponseEntity<ApiResponse<AiJobCreateResponse>>

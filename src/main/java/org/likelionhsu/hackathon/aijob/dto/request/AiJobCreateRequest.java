@@ -1,11 +1,12 @@
 package org.likelionhsu.hackathon.aijob.dto.request;
 
 import org.likelionhsu.hackathon.aijob.domain.AiJobType;
+import org.likelionhsu.hackathon.aijob.validation.ValidAiJobContext;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+@ValidAiJobContext
 public record AiJobCreateRequest(
         @NotNull(message = "필수 입력값입니다.")
         AiJobType type,
@@ -16,8 +17,12 @@ public record AiJobCreateRequest(
 ) {
 
     public record Context(
-            @NotBlank(message = "필수 입력값입니다.")
-            String productId
+            String productId,
+            String imageAssetId
     ) {
+
+        public Context(String productId) {
+            this(productId, null);
+        }
     }
 }

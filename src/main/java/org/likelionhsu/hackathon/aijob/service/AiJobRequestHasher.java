@@ -20,6 +20,25 @@ public class AiJobRequestHasher {
                         .formatted(normalizedProductId)
                         .strip();
 
+        return hashCanonical(canonicalRequest);
+    }
+
+    public String hashItemAnalysis(
+            String normalizedImageAssetId
+    ) {
+        String canonicalRequest =
+                """
+                {"type":"ITEM_ANALYSIS","context":{"imageAssetId":"%s"}}
+                """
+                        .formatted(normalizedImageAssetId)
+                        .strip();
+
+        return hashCanonical(canonicalRequest);
+    }
+
+    private String hashCanonical(
+            String canonicalRequest
+    ) {
         try {
             MessageDigest digest =
                     MessageDigest.getInstance("SHA-256");
