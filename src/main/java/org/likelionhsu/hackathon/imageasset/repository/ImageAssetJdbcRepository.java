@@ -357,6 +357,124 @@ public class ImageAssetJdbcRepository {
         return updated == 1;
     }
 
+    public java.util.List<ImageAssetData>
+    findExpiredTemporaryCandidates(
+            Instant createdAtOrBefore,
+            int limit
+    ) {
+        Objects.requireNonNull(
+                createdAtOrBefore,
+                "createdAtOrBefore는 null일 수 없습니다."
+        );
+
+        if (limit < 1) {
+            throw new IllegalArgumentException(
+                    "limit은 1 이상이어야 합니다."
+            );
+        }
+
+        return jdbcTemplate.query(
+                SELECT_SQL
+                        + """
+                         WHERE purpose = 'ITEM'
+                           AND status = 'TEMPORARY'
+                           AND user_item_id IS NULL
+                           AND deleted_at IS NULL
+                           AND created_at <= ?
+                           AND (
+                               ai_job_id IS NULL
+                               OR NOT EXISTS (
+                                   SELECT 1
+                                   FROM ai_jobs job
+                                   WHERE job.id = image_assets.ai_job_id
+                                     AND job.status IN (
+                                         'PENDING',
+                                         'PROCESSING'
+                                     )
+                               )
+                           )
+                         ORDER BY created_at ASC, id ASC
+                         LIMIT ?
+                        """,
+                this::map,
+                Timestamp.from(createdAtOrBefore),
+                limit
+        );
+    }
+
+    public boolean markExpiredTemporaryDeletePending(
+            Long ownerUserId,
+            Long imageAssetId,
+            Instant createdAtOrBefore
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                imageAssetId,
+                "imageAssetId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                createdAtOrBefore,
+                "createdAtOrBefore는 null일 수 없습니다."
+        );
+
+        int updated = jdbcTemplate.update(
+                """
+                UPDATE image_assets
+                SET status = 'DELETE_PENDING'
+                WHERE id = ?
+                  AND owner_user_id = ?
+                  AND purpose = 'ITEM'
+                  AND status = 'TEMPORARY'
+                  AND user_item_id IS NULL
+                  AND deleted_at IS NULL
+                  AND created_at <= ?
+                  AND (
+                      ai_job_id IS NULL
+                      OR NOT EXISTS (
+                          SELECT 1
+                          FROM ai_jobs job
+                          WHERE job.id = image_assets.ai_job_id
+                            AND job.status IN (
+                                'PENDING',
+                                'PROCESSING'
+                            )
+                      )
+                  )
+                """,
+                imageAssetId,
+                ownerUserId,
+                Timestamp.from(createdAtOrBefore)
+        );
+
+        return updated == 1;
+    }
+
+    public java.util.List<ImageAssetData>
+    findDeletePending(
+            int limit
+    ) {
+        if (limit < 1) {
+            throw new IllegalArgumentException(
+                    "limit은 1 이상이어야 합니다."
+            );
+        }
+
+        return jdbcTemplate.query(
+                SELECT_SQL
+                        + """
+                         WHERE status = 'DELETE_PENDING'
+                           AND deleted_at IS NULL
+                         ORDER BY created_at ASC, id ASC
+                         LIMIT ?
+                        """,
+                this::map,
+                limit
+        );
+    }
+
     public boolean markDeleted(
             Long ownerUserId,
             Long imageAssetId
@@ -377,7 +495,6 @@ public class ImageAssetJdbcRepository {
                     deleted_at = CURRENT_TIMESTAMP(6)
                 WHERE id = ?
                   AND owner_user_id = ?
-                  AND purpose = 'ITEM'
                   AND status = 'DELETE_PENDING'
                   AND deleted_at IS NULL
                 """,

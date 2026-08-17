@@ -34,7 +34,17 @@ public class UserDataDeletionService {
                 userId
         );
         jdbcTemplate.update(
-                "DELETE FROM image_assets WHERE owner_user_id = ?",
+                """
+                UPDATE image_assets
+                SET status = CASE
+                        WHEN status = 'DELETED'
+                            THEN 'DELETED'
+                        ELSE 'DELETE_PENDING'
+                    END,
+                    user_item_id = NULL,
+                    ai_job_id = NULL
+                WHERE owner_user_id = ?
+                """,
                 userId
         );
         jdbcTemplate.update(
