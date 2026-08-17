@@ -1,5 +1,9 @@
 package org.likelionhsu.hackathon.aijob.validation;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.likelionhsu.hackathon.aijob.domain.AiJobType;
 import org.likelionhsu.hackathon.aijob.dto.request.AiJobCreateRequest;
 
@@ -16,6 +20,41 @@ public class AiJobContextValidator
             "필수 입력값입니다.";
     private static final String NOT_ALLOWED_MESSAGE =
             "해당 AI 작업 타입에서는 사용할 수 없습니다.";
+    private static final String INVALID_VALUE_MESSAGE =
+            "허용되지 않는 값입니다.";
+    private static final String STYLE_TAG_SIZE_MESSAGE =
+            "1개 이상 4개 이하로 선택해 주세요.";
+    private static final String DUPLICATE_MESSAGE =
+            "중복 값을 사용할 수 없습니다.";
+
+    private static final Set<String> OCCASIONS = Set.of(
+            "DAILY",
+            "DATE",
+            "TRAVEL",
+            "GATHERING",
+            "CEREMONY",
+            "OUTDOOR",
+            "OTHER"
+    );
+
+    private static final Set<String> STYLE_TAGS = Set.of(
+            "CASUAL",
+            "FORMAL",
+            "NEAT",
+            "GLAMOROUS"
+    );
+
+    private static final Set<String> WEATHER_CONDITIONS = Set.of(
+            "SUNNY",
+            "CLOUDY",
+            "RAINY",
+            "SNOWY",
+            "HOT",
+            "COLD",
+            "WINDY",
+            "INDOOR",
+            "OTHER"
+    );
 
     @Override
     public boolean isValid(
@@ -39,7 +78,11 @@ public class AiJobContextValidator
                             request.context(),
                             context
                     );
-            case STYLE_PLAN -> true;
+            case STYLE_PLAN ->
+                    validateStylePlan(
+                            request.context(),
+                            context
+                    );
         };
     }
 
@@ -67,7 +110,11 @@ public class AiJobContextValidator
             valid = false;
         }
 
-        return valid;
+        return validateNoStylePlanFields(
+                requestContext,
+                context,
+                valid
+        );
     }
 
     private boolean validateItemAnalysis(
@@ -94,6 +141,169 @@ public class AiJobContextValidator
             valid = false;
         }
 
+        return validateNoStylePlanFields(
+                requestContext,
+                context,
+                valid
+        );
+    }
+
+    private boolean validateStylePlan(
+            AiJobCreateRequest.Context requestContext,
+            ConstraintValidatorContext context
+    ) {
+        boolean valid = true;
+
+        if (hasText(requestContext.productId())) {
+            addViolation(
+                    context,
+                    "productId",
+                    NOT_ALLOWED_MESSAGE
+            );
+            valid = false;
+        }
+
+        if (hasText(requestContext.imageAssetId())) {
+            addViolation(
+                    context,
+                    "imageAssetId",
+                    NOT_ALLOWED_MESSAGE
+            );
+            valid = false;
+        }
+
+        if (!hasText(requestContext.occasion())) {
+            addViolation(
+                    context,
+                    "occasion",
+                    REQUIRED_MESSAGE
+            );
+            valid = false;
+        } else if (!OCCASIONS.contains(
+                requestContext.occasion().trim()
+        )) {
+            addViolation(
+                    context,
+                    "occasion",
+                    INVALID_VALUE_MESSAGE
+            );
+            valid = false;
+        }
+
+        List<String> styleTags = requestContext.styleTags();
+
+        if (styleTags == null) {
+            addViolation(
+                    context,
+                    "styleTags",
+                    REQUIRED_MESSAGE
+            );
+            valid = false;
+        } else if (styleTags.isEmpty()
+                || styleTags.size() > STYLE_TAGS.size()) {
+            addViolation(
+                    context,
+                    "styleTags",
+                    STYLE_TAG_SIZE_MESSAGE
+            );
+            valid = false;
+        } else {
+            Set<String> normalized = new HashSet<>();
+
+            for (String styleTag : styleTags) {
+                if (!hasText(styleTag)
+                        || !STYLE_TAGS.contains(styleTag.trim())) {
+                    addViolation(
+                            context,
+                            "styleTags",
+                            INVALID_VALUE_MESSAGE
+                    );
+                    valid = false;
+                    break;
+                }
+
+                if (!normalized.add(styleTag.trim())) {
+                    addViolation(
+                            context,
+                            "styleTags",
+                            DUPLICATE_MESSAGE
+                    );
+                    valid = false;
+                    break;
+                }
+            }
+        }
+
+        String weatherCondition =
+                requestContext.weatherCondition();
+
+        if (weatherCondition != null) {
+            if (!hasText(weatherCondition)
+                    || !WEATHER_CONDITIONS.contains(
+                    weatherCondition.trim()
+            )) {
+                addViolation(
+                        context,
+                        "weatherCondition",
+                        INVALID_VALUE_MESSAGE
+                );
+                valid = false;
+            }
+        }
+
+        if (requestContext.prioritizeOwnedItems() == null) {
+            addViolation(
+                    context,
+                    "prioritizeOwnedItems",
+                    REQUIRED_MESSAGE
+            );
+            valid = false;
+        }
+
+        if (!hasText(requestContext.language())) {
+            addViolation(
+                    context,
+                    "language",
+                    REQUIRED_MESSAGE
+            );
+            valid = false;
+        } else if (!"ko".equals(requestContext.language().trim())) {
+            addViolation(
+                    context,
+                    "language",
+                    INVALID_VALUE_MESSAGE
+            );
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private boolean validateNoStylePlanFields(
+            AiJobCreateRequest.Context requestContext,
+            ConstraintValidatorContext context,
+            boolean valid
+    ) {
+        if (requestContext.occasion() != null) {
+            addViolation(context, "occasion", NOT_ALLOWED_MESSAGE);
+            valid = false;
+        }
+        if (requestContext.styleTags() != null) {
+            addViolation(context, "styleTags", NOT_ALLOWED_MESSAGE);
+            valid = false;
+        }
+        if (requestContext.weatherCondition() != null) {
+            addViolation(context, "weatherCondition", NOT_ALLOWED_MESSAGE);
+            valid = false;
+        }
+        if (requestContext.prioritizeOwnedItems() != null) {
+            addViolation(context, "prioritizeOwnedItems", NOT_ALLOWED_MESSAGE);
+            valid = false;
+        }
+        if (requestContext.language() != null) {
+            addViolation(context, "language", NOT_ALLOWED_MESSAGE);
+            valid = false;
+        }
         return valid;
     }
 

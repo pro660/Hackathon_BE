@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
@@ -32,6 +34,41 @@ public class AiJobRequestHasher {
                 """
                         .formatted(normalizedImageAssetId)
                         .strip();
+
+        return hashCanonical(canonicalRequest);
+    }
+
+    public String hashStylePlan(
+            String occasion,
+            List<String> styleTags,
+            String weatherCondition,
+            boolean prioritizeOwnedItems,
+            String language
+    ) {
+        Objects.requireNonNull(occasion, "occasion");
+        Objects.requireNonNull(styleTags, "styleTags");
+        Objects.requireNonNull(language, "language");
+
+        List<String> normalizedStyleTags = styleTags
+                .stream()
+                .map(String::trim)
+                .sorted()
+                .toList();
+
+        String styleTagsJson = "[\""
+                + String.join("\",\"", normalizedStyleTags)
+                + "\"]";
+        String weatherJson = weatherCondition == null
+                ? "null"
+                : "\"" + weatherCondition.trim() + "\"";
+
+        String canonicalRequest =
+                "{\"type\":\"STYLE_PLAN\",\"context\":{"
+                        + "\"occasion\":\"" + occasion.trim() + "\","
+                        + "\"styleTags\":" + styleTagsJson + ","
+                        + "\"weatherCondition\":" + weatherJson + ","
+                        + "\"prioritizeOwnedItems\":" + prioritizeOwnedItems + ","
+                        + "\"language\":\"" + language.trim() + "\"}}";
 
         return hashCanonical(canonicalRequest);
     }
