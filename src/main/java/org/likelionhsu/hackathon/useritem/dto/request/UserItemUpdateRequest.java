@@ -19,17 +19,11 @@ public class UserItemUpdateRequest {
     private Long productId;
     private boolean productIdPresent;
 
-    @Size(
-            max = 100,
-            message = "100자 이하여야 합니다."
-    )
+    @Size(max = 100, message = "100자 이하여야 합니다.")
     private String brandName;
     private boolean brandNamePresent;
 
-    @Size(
-            max = 200,
-            message = "200자 이하여야 합니다."
-    )
+    @Size(max = 200, message = "200자 이하여야 합니다.")
     private String name;
     private boolean namePresent;
 
@@ -45,22 +39,23 @@ public class UserItemUpdateRequest {
     private MaterialSource materialSource;
     private boolean materialSourcePresent;
 
-    @PastOrPresent(
-            message = "미래 날짜일 수 없습니다."
-    )
+    @PastOrPresent(message = "미래 날짜일 수 없습니다.")
     private LocalDate purchaseDate;
     private boolean purchaseDatePresent;
 
-    @PositiveOrZero(
-            message = "0 이상이어야 합니다."
-    )
+    @PositiveOrZero(message = "0 이상이어야 합니다.")
     private Long purchasePrice;
     private boolean purchasePricePresent;
 
-    @Size(
-            max = 1000,
-            message = "1000자 이하여야 합니다."
-    )
+    @Size(max = 100, message = "100자 이하여야 합니다.")
+    private String purchaseOrderNumber;
+    private boolean purchaseOrderNumberPresent;
+
+    @Size(max = 200, message = "200자 이하여야 합니다.")
+    private String purchasePlace;
+    private boolean purchasePlacePresent;
+
+    @Size(max = 1000, message = "1000자 이하여야 합니다.")
     private String memo;
     private boolean memoPresent;
 
@@ -110,9 +105,7 @@ public class UserItemUpdateRequest {
     }
 
     @JsonSetter("materialSource")
-    public void setMaterialSource(
-            MaterialSource materialSource
-    ) {
+    public void setMaterialSource(MaterialSource materialSource) {
         this.materialSource = materialSource;
         this.materialSourcePresent = true;
     }
@@ -127,6 +120,18 @@ public class UserItemUpdateRequest {
     public void setPurchasePrice(Long purchasePrice) {
         this.purchasePrice = purchasePrice;
         this.purchasePricePresent = true;
+    }
+
+    @JsonSetter("purchaseOrderNumber")
+    public void setPurchaseOrderNumber(String purchaseOrderNumber) {
+        this.purchaseOrderNumber = purchaseOrderNumber;
+        this.purchaseOrderNumberPresent = true;
+    }
+
+    @JsonSetter("purchasePlace")
+    public void setPurchasePlace(String purchasePlace) {
+        this.purchasePlace = purchasePlace;
+        this.purchasePlacePresent = true;
     }
 
     @JsonSetter("memo")
@@ -152,105 +157,35 @@ public class UserItemUpdateRequest {
         this.version = version;
     }
 
-    public Long getProductId() {
-        return productId;
-    }
-
-    public boolean isProductIdPresent() {
-        return productIdPresent;
-    }
-
-    public String getBrandName() {
-        return brandName;
-    }
-
-    public boolean isBrandNamePresent() {
-        return brandNamePresent;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isNamePresent() {
-        return namePresent;
-    }
-
-    public ItemCategory getCategory() {
-        return category;
-    }
-
-    public boolean isCategoryPresent() {
-        return categoryPresent;
-    }
-
-    public ColorGroup getPrimaryColor() {
-        return primaryColor;
-    }
-
-    public boolean isPrimaryColorPresent() {
-        return primaryColorPresent;
-    }
-
-    public MaterialGroup getMaterial() {
-        return material;
-    }
-
-    public boolean isMaterialPresent() {
-        return materialPresent;
-    }
-
-    public MaterialSource getMaterialSource() {
-        return materialSource;
-    }
-
-    public boolean isMaterialSourcePresent() {
-        return materialSourcePresent;
-    }
-
-    public LocalDate getPurchaseDate() {
-        return purchaseDate;
-    }
-
-    public boolean isPurchaseDatePresent() {
-        return purchaseDatePresent;
-    }
-
-    public Long getPurchasePrice() {
-        return purchasePrice;
-    }
-
-    public boolean isPurchasePricePresent() {
-        return purchasePricePresent;
-    }
-
-    public String getMemo() {
-        return memo;
-    }
-
-    public boolean isMemoPresent() {
-        return memoPresent;
-    }
-
-    public Long getAiJobId() {
-        return aiJobId;
-    }
-
-    public boolean isAiJobIdPresent() {
-        return aiJobIdPresent;
-    }
-
-    public LocalDate getNextCareDate() {
-        return nextCareDate;
-    }
-
-    public boolean isNextCareDatePresent() {
-        return nextCareDatePresent;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
+    public Long getProductId() { return productId; }
+    public boolean isProductIdPresent() { return productIdPresent; }
+    public String getBrandName() { return brandName; }
+    public boolean isBrandNamePresent() { return brandNamePresent; }
+    public String getName() { return name; }
+    public boolean isNamePresent() { return namePresent; }
+    public ItemCategory getCategory() { return category; }
+    public boolean isCategoryPresent() { return categoryPresent; }
+    public ColorGroup getPrimaryColor() { return primaryColor; }
+    public boolean isPrimaryColorPresent() { return primaryColorPresent; }
+    public MaterialGroup getMaterial() { return material; }
+    public boolean isMaterialPresent() { return materialPresent; }
+    public MaterialSource getMaterialSource() { return materialSource; }
+    public boolean isMaterialSourcePresent() { return materialSourcePresent; }
+    public LocalDate getPurchaseDate() { return purchaseDate; }
+    public boolean isPurchaseDatePresent() { return purchaseDatePresent; }
+    public Long getPurchasePrice() { return purchasePrice; }
+    public boolean isPurchasePricePresent() { return purchasePricePresent; }
+    public String getPurchaseOrderNumber() { return purchaseOrderNumber; }
+    public boolean isPurchaseOrderNumberPresent() { return purchaseOrderNumberPresent; }
+    public String getPurchasePlace() { return purchasePlace; }
+    public boolean isPurchasePlacePresent() { return purchasePlacePresent; }
+    public String getMemo() { return memo; }
+    public boolean isMemoPresent() { return memoPresent; }
+    public Long getAiJobId() { return aiJobId; }
+    public boolean isAiJobIdPresent() { return aiJobIdPresent; }
+    public LocalDate getNextCareDate() { return nextCareDate; }
+    public boolean isNextCareDatePresent() { return nextCareDatePresent; }
+    public Long getVersion() { return version; }
 
     public boolean hasChanges() {
         return productIdPresent
@@ -262,6 +197,8 @@ public class UserItemUpdateRequest {
                 || materialSourcePresent
                 || purchaseDatePresent
                 || purchasePricePresent
+                || purchaseOrderNumberPresent
+                || purchasePlacePresent
                 || memoPresent
                 || aiJobIdPresent
                 || nextCareDatePresent;

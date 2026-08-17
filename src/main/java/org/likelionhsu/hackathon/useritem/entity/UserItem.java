@@ -68,6 +68,12 @@ public class UserItem extends BaseTimeEntity {
     @Column(name = "purchase_price")
     private Long purchasePrice;
 
+    @Column(name = "purchase_order_number", length = 100)
+    private String purchaseOrderNumber;
+
+    @Column(name = "purchase_place", length = 200)
+    private String purchasePlace;
+
     @Column(length = 1000)
     private String memo;
 
@@ -98,6 +104,8 @@ public class UserItem extends BaseTimeEntity {
             MaterialSource materialSource,
             LocalDate purchaseDate,
             Long purchasePrice,
+            String purchaseOrderNumber,
+            String purchasePlace,
             String memo,
             Long aiJobId,
             LocalDate nextCareDate
@@ -112,6 +120,8 @@ public class UserItem extends BaseTimeEntity {
         this.materialSource = materialSource;
         this.purchaseDate = purchaseDate;
         this.purchasePrice = purchasePrice;
+        this.purchaseOrderNumber = purchaseOrderNumber;
+        this.purchasePlace = purchasePlace;
         this.memo = memo;
         this.aiJobId = aiJobId;
         this.nextCareDate = nextCareDate;
@@ -132,6 +142,42 @@ public class UserItem extends BaseTimeEntity {
             Long aiJobId,
             LocalDate nextCareDate
     ) {
+        return create(
+                user,
+                product,
+                brandName,
+                name,
+                category,
+                primaryColor,
+                material,
+                materialSource,
+                purchaseDate,
+                purchasePrice,
+                null,
+                null,
+                memo,
+                aiJobId,
+                nextCareDate
+        );
+    }
+
+    public static UserItem create(
+            User user,
+            Product product,
+            String brandName,
+            String name,
+            ItemCategory category,
+            ColorGroup primaryColor,
+            MaterialGroup material,
+            MaterialSource materialSource,
+            LocalDate purchaseDate,
+            Long purchasePrice,
+            String purchaseOrderNumber,
+            String purchasePlace,
+            String memo,
+            Long aiJobId,
+            LocalDate nextCareDate
+    ) {
         return new UserItem(
                 user,
                 product,
@@ -143,6 +189,8 @@ public class UserItem extends BaseTimeEntity {
                 materialSource,
                 purchaseDate,
                 purchasePrice,
+                purchaseOrderNumber,
+                purchasePlace,
                 memo,
                 aiJobId,
                 nextCareDate
@@ -162,6 +210,38 @@ public class UserItem extends BaseTimeEntity {
             String memo,
             LocalDate nextCareDate
     ) {
+        update(
+                product,
+                brandName,
+                name,
+                category,
+                primaryColor,
+                material,
+                materialSource,
+                purchaseDate,
+                purchasePrice,
+                this.purchaseOrderNumber,
+                this.purchasePlace,
+                memo,
+                nextCareDate
+        );
+    }
+
+    public void update(
+            Product product,
+            String brandName,
+            String name,
+            ItemCategory category,
+            ColorGroup primaryColor,
+            MaterialGroup material,
+            MaterialSource materialSource,
+            LocalDate purchaseDate,
+            Long purchasePrice,
+            String purchaseOrderNumber,
+            String purchasePlace,
+            String memo,
+            LocalDate nextCareDate
+    ) {
         this.product = product;
         this.brandName = brandName;
         this.name = name;
@@ -171,6 +251,8 @@ public class UserItem extends BaseTimeEntity {
         this.materialSource = materialSource;
         this.purchaseDate = purchaseDate;
         this.purchasePrice = purchasePrice;
+        this.purchaseOrderNumber = purchaseOrderNumber;
+        this.purchasePlace = purchasePlace;
         this.memo = memo;
         this.nextCareDate = nextCareDate;
     }
@@ -181,67 +263,22 @@ public class UserItem extends BaseTimeEntity {
         }
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public String getBrandName() {
-        return brandName;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public ItemCategory getCategory() {
-        return category;
-    }
-
-    public ColorGroup getPrimaryColor() {
-        return primaryColor;
-    }
-
-    public MaterialGroup getMaterial() {
-        return material;
-    }
-
-    public MaterialSource getMaterialSource() {
-        return materialSource;
-    }
-
-    public LocalDate getPurchaseDate() {
-        return purchaseDate;
-    }
-
-    public Long getPurchasePrice() {
-        return purchasePrice;
-    }
-
-    public String getMemo() {
-        return memo;
-    }
-
-    public Long getAiJobId() {
-        return aiJobId;
-    }
-
-    public LocalDate getNextCareDate() {
-        return nextCareDate;
-    }
-
-    public Instant getDeletedAt() {
-        return deletedAt;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
+    public Long getId() { return id; }
+    public User getUser() { return user; }
+    public Product getProduct() { return product; }
+    public String getBrandName() { return brandName; }
+    public String getName() { return name; }
+    public ItemCategory getCategory() { return category; }
+    public ColorGroup getPrimaryColor() { return primaryColor; }
+    public MaterialGroup getMaterial() { return material; }
+    public MaterialSource getMaterialSource() { return materialSource; }
+    public LocalDate getPurchaseDate() { return purchaseDate; }
+    public Long getPurchasePrice() { return purchasePrice; }
+    public String getPurchaseOrderNumber() { return purchaseOrderNumber; }
+    public String getPurchasePlace() { return purchasePlace; }
+    public String getMemo() { return memo; }
+    public Long getAiJobId() { return aiJobId; }
+    public LocalDate getNextCareDate() { return nextCareDate; }
+    public Instant getDeletedAt() { return deletedAt; }
+    public Long getVersion() { return version; }
 }
