@@ -3,7 +3,7 @@
 2026 중앙해커톤 서비스 **입을래?**의 Spring Boot 백엔드 저장소입니다.
 
 > **문서 기준일:** 2026-08-17
-> **현재 `main` 기준:** `7d2d03f` — `[FEAT] 공통 AI Job 및 구매 활용성 OpenAI 분석 구현 (#36)`
+> **현재 구현 기준:** 마이 아이템 ImageAsset 업로드·연결·정리 기능 반영
 > **API 공통 규칙:** [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)
 > **운영 배포 방향:** Gabia 준비 중
 > **최종 로컬 검증:** `./gradlew clean check` 성공
@@ -49,7 +49,7 @@
 | 구매 전 활용 가능성 | ✅ 구현 | Rule-Based 점수·요인·호환 아이템·관리 난이도 분석 |
 | 공통 AI Job | ✅ 구현 | 생성·조회·멱등성·상태·timeout·비동기 처리 기반 |
 | 구매 활용성 OpenAI 설명 | ✅ 구현 | Responses API, Structured Output, 24시간 캐시, 제한적 retry |
-| 마이 아이템 이미지 업로드 | ⏳ 미구현 | 이미지 DB 기반은 있으나 업로드 API/스토리지 연동 미완료 |
+| 마이 아이템 이미지 | ✅ 구현 | JPEG/PNG 업로드, Cloudinary 저장, 연결·교체·삭제, TEMP/삭제대기 자동 정리 |
 | `ITEM_ANALYSIS` AI | ⏳ 미구현 | 공통 AI Job 확장 기반은 있으나 실제 processor/adapter 미연결 |
 | 제품 패스포트 / 활용도 분석 | ⏳ 미구현 | 상위 기능 구현 필요 |
 | 착용 기록 / 다시 활용 안내 | ⏳ 미구현 | 상위 기능 구현 필요 |
@@ -276,7 +276,29 @@ Base path: `/api/my-items`
 - `page`, `size`
 - `createdAt`, `name`, `purchaseDate`, `nextCareDate` 정렬
 
-> 현재 마이 아이템 **정보 CRUD는 구현 완료**되어 있지만, 이미지 파일 자체를 업로드하는 별도 API는 아직 구현되지 않았습니다.
+> 현재 마이 아이템 **정보 CRUD와 이미지 API가 모두 구현**되어 있습니다.
+
+#### My Item Images
+
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| POST | `/api/image-assets` | JPEG/PNG 한 장을 multipart `file`로 업로드해 TEMPORARY ImageAsset 생성 |
+| DELETE | `/api/image-assets/{imageAssetId}` | 연결 전 TEMPORARY 이미지 폐기 |
+| PUT | `/api/my-items/{myItemId}/images/{imageAssetId}` | TEMPORARY 이미지를 연결하거나 기존 ACTIVE 이미지를 교체 |
+| DELETE | `/api/my-items/{myItemId}/images/{imageAssetId}` | 연결된 ACTIVE 이미지 삭제 |
+
+MVP 이미지 정책:
+
+- 요청 한 번에 이미지 한 장
+- JPEG / PNG만 허용
+- 최대 10MB
+- Cloudinary 저장
+- UserItem 하나에는 최대 1개의 `ACTIVE` 이미지 유지
+- UserItem은 이미지 없이도 생성 가능
+- `TEMPORARY → ACTIVE → DELETE_PENDING → DELETED` lifecycle 사용
+- 24시간이 지난 미연결 TEMPORARY 이미지는 cleanup 대상
+- `PENDING / PROCESSING` AI Job이 사용하는 TEMPORARY 이미지는 삭제 및 TTL 정리에서 보호
+- Cloudinary 삭제 실패 시 `DELETE_PENDING`을 유지하고 이후 cleanup에서 재시도
 
 ### AI Jobs
 
@@ -509,6 +531,17 @@ $env:OPENAI_API_KEY="..."
 $env:OPENAI_MODEL="gpt-5.6-luna"
 ```
 
+마이 아이템 이미지를 실제 Cloudinary에 업로드하려면:
+
+```powershell
+$env:CLOUDINARY_CLOUD_NAME="..."
+$env:CLOUDINARY_API_KEY="..."
+$env:CLOUDINARY_API_SECRET="..."
+```
+
+이미지 자동 정리는 local에서 기본 비활성화되고 production profile에서는 기본 활성화됩니다.
+필요하면 `IMAGE_ASSET_CLEANUP_ENABLED`로 명시적으로 제어할 수 있습니다.
+
 ### 3) 선택: MCM 제품 데이터 import
 
 ```powershell
@@ -707,20 +740,19 @@ README에서는 현재 팀의 실제 배포 방향인 Gabia를 기준으로 관�
 
 현재 DB 테이블이 존재하는 것과 API가 실제 구현된 것은 구분해야 합니다.
 
-### 마이 아이템 이미지 + `ITEM_ANALYSIS`
+### `ITEM_ANALYSIS`
 
-현재:
+마이 아이템 이미지 기반은 구현되었습니다.
 
-- `user_items`
-- image 관련 DB/repository 기반
-- 공통 AI Job 기반
+- JPEG/PNG 업로드 및 실제 이미지 검증
+- Cloudinary 저장
+- ImageAsset lifecycle 및 마이 아이템 연결·교체·삭제
+- 24시간 TEMPORARY cleanup
+- DELETE_PENDING 재시도 및 재시작 복구
+- 회원 탈퇴 시 이미지 저장소 정리 큐 유지
 
-은 존재합니다.
+아직 필요한 것은 공통 AI Job을 재사용한 실제 이미지 분석 기능입니다.
 
-아직 필요한 것:
-
-- 이미지 업로드 API
-- 실제 이미지 저장소 연동
 - `ITEM_ANALYSIS` 요청 validation
 - Item Analysis processor
 - OpenAI 이미지 분석 adapter
@@ -755,8 +787,8 @@ V8 장소 관련 DB 기반은 있으나 현재 Place Controller / Service는 없
 
 다음 작업 후보는 다음과 같습니다.
 
-1. 마이 아이템 이미지 업로드와 이미지 저장소 연동
-2. 공통 AI Job을 재사용한 `ITEM_ANALYSIS`
+1. 공통 AI Job을 재사용한 `ITEM_ANALYSIS`
+2. AI 분석 결과 사용자 확인·수정 후 마이 아이템 등록 연계
 3. 제품 패스포트 / 착용 기록 / 활용도 분석
 4. 스마트 착용 추천 및 스타일 플랜
 5. 장소 추천
