@@ -3,7 +3,7 @@
 2026 중앙해커톤 서비스 **입을래?**의 Spring Boot 백엔드 저장소입니다.
 
 > **문서 기준일:** 2026-08-17
-> **현재 구현 기준:** 마이 아이템 ImageAsset 업로드·연결·정리 기능 반영
+> **현재 구현 기준:** 마이 아이템 ImageAsset + `ITEM_ANALYSIS` OpenAI 이미지 분석 반영
 > **API 공통 규칙:** [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)
 > **운영 배포 방향:** Gabia 준비 중
 > **최종 로컬 검증:** `./gradlew clean check` 성공
@@ -28,6 +28,7 @@
 6. 구매 전 활용 가능성 Rule-Based 분석
 7. 공통 AI Job을 통한 비동기 AI 작업 관리
 8. OpenAI Responses API를 통한 구매 활용성 AI 설명 생성
+9. 마이 아이템 이미지 기반 `ITEM_ANALYSIS` 분석
 
 ---
 
@@ -50,7 +51,7 @@
 | 공통 AI Job | ✅ 구현 | 생성·조회·멱등성·상태·timeout·비동기 처리 기반 |
 | 구매 활용성 OpenAI 설명 | ✅ 구현 | Responses API, Structured Output, 24시간 캐시, 제한적 retry |
 | 마이 아이템 이미지 | ✅ 구현 | JPEG/PNG 업로드, Cloudinary 저장, 연결·교체·삭제, TEMP/삭제대기 자동 정리 |
-| `ITEM_ANALYSIS` AI | ⏳ 미구현 | 공통 AI Job 확장 기반은 있으나 실제 processor/adapter 미연결 |
+| `ITEM_ANALYSIS` AI | ✅ 구현 | TEMPORARY ITEM 이미지 분석, Structured Output, 멱등 생성, 비동기 처리, 최대 1회 retry |
 | 제품 패스포트 / 활용도 분석 | ⏳ 미구현 | 상위 기능 구현 필요 |
 | 착용 기록 / 다시 활용 안내 | ⏳ 미구현 | 상위 기능 구현 필요 |
 | 스마트 착용 추천 | ⏳ 미구현 | 구현 필요 |
@@ -58,7 +59,7 @@
 | 장소 추천 | 🧱 DB 기반 | V8 스키마 기반은 있으나 현재 controller/service 미구현 |
 | 백엔드 운영 배포 | 🚧 준비 중 | Gabia 기준 운영 배포 준비 |
 
-> `AiJobType`에는 향후 확장을 위한 타입이 존재하지만, **현재 외부 AI Job 생성 API에서 실제 지원하는 타입은 `PURCHASE_UTILITY`**입니다.
+> `AiJobType`에는 향후 확장을 위한 타입이 존재하며, **현재 외부 AI Job 생성 API에서 실제 지원하는 타입은 `PURCHASE_UTILITY`, `ITEM_ANALYSIS`**입니다.
 
 ---
 
@@ -313,6 +314,7 @@ Base path: `/api/ai-jobs`
 
 ```text
 PURCHASE_UTILITY
+ITEM_ANALYSIS
 ```
 
 AI Job 상태:
@@ -417,7 +419,7 @@ AI Job은 특정 AI 기능 하나에 종속된 테이블/API가 아니라,
 ```text
 공통 AI Job
 ├─ PURCHASE_UTILITY  ← 현재 실제 연결 완료
-├─ ITEM_ANALYSIS     ← 향후 processor/adapter 연결 필요
+├─ ITEM_ANALYSIS     ← 현재 실제 연결 완료
 └─ STYLE_PLAN        ← 향후 구현 필요
 ```
 
@@ -427,7 +429,7 @@ AI Job은 특정 AI 기능 하나에 종속된 테이블/API가 아니라,
 
 ## 9. OpenAI 설정
 
-구매 활용성 AI 설명은 OpenAI Responses API를 사용합니다.
+구매 활용성 AI 설명과 `ITEM_ANALYSIS` 이미지 분석은 OpenAI Responses API를 사용합니다.
 
 ### 환경변수
 
@@ -437,7 +439,7 @@ AI Job은 특정 AI 기능 하나에 종속된 테이블/API가 아니라,
 | `OPENAI_MODEL` | 선택 | 미지정 시 현재 코드 기본값 `gpt-5.6-luna` |
 
 `OPENAI_API_KEY`가 없으면 애플리케이션 전체가 실패하는 것이 아니라
-**OpenAI adapter만 생성되지 않으며**, 구매 활용성의 Rule-Based 분석은 유지됩니다.
+**OpenAI adapter만 생성되지 않으며**, 구매 활용성의 Rule-Based 분석은 유지되고 `ITEM_ANALYSIS` 작업은 AI 분석을 수행할 수 없습니다.
 
 > 현재 `.env.example`에는 OpenAI 변수 예시가 아직 추가되어 있지 않습니다.
 > README 업데이트 이후 별도의 환경설정 정리 작업에서 `.env.example`도 맞추는 것이 좋습니다.
@@ -740,9 +742,9 @@ README에서는 현재 팀의 실제 배포 방향인 Gabia를 기준으로 관�
 
 현재 DB 테이블이 존재하는 것과 API가 실제 구현된 것은 구분해야 합니다.
 
-### `ITEM_ANALYSIS`
+### `ITEM_ANALYSIS` 후속 연계
 
-마이 아이템 이미지 기반은 구현되었습니다.
+마이 아이템 이미지 분석 백엔드는 구현되었습니다.
 
 - JPEG/PNG 업로드 및 실제 이미지 검증
 - Cloudinary 저장
@@ -750,13 +752,12 @@ README에서는 현재 팀의 실제 배포 방향인 Gabia를 기준으로 관�
 - 24시간 TEMPORARY cleanup
 - DELETE_PENDING 재시도 및 재시작 복구
 - 회원 탈퇴 시 이미지 저장소 정리 큐 유지
+- 공통 AI Job 기반 `ITEM_ANALYSIS` 요청 validation
+- Item Analysis 비동기 processor
+- OpenAI 이미지 분석 adapter + Structured Output
+- retryable 오류 최대 1회 재시도
 
-아직 필요한 것은 공통 AI Job을 재사용한 실제 이미지 분석 기능입니다.
-
-- `ITEM_ANALYSIS` 요청 validation
-- Item Analysis processor
-- OpenAI 이미지 분석 adapter
-- AI 분석 결과 사용자 확인/수정 흐름
+남은 것은 프론트에서 AI 분석 결과를 사용자에게 보여주고 확인·수정한 뒤 기존 마이 아이템 등록 API와 연결하는 화면 흐름입니다.
 
 ### 제품 패스포트 / 활용도
 
@@ -787,13 +788,12 @@ V8 장소 관련 DB 기반은 있으나 현재 Place Controller / Service는 없
 
 다음 작업 후보는 다음과 같습니다.
 
-1. 공통 AI Job을 재사용한 `ITEM_ANALYSIS`
-2. AI 분석 결과 사용자 확인·수정 후 마이 아이템 등록 연계
-3. 제품 패스포트 / 착용 기록 / 활용도 분석
-4. 스마트 착용 추천 및 스타일 플랜
-5. 장소 추천
-6. Gabia 운영 배포 및 프론트엔드 실서버 연동
-7. `.env.example` / production 설정 최신화
+1. AI 분석 결과 사용자 확인·수정 후 마이 아이템 등록 연계
+2. 제품 패스포트 / 착용 기록 / 활용도 분석
+3. 스마트 착용 추천 및 스타일 플랜
+4. 장소 추천
+5. Gabia 운영 배포 및 프론트엔드 실서버 연동
+6. `.env.example` / production 설정 최신화
 
 실제 작업 순서는 해커톤 일정과 FE 연동 우선순위에 따라 조정합니다.
 
@@ -871,7 +871,7 @@ Recommendation   Rule-Based 제품 추천
 My Item          CRUD + 검색/필터/정렬
 Purchase Utility Rule-Based 분석 + 관리 난이도
 AI Job           공통 비동기 작업 기반
-OpenAI           Purchase Utility AI 설명 연결 완료
+OpenAI           Purchase Utility 설명 + ITEM_ANALYSIS 이미지 분석 연결 완료
 Testing          Unit + Testcontainers Integration
 CI               GitHub Actions clean check
 Deployment       Gabia 준비 중

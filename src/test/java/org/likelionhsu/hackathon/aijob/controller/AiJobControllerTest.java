@@ -119,6 +119,55 @@ class AiJobControllerTest {
     }
 
     @Test
+    void newItemAnalysisJobReturns202() throws Exception {
+        authenticate(USER_ID);
+
+        when(aiJobService.create(
+                eq(USER_ID),
+                eq(IDEMPOTENCY_KEY),
+                any(AiJobCreateRequest.class)
+        )).thenReturn(
+                new AiJobService.CreationResult(
+                        new AiJobCreateResponse(
+                                "9002",
+                                AiJobType.ITEM_ANALYSIS,
+                                AiJobStatus.PENDING,
+                                Instant.parse(
+                                        "2026-08-17T00:00:00Z"
+                                )
+                        ),
+                        true
+                )
+        );
+
+        mockMvc.perform(
+                        post("/api/ai-jobs")
+                                .header(
+                                        "Idempotency-Key",
+                                        IDEMPOTENCY_KEY
+                                )
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content("""
+                                        {
+                                          "type": "ITEM_ANALYSIS",
+                                          "context": {
+                                            "imageAssetId": "51"
+                                          }
+                                        }
+                                        """)
+                )
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.data.jobId")
+                        .value("9002"))
+                .andExpect(jsonPath("$.data.type")
+                        .value("ITEM_ANALYSIS"))
+                .andExpect(jsonPath("$.data.status")
+                        .value("PENDING"));
+    }
+
+    @Test
     void completedReplayReturns200() throws Exception {
         authenticate(USER_ID);
 
@@ -213,6 +262,37 @@ class AiJobControllerTest {
     }
 
     @Test
+    void itemAnalysisRejectsProductIdInContext()
+            throws Exception {
+        authenticate(USER_ID);
+
+        mockMvc.perform(
+                        post("/api/ai-jobs")
+                                .header(
+                                        "Idempotency-Key",
+                                        IDEMPOTENCY_KEY
+                                )
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content("""
+                                        {
+                                          "type": "ITEM_ANALYSIS",
+                                          "context": {
+                                            "productId": "123",
+                                            "imageAssetId": "51"
+                                          }
+                                        }
+                                        """)
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code")
+                        .value("VALIDATION_ERROR"));
+
+        verifyNoInteractions(aiJobService);
+    }
+
+    @Test
     void idempotencyConflictReturns409() throws Exception {
         authenticate(USER_ID);
 
@@ -290,6 +370,47 @@ class AiJobControllerTest {
                 .andExpect(jsonPath(
                         "$.data.result.analysisId"
                 ).value("31"));
+    }
+
+    @Test
+    void getItemAnalysisJobReturnsStructuredResult()
+            throws Exception {
+        authenticate(USER_ID);
+
+        when(aiJobService.get(
+                USER_ID,
+                9002L
+        )).thenReturn(
+                new AiJobResponse(
+                        "9002",
+                        AiJobType.ITEM_ANALYSIS,
+                        AiJobStatus.SUCCEEDED,
+                        new ObjectMapper().readTree(
+                                "{\"brandName\":\"MCM\",\"name\":\"백팩\",\"category\":\"BAG\",\"primaryColor\":\"BLACK\",\"material\":\"LEATHER\"}"
+                        ),
+                        null,
+                        null,
+                        Instant.parse(
+                                "2026-08-17T00:00:00Z"
+                        ),
+                        Instant.parse(
+                                "2026-08-17T00:00:03Z"
+                        )
+                )
+        );
+
+        mockMvc.perform(
+                        get("/api/ai-jobs/9002")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.type")
+                        .value("ITEM_ANALYSIS"))
+                .andExpect(jsonPath("$.data.result.brandName")
+                        .value("MCM"))
+                .andExpect(jsonPath("$.data.result.category")
+                        .value("BAG"))
+                .andExpect(jsonPath("$.data.result.material")
+                        .value("LEATHER"));
     }
 
     @Test
