@@ -3,10 +3,10 @@
 2026 중앙해커톤 서비스 **입을래?**의 Spring Boot 백엔드 저장소입니다.
 
 > **문서 기준일:** 2026-08-17
-> **현재 구현 기준:** 마이 아이템 ImageAsset + `ITEM_ANALYSIS` OpenAI 이미지 분석 반영
+> **현재 구현 기준:** `main` `0749c9c` / PR #40 — ImageAsset + `ITEM_ANALYSIS` + 마이 아이템 provenance/최초 이미지 연계 반영
 > **API 공통 규칙:** [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)
 > **운영 배포 방향:** Gabia 준비 중
-> **최종 로컬 검증:** `./gradlew clean check` 성공
+> **최종 검증:** 로컬 `./gradlew clean check` 성공 + PR #40 Backend CI 성공
 >
 > README는 현재 구현 상태와 실행·테스트 방법을 빠르게 파악하기 위한 요약 문서입니다.
 > 세부 API 계약은 **실제 `main` 코드 → Flyway 스키마 → `API_CONVENTIONS.md` → README** 순으로 확인합니다.
@@ -28,7 +28,8 @@
 6. 구매 전 활용 가능성 Rule-Based 분석
 7. 공통 AI Job을 통한 비동기 AI 작업 관리
 8. OpenAI Responses API를 통한 구매 활용성 AI 설명 생성
-9. 마이 아이템 이미지 기반 `ITEM_ANALYSIS` 분석
+9. 마이 아이템 이미지 업로드 및 `ITEM_ANALYSIS` 이미지 분석
+10. `ITEM_ANALYSIS` 결과 provenance를 보존한 마이 아이템 등록 및 최초 이미지 연결 검증
 
 ---
 
@@ -46,12 +47,13 @@
 | MCM 샘플 데이터 | ✅ 구현 | `src/main/resources/data/mcm-products.json` 기반 import 구조 |
 | 제품 찜 | ✅ 구현 | 찜 등록·해제·목록 조회 |
 | 제품 추천 | ✅ 구현 | 취향·상황 기반 Rule-Based 추천 생성 및 조회 |
-| 마이 아이템 | ✅ 구현 | 등록·목록·상세·수정·Soft Delete, 검색·필터·정렬 |
+| 마이 아이템 | ✅ 구현 | CRUD·검색·필터·정렬 + nullable `brandName` + `aiJobId` provenance 고정 + 소재 출처 정합성 검증 |
 | 구매 전 활용 가능성 | ✅ 구현 | Rule-Based 점수·요인·호환 아이템·관리 난이도 분석 |
 | 공통 AI Job | ✅ 구현 | 생성·조회·멱등성·상태·timeout·비동기 처리 기반 |
 | 구매 활용성 OpenAI 설명 | ✅ 구현 | Responses API, Structured Output, 24시간 캐시, 제한적 retry |
-| 마이 아이템 이미지 | ✅ 구현 | JPEG/PNG 업로드, Cloudinary 저장, 연결·교체·삭제, TEMP/삭제대기 자동 정리 |
+| 마이 아이템 이미지 | ✅ 구현 | JPEG/PNG 업로드, Cloudinary 저장, 연결·교체·삭제, TEMP/삭제대기 자동 정리, AI 사용 중 보호 |
 | `ITEM_ANALYSIS` AI | ✅ 구현 | TEMPORARY ITEM 이미지 분석, Structured Output, 멱등 생성, 비동기 처리, 최대 1회 retry |
+| `ITEM_ANALYSIS` ↔ 마이 아이템 연계 | ✅ 구현 | SUCCEEDED Job provenance 검증, 소재 출처 검증, 최초 이미지 `input_hash` 일치 검증 |
 | 제품 패스포트 / 활용도 분석 | ⏳ 미구현 | 상위 기능 구현 필요 |
 | 착용 기록 / 다시 활용 안내 | ⏳ 미구현 | 상위 기능 구현 필요 |
 | 스마트 착용 추천 | ⏳ 미구현 | 구현 필요 |
@@ -118,6 +120,41 @@
 - retryable 오류에 한해 최대 1회 재시도
 - AI 실패 시 기존 Rule-Based 분석 결과 보존
 
+### PR #38 — 마이 아이템 이미지 업로드 및 ImageAsset 생명주기
+
+- `POST /api/image-assets` 기반 JPEG/PNG 업로드
+- Cloudinary 저장 및 ImageAsset 메타데이터 관리
+- `TEMPORARY → ACTIVE → DELETE_PENDING → DELETED` lifecycle
+- 마이 아이템 이미지 연결·교체·삭제
+- 24시간 TEMPORARY cleanup
+- DELETE_PENDING 삭제 재시도 및 재시작 복구
+- AI Job 사용 중 TEMPORARY 이미지 삭제 보호
+
+### PR #39 — 마이 아이템 이미지 기반 `ITEM_ANALYSIS`
+
+- 공통 AI Job의 `ITEM_ANALYSIS` 타입 실제 처리 연결
+- ImageAsset 기반 deterministic `input_hash`
+- TEMPORARY ITEM 이미지와 AI Job 바인딩
+- OpenAI Responses API 이미지 분석
+- Structured Output 기반 아이템 속성 추출
+- `input_hash` / `result_json` 성공 결과 저장
+- 비동기 processor 및 최대 1회 제한적 retry
+- AI Job 조회를 통한 분석 결과 제공
+
+### PR #40 — `ITEM_ANALYSIS` 마이 아이템 연동 및 provenance 검증
+
+- `brandName` 선택값 전환 및 Flyway V16 추가
+- 생성 시 `aiJobId`를 등록 흐름 provenance로 저장하고 이후 PATCH 변경 금지
+- `AI_ESTIMATED` 소재는 ITEM_ANALYSIS 결과 소재와 일치해야 함
+- `PRODUCT_DATA` 소재는 연결 Product 소재와 일치해야 함
+- 실제 소재/제품 변경 시에만 필요한 provenance 전환 수행
+- AI 기반 마이 아이템의 최초 이미지가 분석 입력 이미지와 동일한지 `input_hash`로 검증
+- ImageAsset의 최신 `ai_job_id`와 UserItem의 고정 provenance를 분리
+- PENDING/PROCESSING AI Job이 사용하는 TEMPORARY 이미지 attach 차단
+- 삭제된 과거 이미지까지 포함한 attachment history로 최초/교체 판정
+- `IMAGE_ASSET_ANALYSIS_MISMATCH` 409 오류 추가
+- 단위 테스트 + Testcontainers/MySQL 통합 테스트 + Backend CI 통과
+
 ---
 
 ## 4. 기술 스택
@@ -138,6 +175,7 @@
 | DB Migration | Flyway |
 | API Docs | springdoc-openapi 3.1.0 / Swagger UI |
 | AI | OpenAI Responses API |
+| Image Storage | Cloudinary |
 | Test | JUnit 5, Mockito, Testcontainers 2.0.5, H2 |
 | CI | GitHub Actions |
 
@@ -151,6 +189,9 @@
 - 서버/JPA 시간 기준은 UTC
 - API 공통 응답·오류 형식 통일
 - AI 처리 실패가 핵심 Rule-Based 결과를 파괴하지 않도록 fallback 유지
+- AI Job은 기능별로 중복 구현하지 않고 공통 기반을 확장
+- UserItem의 `aiJobId`는 생성 흐름 provenance이며 생성 후 변경하지 않음
+- ImageAsset의 `ai_job_id`는 최신 분석 Job 바인딩이므로 UserItem provenance와 별도 의미를 가짐
 
 ---
 
@@ -163,12 +204,14 @@ hackathon/
 ├─ aijob/             # 공통 AI Job 생성·조회·상태·멱등성
 ├─ auth/              # 일반 인증, JWT, OAuth, 재인증
 ├─ common/            # 공통 설정, 응답, 예외, enum, health
+├─ imageasset/        # 이미지 업로드, Cloudinary, ImageAsset lifecycle/cleanup
+├─ itemanalysis/      # ITEM_ANALYSIS 입력 해시, processor, OpenAI 이미지 분석
 ├─ preference/        # 사용자 취향 프로필
 ├─ product/           # MCM 제품 카탈로그 및 import
 ├─ purchaseutility/   # 구매 전 활용 가능성 + AI 설명
 ├─ recommendation/    # MCM Rule-Based 제품 추천
 ├─ user/              # 마이페이지, 회원 탈퇴
-├─ useritem/          # 마이 아이템 CRUD
+├─ useritem/          # 마이 아이템 CRUD + 이미지/AI provenance 연계
 └─ wishlist/          # 제품 찜
 ```
 
@@ -277,7 +320,20 @@ Base path: `/api/my-items`
 - `page`, `size`
 - `createdAt`, `name`, `purchaseDate`, `nextCareDate` 정렬
 
-> 현재 마이 아이템 **정보 CRUD와 이미지 API가 모두 구현**되어 있습니다.
+> 현재 마이 아이템 **정보 CRUD, 이미지 API, `ITEM_ANALYSIS` provenance 연계까지 구현**되어 있습니다.
+
+#### 마이 아이템 등록 / provenance 정책
+
+- `brandName`은 선택값이며 `null` 저장 가능
+- `aiJobId` 없이 생성하면 일반 수동 등록 흐름
+- `aiJobId`가 있으면 현재 사용자의 **SUCCEEDED `ITEM_ANALYSIS` Job**이어야 함
+- provenance Job은 유효한 64자리 SHA-256 `input_hash`와 파싱 가능한 `result_json`을 가져야 함
+- 생성된 UserItem의 `aiJobId`는 이후 PATCH에서 추가·교체·삭제할 수 없음
+- `material == null`이면 `materialSource == null`
+- `materialSource == AI_ESTIMATED`이면 저장된 ITEM_ANALYSIS 결과의 `material`과 정확히 일치해야 함
+- `materialSource == PRODUCT_DATA`이면 연결 Product의 `material`과 정확히 일치해야 함
+- 사용자가 직접 입력·수정한 소재는 `USER_CONFIRMED` 사용
+- PATCH에서 같은 소재/같은 Product를 다시 보내는 것만으로 provenance가 불필요하게 변경되지 않음
 
 #### My Item Images
 
@@ -298,8 +354,12 @@ MVP 이미지 정책:
 - UserItem은 이미지 없이도 생성 가능
 - `TEMPORARY → ACTIVE → DELETE_PENDING → DELETED` lifecycle 사용
 - 24시간이 지난 미연결 TEMPORARY 이미지는 cleanup 대상
-- `PENDING / PROCESSING` AI Job이 사용하는 TEMPORARY 이미지는 삭제 및 TTL 정리에서 보호
+- `PENDING / PROCESSING` AI Job이 사용하는 TEMPORARY 이미지는 **attach·명시적 삭제·TTL 정리에서 보호**
 - Cloudinary 삭제 실패 시 `DELETE_PENDING`을 유지하고 이후 cleanup에서 재시도
+- AI provenance가 있는 UserItem의 **첫 이미지**는 저장된 Job의 `input_hash`와 대상 ImageAsset 해시가 일치해야 함
+- 여기서 “첫 이미지”는 현재 ACTIVE 여부가 아니라 과거 ITEM 이미지 연결 이력이 한 번도 없는 경우를 뜻함
+- DELETED 이미지도 `user_item_id` 이력을 유지하므로 삭제 후 새 이미지는 “첫 이미지”가 아니라 교체로 취급
+- ImageAsset의 최신 `ai_job_id`가 다른 Job으로 바뀌어도 UserItem의 고정 provenance Job `input_hash`를 기준으로 검증
 
 ### AI Jobs
 
@@ -325,6 +385,19 @@ PROCESSING
 SUCCEEDED
 FAILED
 ```
+
+`ITEM_ANALYSIS` 요청 예시:
+
+```json
+{
+  "type": "ITEM_ANALYSIS",
+  "context": {
+    "imageAssetId": "51"
+  }
+}
+```
+
+요청에는 `Idempotency-Key` 헤더가 필요하며, 성공한 `ITEM_ANALYSIS` Job은 이후 UserItem 등록 provenance와 첫 이미지 검증에 사용되는 `input_hash` / `result_json`을 보존합니다.
 
 ### Purchase Utility
 
@@ -409,6 +482,8 @@ AI Job은 특정 AI 기능 하나에 종속된 테이블/API가 아니라,
 - `Idempotency-Key`
 - `request_hash`
 - model / prompt version 기록
+- `input_hash`
+- `result_json`
 - retry count
 - 오류 상태
 - stale timeout
@@ -419,11 +494,13 @@ AI Job은 특정 AI 기능 하나에 종속된 테이블/API가 아니라,
 ```text
 공통 AI Job
 ├─ PURCHASE_UTILITY  ← 현재 실제 연결 완료
-├─ ITEM_ANALYSIS     ← 현재 실제 연결 완료
+├─ ITEM_ANALYSIS     ← 현재 실제 연결 완료 + UserItem provenance 연계 완료
 └─ STYLE_PLAN        ← 향후 구현 필요
 ```
 
 기능별로 별도 구현이 필요한 부분은 입력 validation, processor, prompt/schema, AI adapter, 결과 저장 방식입니다.
+
+`ITEM_ANALYSIS`의 경우 UserItem 생성 이후에도 분석 Job의 의미가 필요하므로, UserItem에 저장된 `aiJobId`를 **등록 시점의 고정 provenance**로 사용합니다. ImageAsset의 `ai_job_id`는 동일 이미지의 최신 AI Job으로 재바인딩될 수 있어 두 값의 의미를 동일하게 취급하지 않습니다.
 
 ---
 
@@ -442,13 +519,14 @@ AI Job은 특정 AI 기능 하나에 종속된 테이블/API가 아니라,
 **OpenAI adapter만 생성되지 않으며**, 구매 활용성의 Rule-Based 분석은 유지되고 `ITEM_ANALYSIS` 작업은 AI 분석을 수행할 수 없습니다.
 
 > 현재 `.env.example`에는 OpenAI 변수 예시가 아직 추가되어 있지 않습니다.
-> README 업데이트 이후 별도의 환경설정 정리 작업에서 `.env.example`도 맞추는 것이 좋습니다.
+> 또한 production 항목에는 과거 Railway 기준 문구가 남아 있습니다.
+> Gabia 실제 배포 전에 `.env.example`과 production 환경설정을 함께 정리하는 것이 좋습니다.
 
 ---
 
 ## 10. DB / Flyway
 
-현재 `main`의 최신 Flyway migration은 **V15**입니다.
+현재 `main`의 최신 Flyway migration은 **V16**입니다.
 
 | Version | 역할 |
 | --- | --- |
@@ -467,6 +545,14 @@ AI Job은 특정 AI 기능 하나에 종속된 테이블/API가 아니라,
 | V13 | 계정 재인증 토큰 |
 | V14 | Purchase Utility 관리 난이도 |
 | V15 | 공통 AI Job request identity |
+| V16 | `user_items.brand_name` nullable 전환 |
+
+V16:
+
+```sql
+ALTER TABLE user_items
+    MODIFY COLUMN brand_name VARCHAR(100) NULL DEFAULT NULL;
+```
 
 ### Migration 규칙
 
@@ -484,7 +570,7 @@ AI Job은 특정 AI 기능 하나에 종속된 테이블/API가 아니라,
 - Java 21
 - MySQL
 - Docker Desktop
-    - 전체 integration test / Testcontainers 실행 시 필요
+  - 전체 integration test / Testcontainers 실행 시 필요
 - Git
 
 Gradle은 별도 설치 대신 repository의 wrapper를 사용합니다.
@@ -526,7 +612,7 @@ $env:NAVER_CLIENT_ID="..."
 $env:NAVER_CLIENT_SECRET="..."
 ```
 
-OpenAI 구매 활용성 설명을 실제 호출하려면:
+OpenAI 기능을 실제 호출하려면:
 
 ```powershell
 $env:OPENAI_API_KEY="..."
@@ -631,10 +717,14 @@ Docker가 실행 중이어야 합니다.
 
 `check`는 `integrationTest`까지 포함합니다.
 
-2026-08-17 `7d2d03f` 반영 전후 동일 코드 기준 로컬 최종 검증:
+2026-08-17 PR #40 / `0749c9c` 기준 최종 검증:
 
 ```text
-BUILD SUCCESSFUL
+Local
+BUILD SUCCESSFUL in 6m 57s
+
+GitHub Actions
+Backend CI #55: success
 ```
 
 ### GitHub Actions
@@ -742,9 +832,11 @@ README에서는 현재 팀의 실제 배포 방향인 Gabia를 기준으로 관�
 
 현재 DB 테이블이 존재하는 것과 API가 실제 구현된 것은 구분해야 합니다.
 
-### `ITEM_ANALYSIS` 후속 연계
+### `ITEM_ANALYSIS` 프론트 연계
 
-마이 아이템 이미지 분석 백엔드는 구현되었습니다.
+`ITEM_ANALYSIS`의 백엔드 분석 및 UserItem 연계 계약은 구현되었습니다.
+
+현재 백엔드 완료 범위:
 
 - JPEG/PNG 업로드 및 실제 이미지 검증
 - Cloudinary 저장
@@ -756,8 +848,13 @@ README에서는 현재 팀의 실제 배포 방향인 Gabia를 기준으로 관�
 - Item Analysis 비동기 processor
 - OpenAI 이미지 분석 adapter + Structured Output
 - retryable 오류 최대 1회 재시도
+- SUCCEEDED Job provenance의 `input_hash` / `result_json` 검증
+- 마이 아이템 생성 시 `aiJobId` 고정 provenance 저장
+- `AI_ESTIMATED` / `PRODUCT_DATA` 소재 출처 정합성 검증
+- AI 기반 첫 이미지 `input_hash` 일치 검증
+- AI 사용 중 TEMPORARY 이미지 attach 차단
 
-남은 것은 프론트에서 AI 분석 결과를 사용자에게 보여주고 확인·수정한 뒤 기존 마이 아이템 등록 API와 연결하는 화면 흐름입니다.
+남은 것은 **프론트에서 분석 결과를 보여주고 사용자가 확인·수정한 뒤 `POST /api/my-items`와 최초 이미지 연결 API를 실제 화면 흐름으로 이어 붙이고 E2E 확인하는 작업**입니다.
 
 ### 제품 패스포트 / 활용도
 
@@ -788,7 +885,7 @@ V8 장소 관련 DB 기반은 있으나 현재 Place Controller / Service는 없
 
 다음 작업 후보는 다음과 같습니다.
 
-1. AI 분석 결과 사용자 확인·수정 후 마이 아이템 등록 연계
+1. FE의 `ITEM_ANALYSIS` 결과 확인·수정 → 마이 아이템 생성 → 최초 이미지 연결 흐름 통합/E2E 확인
 2. 제품 패스포트 / 착용 기록 / 활용도 분석
 3. 스마트 착용 추천 및 스타일 플랜
 4. 장소 추천
@@ -862,20 +959,20 @@ git diff --check
 ```text
 서비스           입을래?
 Backend          Java 21 / Spring Boot 4.1.0
-DB               MySQL + Flyway V1~V15
+DB               MySQL + Flyway V1~V16
 Auth             JWT + Refresh Cookie + Kakao/Naver OAuth
 Catalog          MCM 제품 조회/필터/정렬
 Preference       취향 프로필 조회/저장
 Wishlist         제품 찜
 Recommendation   Rule-Based 제품 추천
-My Item          CRUD + 검색/필터/정렬
+My Item          CRUD + 검색/필터/정렬 + ImageAsset + ITEM_ANALYSIS provenance 연계
 Purchase Utility Rule-Based 분석 + 관리 난이도
 AI Job           공통 비동기 작업 기반
 OpenAI           Purchase Utility 설명 + ITEM_ANALYSIS 이미지 분석 연결 완료
 Testing          Unit + Testcontainers Integration
 CI               GitHub Actions clean check
 Deployment       Gabia 준비 중
-main             7d2d03f / PR #36
+main             0749c9c / PR #40
 ```
 
 ---
