@@ -326,6 +326,45 @@ public class ImageAssetJdbcRepository {
         return updated == 1;
     }
 
+    public boolean isUsedByRunningAiJob(
+            Long ownerUserId,
+            Long imageAssetId
+    ) {
+        Objects.requireNonNull(
+                ownerUserId,
+                "ownerUserId는 null일 수 없습니다."
+        );
+        Objects.requireNonNull(
+                imageAssetId,
+                "imageAssetId는 null일 수 없습니다."
+        );
+
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*)
+                FROM image_assets image
+                JOIN ai_jobs job
+                  ON job.id = image.ai_job_id
+                WHERE image.id = ?
+                  AND image.owner_user_id = ?
+                  AND image.purpose = 'ITEM'
+                  AND image.status = 'TEMPORARY'
+                  AND image.user_item_id IS NULL
+                  AND image.deleted_at IS NULL
+                  AND job.user_id = image.owner_user_id
+                  AND job.status IN (
+                      'PENDING',
+                      'PROCESSING'
+                  )
+                """,
+                Integer.class,
+                imageAssetId,
+                ownerUserId
+        );
+
+        return count != null && count > 0;
+    }
+
     public boolean markDeletePending(
             Long ownerUserId,
             Long imageAssetId
@@ -349,6 +388,18 @@ public class ImageAssetJdbcRepository {
                   AND status = 'TEMPORARY'
                   AND user_item_id IS NULL
                   AND deleted_at IS NULL
+                  AND (
+                      ai_job_id IS NULL
+                      OR NOT EXISTS (
+                          SELECT 1
+                          FROM ai_jobs job
+                          WHERE job.id = image_assets.ai_job_id
+                            AND job.status IN (
+                                'PENDING',
+                                'PROCESSING'
+                            )
+                      )
+                  )
                 """,
                 imageAssetId,
                 ownerUserId

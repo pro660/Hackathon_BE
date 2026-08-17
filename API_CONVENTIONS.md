@@ -972,31 +972,65 @@ productId가 1000 미만이면 샘플로 판단
 
 향후 실제 외부 데이터와 여러 종류의 시연 데이터를 세부적으로 구분해야 하는 요구가 생기는 경우에는 `dataSource`와 같은 별도의 Enum 필드를 도입할 수 있다. 해당 구분이 필요해질 때 API 계약에서 별도로 정의한다.
 
-### 3.14 ITEM 이미지 업로드 완료 규칙
+### 3.14 ITEM 이미지 업로드·연결 규칙
 
-`ITEM` 이미지 업로드 완료는 다음 확정 계약을 따른다.
+마이아이템 이미지 파일 업로드와 `UserItem` 연결은 독립된 단계로 처리한다.
 
-- 아이템당 최대 3장
-- ITEM 이미지 완료 요청에서 `sortOrder`는 필수이며 허용 범위는 `0~2`
-- 동일한 `UserItem` 안에서 동일 `sortOrder` 중복 금지
-- 같은 아이템에 대한 동시 완료 요청은 `UserItem` 행 비관적 쓰기 잠금으로 직렬화
+이미지 업로드:
 
-Transaction에서는 다음 순서로 검증한다.
+- `POST /api/image-assets`
+- `multipart/form-data`
+- multipart part 이름은 `file`
+- 요청 한 번에 이미지 한 장
+- JPEG / PNG만 허용
+- 최대 10MB
+- MIME type이나 파일명만 신뢰하지 않고 실제 이미지 binary와 dimensions를 검증
+- FE는 소유자 ID, `myItemId`, `aiJobId`, 상태, Cloudinary URL을 직접 보내지 않는다.
+- 성공 시 `201 Created`
+
+마이아이템 연결·교체:
+
+- `PUT /api/my-items/{myItemId}/images/{imageAssetId}`
+- MVP에서는 UserItem 하나에 최대 1개의 `ACTIVE` ITEM 이미지만 유지한다.
+- 처음 연결하면 `TEMPORARY → ACTIVE`
+- 기존 ACTIVE 이미지가 있으면 기존 이미지를 `DELETE_PENDING`으로 바꾸고 새 이미지를 ACTIVE로 연결한다.
+- 같은 이미지를 같은 마이아이템에 다시 PUT하면 idempotent no-op으로 처리한다.
+- 같은 아이템에 대한 동시 연결·교체는 DB row lock으로 직렬화한다.
+- 잠금/상태 충돌은 `409 IMAGE_ASSET_STATE_CONFLICT`
+- 다른 사용자의 이미지 ID는 `404 IMAGE_ASSET_NOT_FOUND`로 숨긴다.
+
+삭제:
+
+- 연결 전 TEMPORARY 폐기: `DELETE /api/image-assets/{imageAssetId}`
+- 연결 이미지 삭제: `DELETE /api/my-items/{myItemId}/images/{imageAssetId}`
+- 성공 시 `204 No Content`
+- 외부 저장소 삭제 전에 DB를 `DELETE_PENDING`으로 전환한다.
+- Cloudinary 삭제 실패 시 `DELETE_PENDING`을 유지하고 background cleanup에서 재시도한다.
+- `PENDING / PROCESSING` AI Job이 사용하는 TEMPORARY 이미지는 직접 삭제할 수 없다.
+- 이 경우 `409 IMAGE_ASSET_IN_USE`를 반환한다.
+
+ImageAsset lifecycle:
 
 ```text
-UserItem 행 PESSIMISTIC_WRITE 잠금
-→ 같은 아이템의 status != DELETED 이미지 조회
-→ 최대 3장 검증
-→ sortOrder 0~2 검증
-→ 동일 sortOrder 중복 검증
-→ 저장
+TEMPORARY
+→ ACTIVE
+→ DELETE_PENDING
+→ DELETED
 ```
 
-동일한 `sortOrder`가 이미 사용 중이면 다음 오류를 반환한다.
+미연결 TEMPORARY 이미지는 기본 24시간 TTL 이후 cleanup 대상이며,
+실행 중인 AI Job이 사용 중인 이미지는 TTL 정리에서 제외한다.
+
+대표 오류 코드:
 
 ```text
-HTTP 409
-ErrorCode: IMAGE_SORT_ORDER_CONFLICT
+400 IMAGE_FILE_INVALID
+404 IMAGE_ASSET_NOT_FOUND
+409 IMAGE_ASSET_STATE_CONFLICT
+409 IMAGE_ASSET_IN_USE
+413 IMAGE_FILE_TOO_LARGE
+415 IMAGE_FORMAT_UNSUPPORTED
+502 IMAGE_STORAGE_ERROR
 ```
 
 ---

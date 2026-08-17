@@ -198,6 +198,20 @@ class ImageAssetCleanupRepositoryIntegrationTest {
                         )
         ).isEmpty();
 
+        assertThat(
+                repository.isUsedByRunningAiJob(
+                        userId,
+                        imageId
+                )
+        ).isTrue();
+
+        assertThat(
+                repository.markDeletePending(
+                        userId,
+                        imageId
+                )
+        ).isFalse();
+
         jdbcTemplate.update(
                 """
                 UPDATE ai_jobs
@@ -208,6 +222,13 @@ class ImageAssetCleanupRepositoryIntegrationTest {
                 """,
                 aiJobId
         );
+
+        assertThat(
+                repository.isUsedByRunningAiJob(
+                        userId,
+                        imageId
+                )
+        ).isFalse();
 
         assertThat(
                 repository

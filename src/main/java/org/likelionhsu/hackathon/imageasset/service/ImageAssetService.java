@@ -113,6 +113,17 @@ public class ImageAssetService {
                 imageAssetId
         );
 
+        if (asset.status() == ImageAssetStatus.TEMPORARY
+                && imageAssetRepository
+                        .isUsedByRunningAiJob(
+                                ownerUserId,
+                                imageAssetId
+                        )) {
+            throw new BusinessException(
+                    ErrorCode.IMAGE_ASSET_IN_USE
+            );
+        }
+
         switch (asset.status()) {
             case TEMPORARY ->
                     deleteTemporary(
@@ -158,7 +169,22 @@ public class ImageAssetService {
             case DELETED -> {
                 // Concurrent idempotent delete already completed.
             }
-            case ACTIVE, TEMPORARY ->
+            case TEMPORARY -> {
+                if (imageAssetRepository
+                        .isUsedByRunningAiJob(
+                                ownerUserId,
+                                imageAssetId
+                        )) {
+                    throw new BusinessException(
+                            ErrorCode.IMAGE_ASSET_IN_USE
+                    );
+                }
+
+                throw new BusinessException(
+                        ErrorCode.IMAGE_ASSET_STATE_CONFLICT
+                );
+            }
+            case ACTIVE ->
                     throw new BusinessException(
                             ErrorCode.IMAGE_ASSET_STATE_CONFLICT
                     );

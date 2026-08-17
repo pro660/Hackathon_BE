@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 
@@ -24,6 +25,7 @@ import jakarta.validation.constraints.Min;
         name = "Image Assets",
         description = "마이 아이템용 이미지 업로드 및 임시 이미지 관리 API"
 )
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/image-assets")
 public class ImageAssetController {

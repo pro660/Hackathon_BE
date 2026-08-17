@@ -268,6 +268,37 @@ class ImageAssetServiceTest {
     }
 
     @Test
+    void temporaryImageUsedByRunningAiJobCannotBeDeleted() {
+        ImageAssetData temporary =
+                asset(ImageAssetStatus.TEMPORARY);
+
+        when(imageAssetRepository.findOwnedItemAsset(
+                USER_ID,
+                IMAGE_ASSET_ID
+        )).thenReturn(Optional.of(temporary));
+
+        when(imageAssetRepository.isUsedByRunningAiJob(
+                USER_ID,
+                IMAGE_ASSET_ID
+        )).thenReturn(true);
+
+        assertBusinessError(
+                () -> service.deleteTemporaryItemImage(
+                        USER_ID,
+                        IMAGE_ASSET_ID
+                ),
+                ErrorCode.IMAGE_ASSET_IN_USE
+        );
+
+        verify(imageAssetRepository, never())
+                .markDeletePending(
+                        USER_ID,
+                        IMAGE_ASSET_ID
+                );
+        verify(imageStoragePort, never()).delete(any());
+    }
+
+    @Test
     void temporaryDeleteTransitionsAndDeletesStorage() {
         ImageAssetData temporary =
                 asset(ImageAssetStatus.TEMPORARY);
