@@ -20,6 +20,7 @@ import org.likelionhsu.hackathon.aijob.domain.AiJobType;
 import org.likelionhsu.hackathon.aijob.dto.request.AiJobCreateRequest;
 import org.likelionhsu.hackathon.aijob.repository.AiJobJdbcRepository;
 import org.likelionhsu.hackathon.common.exception.RequestValidationException;
+import org.likelionhsu.hackathon.itemanalysis.service.ItemAnalysisAiJobDispatcher;
 import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityAiJobDispatcher;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,6 +39,10 @@ class AiJobItemAnalysisServiceTest {
     private ItemAnalysisAiJobCreationService creationService;
 
     @Mock
+    private ItemAnalysisAiJobDispatcher
+            itemAnalysisDispatcher;
+
+    @Mock
     private PurchaseUtilityAiJobDispatcher
             purchaseUtilityDispatcher;
 
@@ -52,6 +57,7 @@ class AiJobItemAnalysisServiceTest {
                 hasher,
                 new ObjectMapper(),
                 creationService,
+                itemAnalysisDispatcher,
                 purchaseUtilityDispatcher,
                 "test-model"
         );
@@ -105,6 +111,11 @@ class AiJobItemAnalysisServiceTest {
                 "test-model",
                 "item-analysis-v1"
         );
+        verify(itemAnalysisDispatcher).dispatch(
+                USER_ID,
+                9101L,
+                51L
+        );
         verifyNoInteractions(purchaseUtilityDispatcher);
     }
 
@@ -138,6 +149,7 @@ class AiJobItemAnalysisServiceTest {
                 .isEqualTo("9101");
 
         verifyNoInteractions(creationService);
+        verifyNoInteractions(itemAnalysisDispatcher);
         verifyNoInteractions(purchaseUtilityDispatcher);
     }
 
@@ -155,6 +167,7 @@ class AiJobItemAnalysisServiceTest {
 
         verifyNoInteractions(repository);
         verifyNoInteractions(creationService);
+        verifyNoInteractions(itemAnalysisDispatcher);
         verifyNoInteractions(purchaseUtilityDispatcher);
     }
 

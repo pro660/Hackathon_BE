@@ -14,6 +14,7 @@ import org.likelionhsu.hackathon.aijob.repository.AiJobJdbcRepository;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.common.exception.RequestValidationException;
+import org.likelionhsu.hackathon.itemanalysis.service.ItemAnalysisAiJobDispatcher;
 import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityAiJobDispatcher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,6 +33,8 @@ public class AiJobService {
     private final ObjectMapper objectMapper;
     private final ItemAnalysisAiJobCreationService
             itemAnalysisAiJobCreationService;
+    private final ItemAnalysisAiJobDispatcher
+            itemAnalysisAiJobDispatcher;
     private final PurchaseUtilityAiJobDispatcher
             purchaseUtilityAiJobDispatcher;
     private final String openAiModel;
@@ -42,6 +45,8 @@ public class AiJobService {
             ObjectMapper objectMapper,
             ItemAnalysisAiJobCreationService
                     itemAnalysisAiJobCreationService,
+            ItemAnalysisAiJobDispatcher
+                    itemAnalysisAiJobDispatcher,
             PurchaseUtilityAiJobDispatcher
                     purchaseUtilityAiJobDispatcher,
             @Value("${OPENAI_MODEL:}")
@@ -52,6 +57,8 @@ public class AiJobService {
         this.objectMapper = objectMapper;
         this.itemAnalysisAiJobCreationService =
                 itemAnalysisAiJobCreationService;
+        this.itemAnalysisAiJobDispatcher =
+                itemAnalysisAiJobDispatcher;
         this.purchaseUtilityAiJobDispatcher =
                 purchaseUtilityAiJobDispatcher;
         this.openAiModel = openAiModel;
@@ -177,18 +184,27 @@ public class AiJobService {
         String model = requireConfiguredModel();
 
         try {
+            Long imageAssetId =
+                    Long.valueOf(
+                            normalizedImageAssetId
+                    );
+
             AiJobData created =
                     itemAnalysisAiJobCreationService
                             .createPendingAndBind(
                                     userId,
-                                    Long.valueOf(
-                                            normalizedImageAssetId
-                                    ),
+                                    imageAssetId,
                                     idempotencyKey,
                                     requestHash,
                                     model,
                                     ITEM_ANALYSIS_PROMPT_VERSION
                             );
+
+            itemAnalysisAiJobDispatcher.dispatch(
+                    userId,
+                    created.id(),
+                    imageAssetId
+            );
 
             return CreationResult.from(created);
         } catch (DataIntegrityViolationException exception) {

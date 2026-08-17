@@ -24,6 +24,7 @@ import org.likelionhsu.hackathon.aijob.dto.response.AiJobResponse;
 import org.likelionhsu.hackathon.aijob.repository.AiJobJdbcRepository;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
+import org.likelionhsu.hackathon.itemanalysis.service.ItemAnalysisAiJobDispatcher;
 import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityAiJobDispatcher;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -44,6 +45,10 @@ class AiJobServiceTest {
             itemAnalysisAiJobCreationService;
 
     @Mock
+    private ItemAnalysisAiJobDispatcher
+            itemAnalysisAiJobDispatcher;
+
+    @Mock
     private PurchaseUtilityAiJobDispatcher dispatcher;
 
     private static final Instant NOW =
@@ -60,6 +65,7 @@ class AiJobServiceTest {
                 hasher,
                 new ObjectMapper(),
                 itemAnalysisAiJobCreationService,
+                itemAnalysisAiJobDispatcher,
                 dispatcher,
                 "test-model"
         );
