@@ -9,8 +9,12 @@ import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.imageasset.domain.ImageAssetData;
 import org.likelionhsu.hackathon.imageasset.domain.ImageAssetStatus;
 import org.likelionhsu.hackathon.imageasset.repository.ImageAssetJdbcRepository;
+import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisInputHasher;
 import org.likelionhsu.hackathon.useritem.dto.response.UserItemImageLinkResponse;
+import org.likelionhsu.hackathon.useritem.repository.UserItemAiJobValidator;
+import org.likelionhsu.hackathon.useritem.repository.UserItemAiJobValidator.ItemAnalysisProvenance;
 import org.likelionhsu.hackathon.useritem.repository.UserItemImageRepository;
+import org.likelionhsu.hackathon.useritem.repository.UserItemImageRepository.LockedUserItemData;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -21,15 +25,23 @@ public class UserItemImageMutationService {
 
     private final UserItemImageRepository userItemImageRepository;
     private final ImageAssetJdbcRepository imageAssetRepository;
+    private final UserItemAiJobValidator userItemAiJobValidator;
+    private final ItemAnalysisInputHasher itemAnalysisInputHasher;
 
     public UserItemImageMutationService(
             UserItemImageRepository userItemImageRepository,
-            ImageAssetJdbcRepository imageAssetRepository
+            ImageAssetJdbcRepository imageAssetRepository,
+            UserItemAiJobValidator userItemAiJobValidator,
+            ItemAnalysisInputHasher itemAnalysisInputHasher
     ) {
         this.userItemImageRepository =
                 Objects.requireNonNull(userItemImageRepository);
         this.imageAssetRepository =
                 Objects.requireNonNull(imageAssetRepository);
+        this.userItemAiJobValidator =
+                Objects.requireNonNull(userItemAiJobValidator);
+        this.itemAnalysisInputHasher =
+                Objects.requireNonNull(itemAnalysisInputHasher);
     }
 
     @Transactional
@@ -79,7 +91,18 @@ public class UserItemImageMutationService {
             Long userItemId,
             Long imageAssetId
     ) {
-        lockOwnedItem(userId, userItemId);
+        LockedUserItemData item =
+                lockOwnedItem(
+                        userId,
+                        userItemId
+                );
+
+        boolean firstImageAttachment =
+                !userItemImageRepository
+                        .hasItemImageHistory(
+                                userId,
+                                userItemId
+                        );
 
         ImageAssetData asset = lockOwnedAsset(
                 userId,
@@ -104,6 +127,23 @@ public class UserItemImageMutationService {
                 != ImageAssetStatus.TEMPORARY
                 || asset.userItemId() != null) {
             throw stateConflict();
+        }
+
+        if (imageAssetRepository
+                .isUsedByRunningAiJob(
+                        userId,
+                        imageAssetId
+                )) {
+            throw imageInUse();
+        }
+
+        if (firstImageAttachment
+                && item.aiJobId() != null) {
+            validateFirstAnalyzedImage(
+                    userId,
+                    item.aiJobId(),
+                    asset
+            );
         }
 
         List<ImageAssetData> previousActiveImages =
@@ -184,22 +224,20 @@ public class UserItemImageMutationService {
         };
     }
 
-    private void lockOwnedItem(
+    private LockedUserItemData lockOwnedItem(
             Long userId,
             Long userItemId
     ) {
-        boolean found =
-                userItemImageRepository
-                        .lockOwnedActiveItem(
-                                userId,
-                                userItemId
-                        );
-
-        if (!found) {
-            throw new BusinessException(
-                    ErrorCode.MY_ITEM_NOT_FOUND
-            );
-        }
+        return userItemImageRepository
+                .lockOwnedActiveItemData(
+                        userId,
+                        userItemId
+                )
+                .orElseThrow(() ->
+                        new BusinessException(
+                                ErrorCode.MY_ITEM_NOT_FOUND
+                        )
+                );
     }
 
     private ImageAssetData lockOwnedAsset(
@@ -225,6 +263,41 @@ public class UserItemImageMutationService {
         return new UserItemImageLinkResponse(
                 String.valueOf(asset.id()),
                 asset.secureUrl()
+        );
+    }
+
+    private void validateFirstAnalyzedImage(
+            Long userId,
+            Long aiJobId,
+            ImageAssetData asset
+    ) {
+        ItemAnalysisProvenance provenance =
+                userItemAiJobValidator
+                        .validateOwnedSucceededItemAnalysis(
+                                userId,
+                                aiJobId
+                        );
+
+        String targetInputHash =
+                itemAnalysisInputHasher.hash(asset);
+
+        if (!Objects.equals(
+                provenance.inputHash(),
+                targetInputHash
+        )) {
+            throw analysisMismatch();
+        }
+    }
+
+    private BusinessException analysisMismatch() {
+        return new BusinessException(
+                ErrorCode.IMAGE_ASSET_ANALYSIS_MISMATCH
+        );
+    }
+
+    private BusinessException imageInUse() {
+        return new BusinessException(
+                ErrorCode.IMAGE_ASSET_IN_USE
         );
     }
 

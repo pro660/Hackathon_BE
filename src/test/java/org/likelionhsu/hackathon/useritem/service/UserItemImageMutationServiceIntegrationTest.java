@@ -23,6 +23,7 @@ import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.imageasset.domain.ImageAssetData;
 import org.likelionhsu.hackathon.imageasset.domain.ImageAssetStatus;
 import org.likelionhsu.hackathon.imageasset.repository.ImageAssetJdbcRepository;
+import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisInputHasher;
 import org.likelionhsu.hackathon.preference.entity.PreferenceProfile;
 import org.likelionhsu.hackathon.product.entity.Product;
 import org.likelionhsu.hackathon.purchaseutility.entity.PurchaseUtilityAnalysis;
@@ -105,6 +106,9 @@ class UserItemImageMutationServiceIntegrationTest {
     ImageAssetJdbcRepository imageAssetRepository;
 
     @Autowired
+    ItemAnalysisInputHasher itemAnalysisInputHasher;
+
+    @Autowired
     UserItemRepository userItemRepository;
 
     @Autowired
@@ -127,6 +131,7 @@ class UserItemImageMutationServiceIntegrationTest {
     void setUp() {
         jdbcTemplate.update("DELETE FROM image_assets");
         jdbcTemplate.update("DELETE FROM user_items");
+        jdbcTemplate.update("DELETE FROM ai_jobs");
         jdbcTemplate.update("DELETE FROM users");
 
         owner = createUser(
@@ -364,6 +369,344 @@ class UserItemImageMutationServiceIntegrationTest {
     }
 
     @Test
+    void analyzedImageCanBeAttachedAsFirstImage() {
+        long imageId =
+                createTemporaryImage(
+                        owner.getId(),
+                        "analysis-match"
+                );
+
+        ImageAssetData image =
+                ownedAsset(
+                        owner.getId(),
+                        imageId
+                );
+
+        String inputHash =
+                itemAnalysisInputHasher.hash(image);
+
+        Long aiJobId = createAiJob(
+                owner.getId(),
+                "SUCCEEDED",
+                inputHash,
+                validAnalysisResultJson()
+        );
+
+        boolean bound =
+                imageAssetRepository
+                        .bindAiJobToTemporaryItemAsset(
+                                owner.getId(),
+                                imageId,
+                                aiJobId
+                        );
+
+        assertThat(bound).isTrue();
+
+        Long analyzedItemId =
+                createItem(
+                        owner,
+                        "AI 분석 아이템",
+                        aiJobId
+                );
+
+        mutationService.attach(
+                owner.getId(),
+                analyzedItemId,
+                imageId
+        );
+
+        ImageAssetData attached =
+                ownedAsset(
+                        owner.getId(),
+                        imageId
+                );
+
+        assertThat(attached.status())
+                .isEqualTo(ImageAssetStatus.ACTIVE);
+        assertThat(attached.userItemId())
+                .isEqualTo(analyzedItemId);
+    }
+
+    @Test
+    void differentFirstImageIsRejectedForAnalyzedItem() {
+        long analyzedImageId =
+                createTemporaryImage(
+                        owner.getId(),
+                        "analysis-origin"
+                );
+
+        ImageAssetData analyzedImage =
+                ownedAsset(
+                        owner.getId(),
+                        analyzedImageId
+                );
+
+        Long aiJobId = createAiJob(
+                owner.getId(),
+                "SUCCEEDED",
+                itemAnalysisInputHasher.hash(
+                        analyzedImage
+                ),
+                validAnalysisResultJson()
+        );
+
+        boolean bound =
+                imageAssetRepository
+                        .bindAiJobToTemporaryItemAsset(
+                                owner.getId(),
+                                analyzedImageId,
+                                aiJobId
+                        );
+
+        assertThat(bound).isTrue();
+
+        Long analyzedItemId =
+                createItem(
+                        owner,
+                        "AI 불일치 아이템",
+                        aiJobId
+                );
+
+        long differentImageId =
+                createTemporaryImage(
+                        owner.getId(),
+                        "analysis-different"
+                );
+
+        assertBusinessError(
+                () -> mutationService.attach(
+                        owner.getId(),
+                        analyzedItemId,
+                        differentImageId
+                ),
+                ErrorCode.IMAGE_ASSET_ANALYSIS_MISMATCH
+        );
+
+        assertThat(
+                ownedAsset(
+                        owner.getId(),
+                        differentImageId
+                ).status()
+        ).isEqualTo(ImageAssetStatus.TEMPORARY);
+    }
+
+    @Test
+    void newerImageAiJobBindingDoesNotReplaceItemProvenance() {
+        long imageId =
+                createTemporaryImage(
+                        owner.getId(),
+                        "analysis-rebound"
+                );
+
+        ImageAssetData image =
+                ownedAsset(
+                        owner.getId(),
+                        imageId
+                );
+
+        String inputHash =
+                itemAnalysisInputHasher.hash(image);
+
+        Long originalJobId = createAiJob(
+                owner.getId(),
+                "SUCCEEDED",
+                inputHash,
+                validAnalysisResultJson()
+        );
+
+        boolean firstBound =
+                imageAssetRepository
+                        .bindAiJobToTemporaryItemAsset(
+                                owner.getId(),
+                                imageId,
+                                originalJobId
+                        );
+
+        assertThat(firstBound).isTrue();
+
+        Long analyzedItemId =
+                createItem(
+                        owner,
+                        "AI provenance 고정",
+                        originalJobId
+                );
+
+        Long newerJobId = createAiJob(
+                owner.getId(),
+                "SUCCEEDED",
+                inputHash,
+                validAnalysisResultJson()
+        );
+
+        boolean rebound =
+                imageAssetRepository
+                        .bindAiJobToTemporaryItemAsset(
+                                owner.getId(),
+                                imageId,
+                                newerJobId
+                        );
+
+        assertThat(rebound).isTrue();
+
+        assertThat(
+                ownedAsset(
+                        owner.getId(),
+                        imageId
+                ).aiJobId()
+        ).isEqualTo(newerJobId);
+
+        mutationService.attach(
+                owner.getId(),
+                analyzedItemId,
+                imageId
+        );
+
+        assertThat(
+                ownedAsset(
+                        owner.getId(),
+                        imageId
+                ).status()
+        ).isEqualTo(ImageAssetStatus.ACTIVE);
+    }
+
+    @Test
+    void imageUsedByRunningAnalysisCannotBeAttached() {
+        long imageId =
+                createTemporaryImage(
+                        owner.getId(),
+                        "analysis-running"
+                );
+
+        ImageAssetData image =
+                ownedAsset(
+                        owner.getId(),
+                        imageId
+                );
+
+        Long runningJobId = createAiJob(
+                owner.getId(),
+                "PENDING",
+                itemAnalysisInputHasher.hash(image),
+                null
+        );
+
+        boolean bound =
+                imageAssetRepository
+                        .bindAiJobToTemporaryItemAsset(
+                                owner.getId(),
+                                imageId,
+                                runningJobId
+                        );
+
+        assertThat(bound).isTrue();
+
+        assertBusinessError(
+                () -> mutationService.attach(
+                        owner.getId(),
+                        itemId,
+                        imageId
+                ),
+                ErrorCode.IMAGE_ASSET_IN_USE
+        );
+
+        assertThat(
+                ownedAsset(
+                        owner.getId(),
+                        imageId
+                ).status()
+        ).isEqualTo(ImageAssetStatus.TEMPORARY);
+    }
+
+    @Test
+    void deletedImageHistoryMakesNextAttachAReplacement() {
+        long firstImageId =
+                createTemporaryImage(
+                        owner.getId(),
+                        "history-first"
+                );
+
+        ImageAssetData firstImage =
+                ownedAsset(
+                        owner.getId(),
+                        firstImageId
+                );
+
+        Long aiJobId = createAiJob(
+                owner.getId(),
+                "SUCCEEDED",
+                itemAnalysisInputHasher.hash(firstImage),
+                validAnalysisResultJson()
+        );
+
+        boolean bound =
+                imageAssetRepository
+                        .bindAiJobToTemporaryItemAsset(
+                                owner.getId(),
+                                firstImageId,
+                                aiJobId
+                        );
+
+        assertThat(bound).isTrue();
+
+        Long analyzedItemId =
+                createItem(
+                        owner,
+                        "삭제 이력 아이템",
+                        aiJobId
+                );
+
+        mutationService.attach(
+                owner.getId(),
+                analyzedItemId,
+                firstImageId
+        );
+
+        mutationService.deleteLinkedImage(
+                owner.getId(),
+                analyzedItemId,
+                firstImageId
+        );
+
+        boolean deleted =
+                imageAssetRepository.markDeleted(
+                        owner.getId(),
+                        firstImageId
+                );
+
+        assertThat(deleted).isTrue();
+
+        assertThat(
+                ownedAsset(
+                        owner.getId(),
+                        firstImageId
+                ).status()
+        ).isEqualTo(ImageAssetStatus.DELETED);
+
+        long replacementImageId =
+                createTemporaryImage(
+                        owner.getId(),
+                        "history-replacement"
+                );
+
+        mutationService.attach(
+                owner.getId(),
+                analyzedItemId,
+                replacementImageId
+        );
+
+        ImageAssetData replacement =
+                ownedAsset(
+                        owner.getId(),
+                        replacementImageId
+                );
+
+        assertThat(replacement.status())
+                .isEqualTo(ImageAssetStatus.ACTIVE);
+        assertThat(replacement.userItemId())
+                .isEqualTo(analyzedItemId);
+    }
+
+    @Test
     void itemLockContentionReturnsConflictAndKeepsOneActive()
             throws Exception {
         long firstImageId =
@@ -465,6 +808,18 @@ class UserItemImageMutationServiceIntegrationTest {
             User user,
             String name
     ) {
+        return createItem(
+                user,
+                name,
+                null
+        );
+    }
+
+    private Long createItem(
+            User user,
+            String name,
+            Long aiJobId
+    ) {
         UserItem item = userItemRepository.saveAndFlush(
                 UserItem.create(
                         user,
@@ -478,12 +833,87 @@ class UserItemImageMutationServiceIntegrationTest {
                         null,
                         null,
                         null,
-                        null,
+                        aiJobId,
                         null
                 )
         );
 
         return item.getId();
+    }
+
+    private Long createAiJob(
+            Long userId,
+            String status,
+            String inputHash,
+            String resultJson
+    ) {
+        String idempotencyKey =
+                "integration-"
+                        + status
+                        + "-"
+                        + System.nanoTime();
+
+        jdbcTemplate.update(
+                """
+                INSERT INTO ai_jobs (
+                    user_id,
+                    type,
+                    status,
+                    idempotency_key,
+                    request_hash,
+                    model,
+                    prompt_version,
+                    input_hash,
+                    result_json,
+                    retry_count,
+                    created_at,
+                    updated_at
+                )
+                VALUES (
+                    ?,
+                    'ITEM_ANALYSIS',
+                    ?,
+                    ?,
+                    NULL,
+                    'integration-test',
+                    'v1',
+                    ?,
+                    ?,
+                    0,
+                    CURRENT_TIMESTAMP(6),
+                    CURRENT_TIMESTAMP(6)
+                )
+                """,
+                userId,
+                status,
+                idempotencyKey,
+                inputHash,
+                resultJson
+        );
+
+        return jdbcTemplate.queryForObject(
+                """
+                SELECT id
+                FROM ai_jobs
+                WHERE user_id = ?
+                  AND idempotency_key = ?
+                """,
+                Long.class,
+                userId,
+                idempotencyKey
+        );
+    }
+
+    private String validAnalysisResultJson() {
+        return """
+                {
+                  "brandName":"MCM",
+                  "name":"통합 테스트 아이템",
+                  "category":"BAG",
+                  "primaryColor":null,
+                  "material":null
+                }
+                """;
     }
 
     private long createTemporaryImage(

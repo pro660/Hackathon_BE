@@ -226,10 +226,16 @@ public enum ErrorCode {
             "현재 이미지 상태에서는 요청한 작업을 수행할 수 없습니다."
     ),
 
+    IMAGE_ASSET_ANALYSIS_MISMATCH(
+            HttpStatus.CONFLICT,
+            "IMAGE_ASSET_ANALYSIS_MISMATCH",
+            "AI 분석에 사용된 이미지와 연결하려는 이미지가 일치하지 않습니다."
+    ),
+
     IMAGE_ASSET_IN_USE(
             HttpStatus.CONFLICT,
             "IMAGE_ASSET_IN_USE",
-            "현재 사용 중인 이미지는 삭제할 수 없습니다."
+            "현재 사용 중인 이미지에는 요청한 작업을 수행할 수 없습니다."
     ),
 
     IMAGE_FILE_TOO_LARGE(
