@@ -3,6 +3,7 @@ package org.likelionhsu.hackathon.useritem.service;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.likelionhsu.hackathon.auth.domain.User;
 import org.likelionhsu.hackathon.auth.repository.UserRepository;
@@ -25,6 +26,7 @@ import org.likelionhsu.hackathon.useritem.dto.response.UserItemImageResponse;
 import org.likelionhsu.hackathon.useritem.dto.response.UserItemListItemResponse;
 import org.likelionhsu.hackathon.useritem.entity.UserItem;
 import org.likelionhsu.hackathon.useritem.repository.UserItemAiJobValidator;
+import org.likelionhsu.hackathon.useritem.repository.UserItemAiJobValidator.ItemAnalysisProvenance;
 import org.likelionhsu.hackathon.useritem.repository.UserItemImageData;
 import org.likelionhsu.hackathon.useritem.repository.UserItemImageRepository;
 import org.likelionhsu.hackathon.useritem.repository.UserItemRepository;
@@ -42,7 +44,6 @@ import jakarta.persistence.OptimisticLockException;
 @Transactional(readOnly = true)
 public class UserItemService {
 
-    private static final String DEFAULT_BRAND_NAME = "MCM";
 
     private final UserItemRepository userItemRepository;
     private final UserItemImageRepository userItemImageRepository;
@@ -148,19 +149,20 @@ public class UserItemService {
                 request.productId()
         );
 
-        if (request.aiJobId() != null) {
-            userItemAiJobValidator
-                    .validateOwnedSucceededItemAnalysis(
-                            userId,
-                            request.aiJobId()
-                    );
-        }
+        ItemAnalysisProvenance analysisProvenance =
+                request.aiJobId() == null
+                        ? null
+                        : userItemAiJobValidator
+                                .validateOwnedSucceededItemAnalysis(
+                                        userId,
+                                        request.aiJobId()
+                                );
 
         MaterialSource materialSource = resolveMaterialSource(
                 request.material(),
                 request.materialSource(),
-                request.productId(),
-                request.aiJobId()
+                product,
+                analysisProvenance
         );
 
         User user = userRepository.getReferenceById(userId);
@@ -168,7 +170,7 @@ public class UserItemService {
         UserItem userItem = UserItem.create(
                 user,
                 product,
-                normalizeBrandName(request.brandName(), true),
+                normalizeBrandName(request.brandName()),
                 normalizeRequiredText(
                         "name",
                         request.name(),
@@ -209,6 +211,13 @@ public class UserItemService {
             );
         }
 
+        if (request.isAiJobIdPresent()) {
+            throw new RequestValidationException(
+                    "aiJobId",
+                    "마이 아이템 생성 후에는 변경할 수 없습니다."
+            );
+        }
+
         UserItem item = findOwnedActiveItem(
                 userId,
                 myItemId
@@ -223,10 +232,7 @@ public class UserItemService {
                 : item.getProduct();
 
         String brandName = request.isBrandNamePresent()
-                ? normalizeBrandName(
-                        request.getBrandName(),
-                        false
-                )
+                ? normalizeBrandName(request.getBrandName())
                 : item.getBrandName();
 
         String name = request.isNamePresent()
@@ -249,20 +255,11 @@ public class UserItemService {
                 ? request.getMaterial()
                 : item.getMaterial();
 
-        Long aiJobId = request.isAiJobIdPresent()
-                ? request.getAiJobId()
-                : item.getAiJobId();
-
-        if (request.isAiJobIdPresent() && aiJobId != null) {
-            userItemAiJobValidator
-                    .validateOwnedSucceededItemAnalysis(
-                            userId,
-                            aiJobId
-                    );
-        }
+        Long aiJobId = item.getAiJobId();
 
         MaterialSource materialSource =
                 resolveUpdatedMaterialSource(
+                        userId,
                         request,
                         item,
                         material,
@@ -293,7 +290,6 @@ public class UserItemService {
                         ? request.getPurchasePrice()
                         : item.getPurchasePrice(),
                 memo,
-                aiJobId,
                 request.isNextCareDatePresent()
                         ? request.getNextCareDate()
                         : item.getNextCareDate()
@@ -359,6 +355,7 @@ public class UserItemService {
     }
 
     private MaterialSource resolveUpdatedMaterialSource(
+            Long userId,
             UserItemUpdateRequest request,
             UserItem item,
             MaterialGroup material,
@@ -381,25 +378,53 @@ public class UserItemService {
 
         if (request.isMaterialSourcePresent()) {
             source = request.getMaterialSource();
-        } else if (request.isMaterialPresent()) {
+        } else if (request.isMaterialPresent()
+                && !Objects.equals(
+                        item.getMaterial(),
+                        material
+                )) {
+            source = MaterialSource.USER_CONFIRMED;
+        } else if (request.isProductIdPresent()
+                && item.getMaterialSource()
+                == MaterialSource.PRODUCT_DATA
+                && !Objects.equals(
+                        item.getProduct() == null
+                                ? null
+                                : item.getProduct().getId(),
+                        product == null
+                                ? null
+                                : product.getId()
+                )) {
             source = MaterialSource.USER_CONFIRMED;
         } else {
             source = item.getMaterialSource();
         }
 
+        ItemAnalysisProvenance analysisProvenance = null;
+
+        if (source == MaterialSource.AI_ESTIMATED
+                && aiJobId != null) {
+            analysisProvenance =
+                    userItemAiJobValidator
+                            .validateOwnedSucceededItemAnalysis(
+                                    userId,
+                                    aiJobId
+                            );
+        }
+
         return resolveMaterialSource(
                 material,
                 source,
-                product == null ? null : product.getId(),
-                aiJobId
+                product,
+                analysisProvenance
         );
     }
 
     private MaterialSource resolveMaterialSource(
             MaterialGroup material,
             MaterialSource materialSource,
-            Long productId,
-            Long aiJobId
+            Product product,
+            ItemAnalysisProvenance analysisProvenance
     ) {
         if (material == null) {
             if (materialSource != null) {
@@ -416,34 +441,49 @@ public class UserItemService {
                 ? MaterialSource.USER_CONFIRMED
                 : materialSource;
 
-        if (resolved == MaterialSource.PRODUCT_DATA
-                && productId == null) {
-            throw new RequestValidationException(
-                    "materialSource",
-                    "PRODUCT_DATA는 연결된 제품이 필요합니다."
-            );
+        if (resolved == MaterialSource.PRODUCT_DATA) {
+            if (product == null) {
+                throw new RequestValidationException(
+                        "materialSource",
+                        "PRODUCT_DATA는 연결된 제품이 필요합니다."
+                );
+            }
+
+            if (!Objects.equals(
+                    material,
+                    product.getMaterial()
+            )) {
+                throw new RequestValidationException(
+                        "material",
+                        "연결된 제품의 소재와 일치해야 합니다."
+                );
+            }
         }
 
-        if (resolved == MaterialSource.AI_ESTIMATED
-                && aiJobId == null) {
-            throw new RequestValidationException(
-                    "materialSource",
-                    "AI_ESTIMATED는 아이템 분석 작업이 필요합니다."
-            );
+        if (resolved == MaterialSource.AI_ESTIMATED) {
+            if (analysisProvenance == null) {
+                throw new RequestValidationException(
+                        "materialSource",
+                        "AI_ESTIMATED는 아이템 분석 작업이 필요합니다."
+                );
+            }
+
+            if (!Objects.equals(
+                    material,
+                    analysisProvenance.result().material()
+            )) {
+                throw new RequestValidationException(
+                        "material",
+                        "아이템 분석 결과의 소재와 일치해야 합니다."
+                );
+            }
         }
 
         return resolved;
     }
 
-    private String normalizeBrandName(
-            String brandName,
-            boolean useDefault
-    ) {
-        if (brandName == null && useDefault) {
-            return DEFAULT_BRAND_NAME;
-        }
-
-        return normalizeRequiredText(
+    private String normalizeBrandName(String brandName) {
+        return normalizeOptionalText(
                 "brandName",
                 brandName,
                 100

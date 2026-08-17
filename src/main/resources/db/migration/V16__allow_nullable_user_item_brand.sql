@@ -1,0 +1,2 @@
+ALTER TABLE user_items
+    MODIFY COLUMN brand_name VARCHAR(100) NULL DEFAULT NULL;

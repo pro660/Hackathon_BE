@@ -40,7 +40,7 @@ public class UserItem extends BaseTimeEntity {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(name = "brand_name", nullable = false, length = 100)
+    @Column(name = "brand_name", length = 100)
     private String brandName;
 
     @Column(nullable = false, length = 200)
@@ -160,7 +160,6 @@ public class UserItem extends BaseTimeEntity {
             LocalDate purchaseDate,
             Long purchasePrice,
             String memo,
-            Long aiJobId,
             LocalDate nextCareDate
     ) {
         this.product = product;
@@ -173,7 +172,6 @@ public class UserItem extends BaseTimeEntity {
         this.purchaseDate = purchaseDate;
         this.purchasePrice = purchasePrice;
         this.memo = memo;
-        this.aiJobId = aiJobId;
         this.nextCareDate = nextCareDate;
     }
 

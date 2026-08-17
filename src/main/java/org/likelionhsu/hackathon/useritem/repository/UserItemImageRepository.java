@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -29,22 +30,63 @@ public class UserItemImageRepository {
             Long userId,
             Long userItemId
     ) {
-        List<Long> lockedIds = jdbcTemplate.query(
+        return lockOwnedActiveItemData(
+                userId,
+                userItemId
+        ).isPresent();
+    }
+
+    public Optional<LockedUserItemData>
+    lockOwnedActiveItemData(
+            Long userId,
+            Long userItemId
+    ) {
+        return jdbcTemplate.query(
                 """
-                SELECT id
+                SELECT id, ai_job_id
                 FROM user_items
                 WHERE id = ?
                   AND user_id = ?
                   AND deleted_at IS NULL
                 FOR UPDATE NOWAIT
                 """,
-                (resultSet, rowNumber) ->
-                        resultSet.getLong("id"),
+                (resultSet, rowNumber) -> {
+                    long rawAiJobId =
+                            resultSet.getLong("ai_job_id");
+
+                    Long aiJobId =
+                            resultSet.wasNull()
+                                    ? null
+                                    : rawAiJobId;
+
+                    return new LockedUserItemData(
+                            resultSet.getLong("id"),
+                            aiJobId
+                    );
+                },
                 userItemId,
                 userId
+        ).stream().findFirst();
+    }
+
+    public boolean hasItemImageHistory(
+            Long userId,
+            Long userItemId
+    ) {
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*)
+                FROM image_assets
+                WHERE owner_user_id = ?
+                  AND user_item_id = ?
+                  AND purpose = 'ITEM'
+                """,
+                Integer.class,
+                userId,
+                userItemId
         );
 
-        return !lockedIds.isEmpty();
+        return count != null && count > 0;
     }
 
     public List<UserItemImageData> findActiveImages(
@@ -140,5 +182,11 @@ public class UserItemImageRepository {
                 userId,
                 userItemId
         );
+    }
+
+    public record LockedUserItemData(
+            Long id,
+            Long aiJobId
+    ) {
     }
 }
