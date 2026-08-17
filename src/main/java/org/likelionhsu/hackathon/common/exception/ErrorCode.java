@@ -46,6 +46,24 @@ public enum ErrorCode {
             "스타일 플랜을 찾을 수 없습니다."
     ),
 
+    PLACE_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "PLACE_NOT_FOUND",
+            "?μ냼瑜?李얠쓣 ???놁뒿?덈떎."
+    ),
+
+    PLACE_PROVIDER_UNAVAILABLE(
+            HttpStatus.BAD_GATEWAY,
+            "PLACE_PROVIDER_UNAVAILABLE",
+            "?μ냼 寃???쒕퉬?ㅻ? ?쇱떆?곸쑝濡??ъ슜?????놁뒿?덈떎."
+    ),
+
+    PLACE_PROVIDER_TIMEOUT(
+            HttpStatus.GATEWAY_TIMEOUT,
+            "PLACE_PROVIDER_TIMEOUT",
+            "?μ냼 寃???쒕퉬???묐떟 ?쒓컙??珥덇낵?섏뿀?듬땲??"
+    ),
+
     REQUEST_BODY_INVALID(
             HttpStatus.BAD_REQUEST,
             "REQUEST_BODY_INVALID",
