@@ -20,6 +20,8 @@ public record UserItemDetailResponse(
         MaterialSource materialSource,
         LocalDate purchaseDate,
         Long purchasePrice,
+        String purchaseOrderNumber,
+        String purchasePlace,
         String memo,
         LocalDate nextCareDate,
         String aiJobId,
@@ -28,4 +30,45 @@ public record UserItemDetailResponse(
         Instant createdAt,
         Instant updatedAt
 ) {
+    public UserItemDetailResponse(
+            String myItemId,
+            String linkedProductId,
+            String brandName,
+            String name,
+            ItemCategory category,
+            ColorGroup primaryColor,
+            MaterialGroup material,
+            MaterialSource materialSource,
+            LocalDate purchaseDate,
+            Long purchasePrice,
+            String memo,
+            LocalDate nextCareDate,
+            String aiJobId,
+            List<UserItemImageResponse> images,
+            Long version,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
+        this(
+                myItemId,
+                linkedProductId,
+                brandName,
+                name,
+                category,
+                primaryColor,
+                material,
+                materialSource,
+                purchaseDate,
+                purchasePrice,
+                null,
+                null,
+                memo,
+                nextCareDate,
+                aiJobId,
+                images,
+                version,
+                createdAt,
+                updatedAt
+        );
+    }
 }

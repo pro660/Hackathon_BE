@@ -14,6 +14,7 @@ import org.likelionhsu.hackathon.useritem.dto.request.UserItemUpdateRequest;
 import org.likelionhsu.hackathon.useritem.dto.response.UserItemCreateResponse;
 import org.likelionhsu.hackathon.useritem.dto.response.UserItemDetailResponse;
 import org.likelionhsu.hackathon.useritem.dto.response.UserItemListItemResponse;
+import org.likelionhsu.hackathon.useritem.dto.response.UserItemPassportResponse;
 import org.likelionhsu.hackathon.useritem.service.UserItemService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -71,43 +72,25 @@ public class UserItemController {
     public ApiResponse<PageResponse<UserItemListItemResponse>>
     getMyItems(
             @RequestParam(required = false)
-            @Size(
-                    max = 200,
-                    message = "200자 이하여야 합니다."
-            )
+            @Size(max = 200, message = "200자 이하여야 합니다.")
             String keyword,
 
             @RequestParam(required = false)
             ItemCategory category,
 
-            @RequestParam(
-                    name = "color",
-                    required = false
-            )
+            @RequestParam(name = "color", required = false)
             ColorGroup color,
 
             @RequestParam(defaultValue = "0")
-            @Min(
-                    value = 0,
-                    message = "0 이상이어야 합니다."
-            )
+            @Min(value = 0, message = "0 이상이어야 합니다.")
             int page,
 
             @RequestParam(defaultValue = "20")
-            @Min(
-                    value = 1,
-                    message = "1 이상이어야 합니다."
-            )
-            @Max(
-                    value = 100,
-                    message = "100 이하여야 합니다."
-            )
+            @Min(value = 1, message = "1 이상이어야 합니다.")
+            @Max(value = 100, message = "100 이하여야 합니다.")
             int size,
 
-            @RequestParam(
-                    name = "sort",
-                    required = false
-            )
+            @RequestParam(name = "sort", required = false)
             List<String> sort,
 
             @AuthenticationPrincipal Jwt jwt
@@ -136,15 +119,31 @@ public class UserItemController {
     @GetMapping("/{myItemId}")
     public ApiResponse<UserItemDetailResponse> getMyItem(
             @PathVariable
-            @Min(
-                    value = 1,
-                    message = "1 이상이어야 합니다."
-            )
+            @Min(value = 1, message = "1 이상이어야 합니다.")
             Long myItemId,
             @AuthenticationPrincipal Jwt jwt
     ) {
         return ApiResponse.success(
                 userItemService.getMyItem(
+                        Long.valueOf(jwt.getSubject()),
+                        myItemId
+                )
+        );
+    }
+
+    @Operation(
+            summary = "제품 패스포트 조회",
+            description = "현재 로그인 사용자가 소유한 마이 아이템의 제품 정보와 구매 정보를 조회합니다."
+    )
+    @GetMapping("/{myItemId}/passport")
+    public ApiResponse<UserItemPassportResponse> getMyItemPassport(
+            @PathVariable
+            @Min(value = 1, message = "1 이상이어야 합니다.")
+            Long myItemId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ApiResponse.success(
+                userItemService.getMyItemPassport(
                         Long.valueOf(jwt.getSubject()),
                         myItemId
                 )
@@ -179,10 +178,7 @@ public class UserItemController {
     @PatchMapping("/{myItemId}")
     public ApiResponse<UserItemDetailResponse> updateMyItem(
             @PathVariable
-            @Min(
-                    value = 1,
-                    message = "1 이상이어야 합니다."
-            )
+            @Min(value = 1, message = "1 이상이어야 합니다.")
             Long myItemId,
             @Valid @RequestBody UserItemUpdateRequest request,
             @AuthenticationPrincipal Jwt jwt
@@ -203,10 +199,7 @@ public class UserItemController {
     @DeleteMapping("/{myItemId}")
     public ResponseEntity<Void> deleteMyItem(
             @PathVariable
-            @Min(
-                    value = 1,
-                    message = "1 이상이어야 합니다."
-            )
+            @Min(value = 1, message = "1 이상이어야 합니다.")
             Long myItemId,
             @AuthenticationPrincipal Jwt jwt
     ) {

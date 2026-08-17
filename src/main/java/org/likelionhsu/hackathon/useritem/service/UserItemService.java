@@ -24,6 +24,9 @@ import org.likelionhsu.hackathon.useritem.dto.response.UserItemCreateResponse;
 import org.likelionhsu.hackathon.useritem.dto.response.UserItemDetailResponse;
 import org.likelionhsu.hackathon.useritem.dto.response.UserItemImageResponse;
 import org.likelionhsu.hackathon.useritem.dto.response.UserItemListItemResponse;
+import org.likelionhsu.hackathon.useritem.dto.response.UserItemPassportProductInfoResponse;
+import org.likelionhsu.hackathon.useritem.dto.response.UserItemPassportPurchaseInfoResponse;
+import org.likelionhsu.hackathon.useritem.dto.response.UserItemPassportResponse;
 import org.likelionhsu.hackathon.useritem.entity.UserItem;
 import org.likelionhsu.hackathon.useritem.repository.UserItemAiJobValidator;
 import org.likelionhsu.hackathon.useritem.repository.UserItemAiJobValidator.ItemAnalysisProvenance;
@@ -43,7 +46,6 @@ import jakarta.persistence.OptimisticLockException;
 @Service
 @Transactional(readOnly = true)
 public class UserItemService {
-
 
     private final UserItemRepository userItemRepository;
     private final UserItemImageRepository userItemImageRepository;
@@ -78,21 +80,9 @@ public class UserItemService {
         Specification<UserItem> specification =
                 UserItemSpecification.ownedBy(userId)
                         .and(UserItemSpecification.notDeleted())
-                        .and(
-                                UserItemSpecification.containsKeyword(
-                                        keyword
-                                )
-                        )
-                        .and(
-                                UserItemSpecification.hasCategory(
-                                        category
-                                )
-                        )
-                        .and(
-                                UserItemSpecification.hasPrimaryColor(
-                                        color
-                                )
-                        );
+                        .and(UserItemSpecification.containsKeyword(keyword))
+                        .and(UserItemSpecification.hasCategory(category))
+                        .and(UserItemSpecification.hasPrimaryColor(color));
 
         Page<UserItem> itemPage = userItemRepository.findAll(
                 specification,
@@ -133,11 +123,20 @@ public class UserItemService {
     ) {
         return toDetailResponse(
                 userId,
-                findOwnedActiveItem(
-                        userId,
-                        myItemId
-                )
+                findOwnedActiveItem(userId, myItemId)
         );
+    }
+
+    public UserItemPassportResponse getMyItemPassport(
+            Long userId,
+            Long myItemId
+    ) {
+        UserItem item = findOwnedActiveItem(
+                userId,
+                myItemId
+        );
+
+        return toPassportResponse(userId, item);
     }
 
     @Transactional
@@ -145,9 +144,7 @@ public class UserItemService {
             Long userId,
             UserItemCreateRequest request
     ) {
-        Product product = findLinkedProduct(
-                request.productId()
-        );
+        Product product = findLinkedProduct(request.productId());
 
         ItemAnalysisProvenance analysisProvenance =
                 request.aiJobId() == null
@@ -182,6 +179,16 @@ public class UserItemService {
                 materialSource,
                 request.purchaseDate(),
                 request.purchasePrice(),
+                normalizeOptionalText(
+                        "purchaseOrderNumber",
+                        request.purchaseOrderNumber(),
+                        100
+                ),
+                normalizeOptionalText(
+                        "purchasePlace",
+                        request.purchasePlace(),
+                        200
+                ),
                 normalizeOptionalText(
                         "memo",
                         request.memo(),
@@ -218,10 +225,7 @@ public class UserItemService {
             );
         }
 
-        UserItem item = findOwnedActiveItem(
-                userId,
-                myItemId
-        );
+        UserItem item = findOwnedActiveItem(userId, myItemId);
 
         if (!request.getVersion().equals(item.getVersion())) {
             throw versionConflict();
@@ -257,15 +261,31 @@ public class UserItemService {
 
         Long aiJobId = item.getAiJobId();
 
-        MaterialSource materialSource =
-                resolveUpdatedMaterialSource(
-                        userId,
-                        request,
-                        item,
-                        material,
-                        product,
-                        aiJobId
-                );
+        MaterialSource materialSource = resolveUpdatedMaterialSource(
+                userId,
+                request,
+                item,
+                material,
+                product,
+                aiJobId
+        );
+
+        String purchaseOrderNumber =
+                request.isPurchaseOrderNumberPresent()
+                        ? normalizeOptionalText(
+                                "purchaseOrderNumber",
+                                request.getPurchaseOrderNumber(),
+                                100
+                        )
+                        : item.getPurchaseOrderNumber();
+
+        String purchasePlace = request.isPurchasePlacePresent()
+                ? normalizeOptionalText(
+                        "purchasePlace",
+                        request.getPurchasePlace(),
+                        200
+                )
+                : item.getPurchasePlace();
 
         String memo = request.isMemoPresent()
                 ? normalizeOptionalText(
@@ -289,6 +309,8 @@ public class UserItemService {
                 request.isPurchasePricePresent()
                         ? request.getPurchasePrice()
                         : item.getPurchasePrice(),
+                purchaseOrderNumber,
+                purchasePlace,
                 memo,
                 request.isNextCareDatePresent()
                         ? request.getNextCareDate()
@@ -306,10 +328,7 @@ public class UserItemService {
             Long myItemId
     ) {
         UserItem item = userItemRepository
-                .findByIdAndUser_Id(
-                        myItemId,
-                        userId
-                )
+                .findByIdAndUser_Id(myItemId, userId)
                 .orElseThrow(this::myItemNotFound);
 
         if (item.getDeletedAt() != null) {
@@ -343,10 +362,7 @@ public class UserItemService {
         }
 
         return productRepository
-                .findByIdAndStatus(
-                        productId,
-                        ProductStatus.ACTIVE
-                )
+                .findByIdAndStatus(productId, ProductStatus.ACTIVE)
                 .orElseThrow(() ->
                         new BusinessException(
                                 ErrorCode.PRODUCT_NOT_FOUND
@@ -379,10 +395,7 @@ public class UserItemService {
         if (request.isMaterialSourcePresent()) {
             source = request.getMaterialSource();
         } else if (request.isMaterialPresent()
-                && !Objects.equals(
-                        item.getMaterial(),
-                        material
-                )) {
+                && !Objects.equals(item.getMaterial(), material)) {
             source = MaterialSource.USER_CONFIRMED;
         } else if (request.isProductIdPresent()
                 && item.getMaterialSource()
@@ -449,10 +462,7 @@ public class UserItemService {
                 );
             }
 
-            if (!Objects.equals(
-                    material,
-                    product.getMaterial()
-            )) {
+            if (!Objects.equals(material, product.getMaterial())) {
                 throw new RequestValidationException(
                         "material",
                         "연결된 제품의 소재와 일치해야 합니다."
@@ -537,9 +547,7 @@ public class UserItemService {
         return normalized;
     }
 
-    private ItemCategory requireCategory(
-            ItemCategory category
-    ) {
+    private ItemCategory requireCategory(ItemCategory category) {
         if (category == null) {
             throw new RequestValidationException(
                     "category",
@@ -565,10 +573,7 @@ public class UserItemService {
     ) {
         List<UserItemImageResponse> images =
                 userItemImageRepository
-                        .findActiveImages(
-                                userId,
-                                item.getId()
-                        )
+                        .findActiveImages(userId, item.getId())
                         .stream()
                         .map(this::toImageResponse)
                         .toList();
@@ -588,6 +593,8 @@ public class UserItemService {
                 item.getMaterialSource(),
                 item.getPurchaseDate(),
                 item.getPurchasePrice(),
+                item.getPurchaseOrderNumber(),
+                item.getPurchasePlace(),
                 item.getMemo(),
                 item.getNextCareDate(),
                 item.getAiJobId() == null
@@ -597,6 +604,43 @@ public class UserItemService {
                 item.getVersion(),
                 item.getCreatedAt(),
                 item.getUpdatedAt()
+        );
+    }
+
+    private UserItemPassportResponse toPassportResponse(
+            Long userId,
+            UserItem item
+    ) {
+        Product product = item.getProduct();
+
+        String imageUrl = userItemImageRepository
+                .findActiveImages(userId, item.getId())
+                .stream()
+                .findFirst()
+                .map(UserItemImageData::url)
+                .orElse(null);
+
+        return new UserItemPassportResponse(
+                String.valueOf(item.getId()),
+                new UserItemPassportProductInfoResponse(
+                        product == null
+                                ? null
+                                : String.valueOf(product.getId()),
+                        item.getBrandName(),
+                        item.getName(),
+                        item.getCategory(),
+                        item.getPrimaryColor(),
+                        item.getMaterial(),
+                        imageUrl,
+                        product == null ? null : product.getSku(),
+                        product == null ? null : product.getProductUrl()
+                ),
+                new UserItemPassportPurchaseInfoResponse(
+                        item.getPurchaseOrderNumber(),
+                        item.getPurchaseDate(),
+                        item.getPurchasePrice(),
+                        item.getPurchasePlace()
+                )
         );
     }
 
@@ -611,9 +655,7 @@ public class UserItemService {
     }
 
     private BusinessException myItemNotFound() {
-        return new BusinessException(
-                ErrorCode.MY_ITEM_NOT_FOUND
-        );
+        return new BusinessException(ErrorCode.MY_ITEM_NOT_FOUND);
     }
 
     private BusinessException versionConflict() {
