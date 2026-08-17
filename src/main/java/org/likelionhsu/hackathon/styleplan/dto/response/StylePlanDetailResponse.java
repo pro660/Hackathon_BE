@@ -1,8 +1,10 @@
 package org.likelionhsu.hackathon.styleplan.dto.response;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
+import org.likelionhsu.hackathon.place.domain.PlaceCategory;
 import org.likelionhsu.hackathon.styleplan.domain.StyleItemRole;
 import org.likelionhsu.hackathon.styleplan.domain.StylePlanGenerationType;
 import org.likelionhsu.hackathon.styleplan.domain.StylePlanOccasion;
@@ -20,7 +22,7 @@ public record StylePlanDetailResponse(
         StylePlanStatus status,
         List<OwnedItem> ownedItems,
         List<RecommendedProduct> recommendedProducts,
-        List<Object> places,
+        List<Place> places,
         long version,
         Instant createdAt,
         Instant updatedAt
@@ -47,6 +49,21 @@ public record StylePlanDetailResponse(
             String imageUrl,
             int rank,
             String reason
+    ) {
+    }
+
+    public record Place(
+            String placeId,
+            String name,
+            PlaceCategory category,
+            String categoryName,
+            String roadAddress,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String placeUrl,
+            int rank,
+            String reasonCode,
+            boolean saved
     ) {
     }
 }
