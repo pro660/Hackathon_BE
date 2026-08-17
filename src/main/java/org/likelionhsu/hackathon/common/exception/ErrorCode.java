@@ -40,6 +40,12 @@ public enum ErrorCode {
             "구매 활용성 분석 결과를 찾을 수 없습니다."
     ),
 
+    STYLE_PLAN_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "STYLE_PLAN_NOT_FOUND",
+            "스타일 플랜을 찾을 수 없습니다."
+    ),
+
     REQUEST_BODY_INVALID(
             HttpStatus.BAD_REQUEST,
             "REQUEST_BODY_INVALID",
