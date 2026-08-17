@@ -1,10 +1,11 @@
 package org.likelionhsu.hackathon.styleplan.service;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
-
+import org.likelionhsu.hackathon.styleplan.ai.StylePlanGenerationException;
+import org.likelionhsu.hackathon.styleplan.ai.StylePlanGenerationPort;
+import org.likelionhsu.hackathon.styleplan.ai.StylePlanGenerationResult;
 import org.likelionhsu.hackathon.styleplan.dto.StylePlanPreview;
 import org.likelionhsu.hackathon.styleplan.repository.StylePlanAiJobGateway;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,7 +19,11 @@ public class StylePlanAiJobProcessor {
             contextService;
     private final StylePlanInputHasher inputHasher;
     private final StylePlanFallbackService fallbackService;
-    private final ObjectMapper objectMapper;
+    private final ObjectProvider<StylePlanGenerationPort>
+            generationPortProvider;
+    private final StylePlanPreviewAssembler previewAssembler;
+    private final StylePlanAiJobCompletionService
+            completionService;
 
     public StylePlanAiJobProcessor(
             StylePlanAiJobGateway aiJobGateway,
@@ -26,13 +31,20 @@ public class StylePlanAiJobProcessor {
                     contextService,
             StylePlanInputHasher inputHasher,
             StylePlanFallbackService fallbackService,
-            ObjectMapper objectMapper
+            ObjectProvider<StylePlanGenerationPort>
+                    generationPortProvider,
+            StylePlanPreviewAssembler previewAssembler,
+            StylePlanAiJobCompletionService
+                    completionService
     ) {
         this.aiJobGateway = aiJobGateway;
         this.contextService = contextService;
         this.inputHasher = inputHasher;
         this.fallbackService = fallbackService;
-        this.objectMapper = objectMapper;
+        this.generationPortProvider =
+                generationPortProvider;
+        this.previewAssembler = previewAssembler;
+        this.completionService = completionService;
     }
 
     public ProcessingResult process(
@@ -72,36 +84,139 @@ public class StylePlanAiJobProcessor {
                         context
                 );
 
-        boolean updated =
-                aiJobGateway.markFailedWithFallback(
-                        userId,
-                        jobId,
-                        serialize(fallback),
-                        STYLE_PLAN_FAILED_ERROR_CODE
+        StylePlanGenerationPort generationPort =
+                generationPortProvider.getIfAvailable();
+
+        if (generationPort == null) {
+            completionService.completeFallback(
+                    userId,
+                    jobId,
+                    fallback,
+                    STYLE_PLAN_FAILED_ERROR_CODE,
+                    0
+            );
+
+            return ProcessingResult.fallback();
+        }
+
+        GenerationAttempt attempt =
+                generateWithSingleRetry(
+                        generationPort,
+                        context,
+                        jobId
                 );
 
-        if (!updated) {
-            throw new IllegalStateException(
-                    "STYLE_PLAN fallback 상태 저장에 실패했습니다."
+        if (attempt.preview() == null) {
+            completionService.completeFallback(
+                    userId,
+                    jobId,
+                    fallback,
+                    STYLE_PLAN_FAILED_ERROR_CODE,
+                    attempt.retryCount()
+            );
+
+            return ProcessingResult.fallback();
+        }
+
+        completionService.completeSuccess(
+                userId,
+                jobId,
+                attempt.preview(),
+                attempt.generation(),
+                attempt.retryCount()
+        );
+
+        return ProcessingResult.ai();
+    }
+
+    private GenerationAttempt generateWithSingleRetry(
+            StylePlanGenerationPort generationPort,
+            StylePlanRecommendationContext context,
+            Long jobId
+    ) {
+        try {
+            return successfulAttempt(
+                    generationPort,
+                    context,
+                    jobId,
+                    0
+            );
+        } catch (StylePlanGenerationException
+                firstFailure) {
+            if (!firstFailure.isRetryable()) {
+                return GenerationAttempt.failed(0);
+            }
+
+            try {
+                return successfulAttempt(
+                        generationPort,
+                        context,
+                        jobId,
+                        1
+                );
+            } catch (RuntimeException secondFailure) {
+                return GenerationAttempt.failed(1);
+            }
+        } catch (RuntimeException unexpectedFailure) {
+            return GenerationAttempt.failed(0);
+        }
+    }
+
+    private GenerationAttempt successfulAttempt(
+            StylePlanGenerationPort generationPort,
+            StylePlanRecommendationContext context,
+            Long jobId,
+            int retryCount
+    ) {
+        StylePlanGenerationResult generation =
+                generationPort.generate(context);
+
+        StylePlanPreview preview =
+                previewAssembler.assemble(
+                        jobId,
+                        context,
+                        generation.selection()
+                );
+
+        return GenerationAttempt.success(
+                preview,
+                generation,
+                retryCount
+        );
+    }
+
+    private record GenerationAttempt(
+            StylePlanPreview preview,
+            StylePlanGenerationResult generation,
+            int retryCount
+    ) {
+
+        private static GenerationAttempt success(
+                StylePlanPreview preview,
+                StylePlanGenerationResult generation,
+                int retryCount
+        ) {
+            return new GenerationAttempt(
+                    preview,
+                    generation,
+                    retryCount
             );
         }
 
-        return ProcessingResult.fallback();
-    }
-
-    private String serialize(Object value) {
-        try {
-            return objectMapper.writeValueAsString(value);
-        } catch (JacksonException exception) {
-            throw new IllegalStateException(
-                    "STYLE_PLAN fallback JSON 직렬화에 실패했습니다.",
-                    exception
+        private static GenerationAttempt failed(
+                int retryCount
+        ) {
+            return new GenerationAttempt(
+                    null,
+                    null,
+                    retryCount
             );
         }
     }
 
     public enum ProcessingOutcome {
         NOT_CLAIMED,
+        AI,
         FALLBACK
     }
 
@@ -112,6 +227,12 @@ public class StylePlanAiJobProcessor {
         public static ProcessingResult notClaimed() {
             return new ProcessingResult(
                     ProcessingOutcome.NOT_CLAIMED
+            );
+        }
+
+        public static ProcessingResult ai() {
+            return new ProcessingResult(
+                    ProcessingOutcome.AI
             );
         }
 
