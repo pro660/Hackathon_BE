@@ -287,6 +287,72 @@ class ItemAnalysisAiJobCreationServiceIntegrationTest {
                 .isEqualTo(retried.id());
     }
 
+    @Test
+    void staleRunningJobIsTimedOutAndImageCanBeRebound() {
+        long imageAssetId =
+                createTemporaryImage(userId);
+
+        AiJobData first =
+                service.createPendingAndBind(
+                        userId,
+                        imageAssetId,
+                        "item-analysis-stale-1",
+                        "1".repeat(64),
+                        "test-model",
+                        "item-analysis-v1"
+                );
+
+        jdbcTemplate.update(
+                """
+                UPDATE ai_jobs
+                SET created_at =
+                        DATE_SUB(
+                            CURRENT_TIMESTAMP(6),
+                            INTERVAL 3 MINUTE
+                        ),
+                    updated_at = CURRENT_TIMESTAMP(6)
+                WHERE id = ?
+                """,
+                first.id()
+        );
+
+        AiJobData retried =
+                service.createPendingAndBind(
+                        userId,
+                        imageAssetId,
+                        "item-analysis-stale-2",
+                        "2".repeat(64),
+                        "test-model",
+                        "item-analysis-v1"
+                );
+
+        AiJobData timedOut =
+                aiJobRepository
+                        .findOwned(
+                                userId,
+                                first.id()
+                        )
+                        .orElseThrow();
+
+        assertThat(timedOut.status())
+                .isEqualTo(AiJobStatus.FAILED);
+        assertThat(timedOut.errorCode())
+                .isEqualTo("AI_JOB_TIMEOUT");
+        assertThat(timedOut.completedAt())
+                .isNotNull();
+
+        ImageAssetData image =
+                imageAssetRepository
+                        .findOwnedItemAsset(
+                                userId,
+                                imageAssetId
+                        )
+                        .orElseThrow();
+
+        assertThat(image.aiJobId())
+                .isEqualTo(retried.id());
+    }
+
     private Long createUser(
             String email,
             String nickname

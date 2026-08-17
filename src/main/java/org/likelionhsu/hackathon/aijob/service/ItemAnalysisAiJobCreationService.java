@@ -140,13 +140,41 @@ public class ItemAnalysisAiJobCreationService {
             throw stateConflict();
         }
 
-        if (linkedJob.status() == AiJobStatus.PENDING
-                || linkedJob.status()
-                == AiJobStatus.PROCESSING) {
-            throw new BusinessException(
-                    ErrorCode.IMAGE_ASSET_IN_USE
-            );
+        if (linkedJob.status() != AiJobStatus.PENDING
+                && linkedJob.status()
+                != AiJobStatus.PROCESSING) {
+            return;
         }
+
+        boolean timedOut =
+                aiJobRepository.markTimedOutIfStale(
+                        userId,
+                        linkedJob.id()
+                );
+
+        if (timedOut) {
+            return;
+        }
+
+        AiJobData refreshed =
+                aiJobRepository
+                        .findOwned(
+                                userId,
+                                linkedJob.id()
+                        )
+                        .orElseThrow(
+                                this::stateConflict
+                        );
+
+        if (refreshed.status() != AiJobStatus.PENDING
+                && refreshed.status()
+                != AiJobStatus.PROCESSING) {
+            return;
+        }
+
+        throw new BusinessException(
+                ErrorCode.IMAGE_ASSET_IN_USE
+        );
     }
 
     private BusinessException stateConflict() {
