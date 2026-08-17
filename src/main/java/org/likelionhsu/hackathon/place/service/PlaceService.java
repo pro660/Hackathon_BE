@@ -7,16 +7,22 @@ import java.util.Set;
 import org.likelionhsu.hackathon.common.exception.BusinessException;
 import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.common.exception.RequestValidationException;
+import org.likelionhsu.hackathon.common.response.PageResponse;
 import org.likelionhsu.hackathon.place.client.ExternalPlace;
 import org.likelionhsu.hackathon.place.client.PlaceSearchCommand;
 import org.likelionhsu.hackathon.place.client.PlaceSearchException;
 import org.likelionhsu.hackathon.place.client.PlaceSearchPort;
 import org.likelionhsu.hackathon.place.domain.PlaceCategory;
 import org.likelionhsu.hackathon.place.dto.PlaceResponse;
+import org.likelionhsu.hackathon.place.dto.PlaceSavedStateResponse;
 import org.likelionhsu.hackathon.place.dto.PlaceSearchResponse;
+import org.likelionhsu.hackathon.place.dto.SavedPlaceResponse;
 import org.likelionhsu.hackathon.place.repository.PlaceRepository;
+import org.likelionhsu.hackathon.place.repository.PlaceRepository.SavedPlaceRow;
 import org.likelionhsu.hackathon.place.repository.PlaceRepository.StoredPlace;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -89,6 +95,50 @@ public class PlaceService {
                         ))
                         .toList()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<SavedPlaceResponse> getSavedPlaces(
+            Long userId,
+            Pageable pageable
+    ) {
+        return PageResponse.from(
+                placeRepository.findSavedPage(
+                        userId,
+                        pageable
+                ).map(this::toSavedResponse)
+        );
+    }
+
+    @Transactional
+    public PlaceSavedStateResponse savePlace(
+            Long userId,
+            Long placeId
+    ) {
+        requirePlace(placeId);
+        placeRepository.savePlace(userId, placeId);
+
+        return new PlaceSavedStateResponse(
+                String.valueOf(placeId),
+                true
+        );
+    }
+
+    @Transactional
+    public void unsavePlace(
+            Long userId,
+            Long placeId
+    ) {
+        requirePlace(placeId);
+        placeRepository.deleteSavedPlace(userId, placeId);
+    }
+
+    private void requirePlace(Long placeId) {
+        if (!placeRepository.existsById(placeId)) {
+            throw new BusinessException(
+                    ErrorCode.PLACE_NOT_FOUND
+            );
+        }
     }
 
     private String normalizeAndValidate(
@@ -185,6 +235,24 @@ public class PlaceService {
                 place.longitude(),
                 place.placeUrl(),
                 saved
+        );
+    }
+
+    private SavedPlaceResponse toSavedResponse(
+            SavedPlaceRow place
+    ) {
+        return new SavedPlaceResponse(
+                String.valueOf(place.id()),
+                place.name(),
+                place.category(),
+                place.categoryName(),
+                place.address(),
+                place.roadAddress(),
+                place.latitude(),
+                place.longitude(),
+                place.placeUrl(),
+                true,
+                place.savedAt()
         );
     }
 }

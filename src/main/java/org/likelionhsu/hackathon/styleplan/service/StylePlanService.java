@@ -165,7 +165,7 @@ public class StylePlanService {
                 header.status(),
                 queryRepository.findOwnedItems(userId, stylePlanId),
                 queryRepository.findRecommendedProducts(stylePlanId),
-                List.of(),
+                queryRepository.findPlaces(userId, stylePlanId),
                 header.version(),
                 header.createdAt(),
                 header.updatedAt()
