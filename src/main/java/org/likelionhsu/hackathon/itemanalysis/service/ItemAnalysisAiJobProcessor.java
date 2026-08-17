@@ -6,6 +6,7 @@ import org.likelionhsu.hackathon.imageasset.domain.ImageAssetData;
 import org.likelionhsu.hackathon.imageasset.domain.ImageAssetStatus;
 import org.likelionhsu.hackathon.imageasset.repository.ImageAssetJdbcRepository;
 import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisAiJobGateway;
+import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisException;
 import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisGenerationResult;
 import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisInputHasher;
 import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisPort;
@@ -113,22 +114,25 @@ public class ItemAnalysisAiJobProcessor {
             return ProcessingResult.failed();
         }
 
-        ItemAnalysisGenerationResult generated;
+        AnalysisAttempt attempt =
+                analyzeWithSingleRetry(
+                        port,
+                        ItemAnalysisRequest.from(asset)
+                );
 
-        try {
-            generated = port.analyze(
-                    ItemAnalysisRequest.from(asset)
-            );
-        } catch (RuntimeException exception) {
+        if (attempt.generated() == null) {
             completionService.completeFailed(
                     userId,
                     jobId,
                     null,
-                    0
+                    attempt.retryCount()
             );
 
             return ProcessingResult.failed();
         }
+
+        ItemAnalysisGenerationResult generated =
+                attempt.generated();
 
         completionService.completeSucceeded(
                 userId,
@@ -137,10 +141,52 @@ public class ItemAnalysisAiJobProcessor {
                 generated.inputTokens(),
                 generated.outputTokens(),
                 generated.latencyMs(),
-                0
+                attempt.retryCount()
         );
 
         return ProcessingResult.succeeded();
+    }
+
+    private AnalysisAttempt analyzeWithSingleRetry(
+            ItemAnalysisPort port,
+            ItemAnalysisRequest request
+    ) {
+        try {
+            return new AnalysisAttempt(
+                    port.analyze(request),
+                    0
+            );
+        } catch (ItemAnalysisException firstFailure) {
+            if (!firstFailure.isRetryable()) {
+                return new AnalysisAttempt(
+                        null,
+                        0
+                );
+            }
+
+            try {
+                return new AnalysisAttempt(
+                        port.analyze(request),
+                        1
+                );
+            } catch (RuntimeException secondFailure) {
+                return new AnalysisAttempt(
+                        null,
+                        1
+                );
+            }
+        } catch (RuntimeException unexpectedFailure) {
+            return new AnalysisAttempt(
+                    null,
+                    0
+            );
+        }
+    }
+
+    private record AnalysisAttempt(
+            ItemAnalysisGenerationResult generated,
+            int retryCount
+    ) {
     }
 
     private ImageAssetData findBoundTemporaryAsset(

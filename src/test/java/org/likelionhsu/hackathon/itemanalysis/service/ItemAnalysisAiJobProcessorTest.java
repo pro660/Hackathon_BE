@@ -2,6 +2,7 @@ package org.likelionhsu.hackathon.itemanalysis.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -20,6 +21,7 @@ import org.likelionhsu.hackathon.imageasset.domain.ImageAssetPurpose;
 import org.likelionhsu.hackathon.imageasset.domain.ImageAssetStatus;
 import org.likelionhsu.hackathon.imageasset.repository.ImageAssetJdbcRepository;
 import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisAiJobGateway;
+import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisException;
 import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisGenerationResult;
 import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisInputHasher;
 import org.likelionhsu.hackathon.itemanalysis.ai.ItemAnalysisPort;
@@ -261,36 +263,83 @@ class ItemAnalysisAiJobProcessorTest {
     }
 
     @Test
-    void aiFailureTransitionsJobToFailed() {
-        ImageAssetData asset = asset(JOB_ID);
-
-        when(aiJobGateway.claimProcessing(
-                USER_ID,
-                JOB_ID
-        )).thenReturn(true);
-
-        when(imageAssetRepository.findOwnedItemAsset(
-                USER_ID,
-                IMAGE_ASSET_ID
-        )).thenReturn(Optional.of(asset));
-
-        when(inputHasher.hash(asset))
-                .thenReturn("c".repeat(64));
-
-        when(aiJobGateway.updateInputHashIfProcessing(
-                USER_ID,
-                JOB_ID,
+    void retryableFailureIsRetriedOnceAndCanSucceed() {
+        prepareReadyAsset(
                 "c".repeat(64)
-        )).thenReturn(true);
+        );
 
-        when(portProvider.getIfAvailable())
-                .thenReturn(port);
+        ItemAnalysisResult analysis =
+                analysisResult();
 
         when(port.analyze(
                 org.mockito.ArgumentMatchers
                         .any(ItemAnalysisRequest.class)
         )).thenThrow(
-                new IllegalStateException("ai failure")
+                new ItemAnalysisException(
+                        ItemAnalysisException
+                                .FailureKind
+                                .TRANSIENT_PROVIDER,
+                        "temporary"
+                )
+        ).thenReturn(
+                new ItemAnalysisGenerationResult(
+                        analysis,
+                        110,
+                        35,
+                        900L
+                )
+        );
+
+        ItemAnalysisAiJobProcessor.ProcessingResult result =
+                processor.process(
+                        USER_ID,
+                        JOB_ID,
+                        IMAGE_ASSET_ID
+                );
+
+        assertThat(result.outcome())
+                .isEqualTo(
+                        ItemAnalysisAiJobProcessor
+                                .ProcessingOutcome
+                                .SUCCEEDED
+                );
+
+        verify(port, times(2)).analyze(
+                org.mockito.ArgumentMatchers
+                        .any(ItemAnalysisRequest.class)
+        );
+
+        verify(completionService).completeSucceeded(
+                USER_ID,
+                JOB_ID,
+                analysis,
+                110,
+                35,
+                900L,
+                1
+        );
+    }
+
+    @Test
+    void retryableFailureThenSecondFailureStoresRetryCountOne() {
+        prepareReadyAsset(
+                "d".repeat(64)
+        );
+
+        when(port.analyze(
+                org.mockito.ArgumentMatchers
+                        .any(ItemAnalysisRequest.class)
+        )).thenThrow(
+                new ItemAnalysisException(
+                        ItemAnalysisException
+                                .FailureKind
+                                .INVALID_RESPONSE,
+                        "invalid response"
+                )
+        ).thenThrow(
+                new IllegalStateException(
+                        "second failure"
+                )
         );
 
         ItemAnalysisAiJobProcessor.ProcessingResult result =
@@ -306,11 +355,139 @@ class ItemAnalysisAiJobProcessorTest {
                                 .ProcessingOutcome.FAILED
                 );
 
+        verify(port, times(2)).analyze(
+                org.mockito.ArgumentMatchers
+                        .any(ItemAnalysisRequest.class)
+        );
+
+        verify(completionService).completeFailed(
+                USER_ID,
+                JOB_ID,
+                null,
+                1
+        );
+    }
+
+    @Test
+    void nonRetryableFailureIsNotRetried() {
+        prepareReadyAsset(
+                "e".repeat(64)
+        );
+
+        when(port.analyze(
+                org.mockito.ArgumentMatchers
+                        .any(ItemAnalysisRequest.class)
+        )).thenThrow(
+                new ItemAnalysisException(
+                        ItemAnalysisException
+                                .FailureKind
+                                .NON_RETRYABLE_PROVIDER,
+                        "refused"
+                )
+        );
+
+        ItemAnalysisAiJobProcessor.ProcessingResult result =
+                processor.process(
+                        USER_ID,
+                        JOB_ID,
+                        IMAGE_ASSET_ID
+                );
+
+        assertThat(result.outcome())
+                .isEqualTo(
+                        ItemAnalysisAiJobProcessor
+                                .ProcessingOutcome.FAILED
+                );
+
+        verify(port).analyze(
+                org.mockito.ArgumentMatchers
+                        .any(ItemAnalysisRequest.class)
+        );
+
         verify(completionService).completeFailed(
                 USER_ID,
                 JOB_ID,
                 null,
                 0
+        );
+    }
+
+    @Test
+    void unexpectedRuntimeFailureIsNotRetried() {
+        prepareReadyAsset(
+                "f".repeat(64)
+        );
+
+        when(port.analyze(
+                org.mockito.ArgumentMatchers
+                        .any(ItemAnalysisRequest.class)
+        )).thenThrow(
+                new IllegalStateException(
+                        "unexpected failure"
+                )
+        );
+
+        ItemAnalysisAiJobProcessor.ProcessingResult result =
+                processor.process(
+                        USER_ID,
+                        JOB_ID,
+                        IMAGE_ASSET_ID
+                );
+
+        assertThat(result.outcome())
+                .isEqualTo(
+                        ItemAnalysisAiJobProcessor
+                                .ProcessingOutcome.FAILED
+                );
+
+        verify(port).analyze(
+                org.mockito.ArgumentMatchers
+                        .any(ItemAnalysisRequest.class)
+        );
+
+        verify(completionService).completeFailed(
+                USER_ID,
+                JOB_ID,
+                null,
+                0
+        );
+    }
+
+    private void prepareReadyAsset(
+            String inputHash
+    ) {
+        ImageAssetData asset = asset(JOB_ID);
+
+        when(aiJobGateway.claimProcessing(
+                USER_ID,
+                JOB_ID
+        )).thenReturn(true);
+
+        when(imageAssetRepository.findOwnedItemAsset(
+                USER_ID,
+                IMAGE_ASSET_ID
+        )).thenReturn(Optional.of(asset));
+
+        when(inputHasher.hash(asset))
+                .thenReturn(inputHash);
+
+        when(aiJobGateway.updateInputHashIfProcessing(
+                USER_ID,
+                JOB_ID,
+                inputHash
+        )).thenReturn(true);
+
+        when(portProvider.getIfAvailable())
+                .thenReturn(port);
+    }
+
+    private ItemAnalysisResult analysisResult() {
+        return new ItemAnalysisResult(
+                "MCM",
+                "백팩",
+                ItemCategory.BAG,
+                ColorGroup.BLACK,
+                MaterialGroup.LEATHER
         );
     }
 
