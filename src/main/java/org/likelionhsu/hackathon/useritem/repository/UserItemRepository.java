@@ -1,5 +1,6 @@
 package org.likelionhsu.hackathon.useritem.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.likelionhsu.hackathon.useritem.entity.UserItem;
@@ -17,6 +18,10 @@ public interface UserItemRepository
 
     Optional<UserItem> findByIdAndUser_Id(
             Long id,
+            Long userId
+    );
+
+    List<UserItem> findAllByUser_IdAndDeletedAtIsNullOrderByIdAsc(
             Long userId
     );
 }

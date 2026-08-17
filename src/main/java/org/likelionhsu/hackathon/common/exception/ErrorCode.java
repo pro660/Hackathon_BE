@@ -208,6 +208,18 @@ public enum ErrorCode {
             "AI 작업을 찾을 수 없습니다."
     ),
 
+    AI_JOB_ALREADY_RUNNING(
+            HttpStatus.CONFLICT,
+            "AI_JOB_ALREADY_RUNNING",
+            "이미 처리 중인 AI 작업이 있습니다."
+    ),
+
+    AI_DAILY_LIMIT_EXCEEDED(
+            HttpStatus.TOO_MANY_REQUESTS,
+            "AI_DAILY_LIMIT_EXCEEDED",
+            "최근 24시간 AI 작업 요청 한도를 초과했습니다."
+    ),
+
     IMAGE_FILE_INVALID(
             HttpStatus.BAD_REQUEST,
             "IMAGE_FILE_INVALID",

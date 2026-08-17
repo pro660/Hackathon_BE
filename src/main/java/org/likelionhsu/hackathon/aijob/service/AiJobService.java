@@ -16,6 +16,9 @@ import org.likelionhsu.hackathon.common.exception.ErrorCode;
 import org.likelionhsu.hackathon.common.exception.RequestValidationException;
 import org.likelionhsu.hackathon.itemanalysis.service.ItemAnalysisAiJobDispatcher;
 import org.likelionhsu.hackathon.purchaseutility.service.PurchaseUtilityAiJobDispatcher;
+import org.likelionhsu.hackathon.styleplan.service.StylePlanAiJobDispatcher;
+import org.likelionhsu.hackathon.styleplan.service.StylePlanJobRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,8 @@ public class AiJobService {
             "purchase-utility-summary-v1";
     private static final String ITEM_ANALYSIS_PROMPT_VERSION =
             "item-analysis-v1";
+    private static final String STYLE_PLAN_PROMPT_VERSION =
+            "style-plan-v1";
 
     private final AiJobJdbcRepository aiJobRepository;
     private final AiJobRequestHasher requestHasher;
@@ -37,8 +42,13 @@ public class AiJobService {
             itemAnalysisAiJobDispatcher;
     private final PurchaseUtilityAiJobDispatcher
             purchaseUtilityAiJobDispatcher;
+    private final StylePlanAiJobDispatcher
+            stylePlanAiJobDispatcher;
+    private final AiJobCreationPolicyService
+            creationPolicyService;
     private final String openAiModel;
 
+    @Autowired
     public AiJobService(
             AiJobJdbcRepository aiJobRepository,
             AiJobRequestHasher requestHasher,
@@ -49,6 +59,10 @@ public class AiJobService {
                     itemAnalysisAiJobDispatcher,
             PurchaseUtilityAiJobDispatcher
                     purchaseUtilityAiJobDispatcher,
+            StylePlanAiJobDispatcher
+                    stylePlanAiJobDispatcher,
+            AiJobCreationPolicyService
+                    creationPolicyService,
             @Value("${OPENAI_MODEL:}")
             String openAiModel
     ) {
@@ -61,7 +75,67 @@ public class AiJobService {
                 itemAnalysisAiJobDispatcher;
         this.purchaseUtilityAiJobDispatcher =
                 purchaseUtilityAiJobDispatcher;
+        this.stylePlanAiJobDispatcher =
+                stylePlanAiJobDispatcher;
+        this.creationPolicyService =
+                creationPolicyService;
         this.openAiModel = openAiModel;
+    }
+
+    /*
+     * Existing unit-test compatibility constructors.
+     * Production uses the @Autowired constructor above.
+     */
+    AiJobService(
+            AiJobJdbcRepository aiJobRepository,
+            AiJobRequestHasher requestHasher,
+            ObjectMapper objectMapper,
+            ItemAnalysisAiJobCreationService
+                    itemAnalysisAiJobCreationService,
+            ItemAnalysisAiJobDispatcher
+                    itemAnalysisAiJobDispatcher,
+            PurchaseUtilityAiJobDispatcher
+                    purchaseUtilityAiJobDispatcher,
+            StylePlanAiJobDispatcher
+                    stylePlanAiJobDispatcher,
+            String openAiModel
+    ) {
+        this(
+                aiJobRepository,
+                requestHasher,
+                objectMapper,
+                itemAnalysisAiJobCreationService,
+                itemAnalysisAiJobDispatcher,
+                purchaseUtilityAiJobDispatcher,
+                stylePlanAiJobDispatcher,
+                null,
+                openAiModel
+        );
+    }
+
+    AiJobService(
+            AiJobJdbcRepository aiJobRepository,
+            AiJobRequestHasher requestHasher,
+            ObjectMapper objectMapper,
+            ItemAnalysisAiJobCreationService
+                    itemAnalysisAiJobCreationService,
+            ItemAnalysisAiJobDispatcher
+                    itemAnalysisAiJobDispatcher,
+            PurchaseUtilityAiJobDispatcher
+                    purchaseUtilityAiJobDispatcher,
+            String openAiModel
+    ) {
+        this(
+                aiJobRepository,
+                requestHasher,
+                objectMapper,
+                itemAnalysisAiJobCreationService,
+                itemAnalysisAiJobDispatcher,
+                purchaseUtilityAiJobDispatcher,
+                null,
+                null,
+                openAiModel
+        );
     }
 
     public CreationResult create(
@@ -75,8 +149,7 @@ public class AiJobService {
         );
 
         if (request != null
-                && request.type()
-                == AiJobType.ITEM_ANALYSIS) {
+                && request.type() == AiJobType.ITEM_ANALYSIS) {
             return createItemAnalysis(
                     userId,
                     idempotencyKey,
@@ -84,6 +157,27 @@ public class AiJobService {
             );
         }
 
+        if (request != null
+                && request.type() == AiJobType.STYLE_PLAN) {
+            return createStylePlan(
+                    userId,
+                    idempotencyKey,
+                    request
+            );
+        }
+
+        return createPurchaseUtility(
+                userId,
+                idempotencyKey,
+                request
+        );
+    }
+
+    private CreationResult createPurchaseUtility(
+            Long userId,
+            String idempotencyKey,
+            AiJobCreateRequest request
+    ) {
         String normalizedProductId =
                 normalizePurchaseUtilityProductId(request);
 
@@ -93,11 +187,10 @@ public class AiJobService {
                 );
 
         var existing =
-                aiJobRepository
-                        .findByUserAndIdempotencyKey(
-                                userId,
-                                idempotencyKey
-                        );
+                aiJobRepository.findByUserAndIdempotencyKey(
+                        userId,
+                        idempotencyKey
+                );
 
         if (existing.isPresent()) {
             return resolveExisting(
@@ -109,27 +202,26 @@ public class AiJobService {
         String model = requireConfiguredModel();
 
         try {
-            long jobId =
-                    aiJobRepository.createPending(
+            long jobId = createWithinPolicy(
+                    userId,
+                    idempotencyKey,
+                    () -> aiJobRepository.createPending(
                             userId,
                             AiJobType.PURCHASE_UTILITY,
                             idempotencyKey,
                             requestHash,
                             model,
                             PURCHASE_UTILITY_PROMPT_VERSION
-                    );
+                    )
+            );
 
-            AiJobData created =
-                    aiJobRepository
-                            .findOwned(
-                                    userId,
-                                    jobId
+            AiJobData created = aiJobRepository
+                    .findOwned(userId, jobId)
+                    .orElseThrow(() ->
+                            new IllegalStateException(
+                                    "생성한 AI Job을 조회할 수 없습니다."
                             )
-                            .orElseThrow(() ->
-                                    new IllegalStateException(
-                                            "생성한 AI Job을 조회할 수 없습니다."
-                                    )
-                            );
+                    );
 
             purchaseUtilityAiJobDispatcher.dispatch(
                     userId,
@@ -139,18 +231,12 @@ public class AiJobService {
 
             return CreationResult.from(created);
         } catch (DataIntegrityViolationException exception) {
-            return aiJobRepository
-                    .findByUserAndIdempotencyKey(
-                            userId,
-                            idempotencyKey
-                    )
-                    .map(job ->
-                            resolveExisting(
-                                    job,
-                                    requestHash
-                            )
-                    )
-                    .orElseThrow(() -> exception);
+            return resolveWinnerAfterInsertRace(
+                    userId,
+                    idempotencyKey,
+                    requestHash,
+                    exception
+            );
         }
     }
 
@@ -168,11 +254,10 @@ public class AiJobService {
                 );
 
         var existing =
-                aiJobRepository
-                        .findByUserAndIdempotencyKey(
-                                userId,
-                                idempotencyKey
-                        );
+                aiJobRepository.findByUserAndIdempotencyKey(
+                        userId,
+                        idempotencyKey
+                );
 
         if (existing.isPresent()) {
             return resolveExisting(
@@ -185,20 +270,22 @@ public class AiJobService {
 
         try {
             Long imageAssetId =
-                    Long.valueOf(
-                            normalizedImageAssetId
-                    );
+                    Long.valueOf(normalizedImageAssetId);
 
             AiJobData created =
-                    itemAnalysisAiJobCreationService
-                            .createPendingAndBind(
-                                    userId,
-                                    imageAssetId,
-                                    idempotencyKey,
-                                    requestHash,
-                                    model,
-                                    ITEM_ANALYSIS_PROMPT_VERSION
-                            );
+                    createWithinPolicy(
+                            userId,
+                            idempotencyKey,
+                            () -> itemAnalysisAiJobCreationService
+                                    .createPendingAndBind(
+                                            userId,
+                                            imageAssetId,
+                                            idempotencyKey,
+                                            requestHash,
+                                            model,
+                                            ITEM_ANALYSIS_PROMPT_VERSION
+                                    )
+                    );
 
             itemAnalysisAiJobDispatcher.dispatch(
                     userId,
@@ -208,18 +295,82 @@ public class AiJobService {
 
             return CreationResult.from(created);
         } catch (DataIntegrityViolationException exception) {
-            return aiJobRepository
-                    .findByUserAndIdempotencyKey(
+            return resolveWinnerAfterInsertRace(
+                    userId,
+                    idempotencyKey,
+                    requestHash,
+                    exception
+            );
+        }
+    }
+
+    private CreationResult createStylePlan(
+            Long userId,
+            String idempotencyKey,
+            AiJobCreateRequest request
+    ) {
+        StylePlanJobRequest stylePlanRequest =
+                StylePlanJobRequest.from(request);
+
+        String requestHash = requestHasher.hashStylePlan(
+                stylePlanRequest.occasion(),
+                stylePlanRequest.styleTags(),
+                stylePlanRequest.weatherCondition(),
+                stylePlanRequest.prioritizeOwnedItems(),
+                stylePlanRequest.language()
+        );
+
+        var existing =
+                aiJobRepository.findByUserAndIdempotencyKey(
+                        userId,
+                        idempotencyKey
+                );
+
+        if (existing.isPresent()) {
+            return resolveExisting(
+                    existing.get(),
+                    requestHash
+            );
+        }
+
+        String model = requireConfiguredModel();
+
+        try {
+            long jobId = createWithinPolicy(
+                    userId,
+                    idempotencyKey,
+                    () -> aiJobRepository.createPending(
                             userId,
-                            idempotencyKey
+                            AiJobType.STYLE_PLAN,
+                            idempotencyKey,
+                            requestHash,
+                            model,
+                            STYLE_PLAN_PROMPT_VERSION
                     )
-                    .map(job ->
-                            resolveExisting(
-                                    job,
-                                    requestHash
+            );
+
+            AiJobData created = aiJobRepository
+                    .findOwned(userId, jobId)
+                    .orElseThrow(() ->
+                            new IllegalStateException(
+                                    "생성한 STYLE_PLAN AI Job을 조회할 수 없습니다."
                             )
-                    )
-                    .orElseThrow(() -> exception);
+                    );
+
+            stylePlanAiJobDispatcher.dispatch(
+                    userId,
+                    jobId,
+                    stylePlanRequest
+            );
+
+            return CreationResult.from(created);
+        } catch (DataIntegrityViolationException exception) {
+            return resolveWinnerAfterInsertRace(
+                    userId,
+                    idempotencyKey,
+                    requestHash,
+                    exception
+            );
         }
     }
 
@@ -236,22 +387,36 @@ public class AiJobService {
                 "jobId는 null일 수 없습니다."
         );
 
-        AiJobData job =
-                aiJobRepository
-                        .findOwned(
-                                userId,
-                                jobId
+        AiJobData job = aiJobRepository
+                .findOwned(userId, jobId)
+                .orElseThrow(() ->
+                        new BusinessException(
+                                ErrorCode.AI_JOB_NOT_FOUND
                         )
-                        .orElseThrow(() ->
-                                new BusinessException(
-                                        ErrorCode.AI_JOB_NOT_FOUND
-                                )
-                        );
+                );
 
         return AiJobResponse.from(
                 refreshStaleIfNeeded(job),
                 objectMapper
         );
+    }
+
+    private CreationResult resolveWinnerAfterInsertRace(
+            Long userId,
+            String idempotencyKey,
+            String requestHash,
+            DataIntegrityViolationException original
+    ) {
+        return aiJobRepository
+                .findByUserAndIdempotencyKey(
+                        userId,
+                        idempotencyKey
+                )
+                .map(job -> resolveExisting(
+                        job,
+                        requestHash
+                ))
+                .orElseThrow(() -> original);
     }
 
     private CreationResult resolveExisting(
@@ -288,10 +453,7 @@ public class AiJobService {
         }
 
         return aiJobRepository
-                .findOwned(
-                        job.userId(),
-                        job.id()
-                )
+                .findOwned(job.userId(), job.id())
                 .orElseThrow(() ->
                         new BusinessException(
                                 ErrorCode.AI_JOB_NOT_FOUND
@@ -303,86 +465,79 @@ public class AiJobService {
             AiJobCreateRequest request
     ) {
         if (request == null
-                || request.type()
-                != AiJobType.PURCHASE_UTILITY
+                || request.type() != AiJobType.PURCHASE_UTILITY
                 || request.context() == null) {
             throw new BusinessException(
                     ErrorCode.REQUEST_BODY_INVALID
             );
         }
 
-        String rawProductId =
-                request.context().productId();
-
-        if (rawProductId == null
-                || rawProductId.isBlank()) {
-            throw new RequestValidationException(
-                    "context.productId",
-                    "필수 입력값입니다."
-            );
-        }
-
-        try {
-            long productId =
-                    Long.parseLong(rawProductId.trim());
-
-            if (productId <= 0L) {
-                throw new NumberFormatException(
-                        "productId must be positive"
-                );
-            }
-
-            return String.valueOf(productId);
-        } catch (NumberFormatException exception) {
-            throw new RequestValidationException(
-                    "context.productId",
-                    "1 이상의 정수로 입력해 주세요."
-            );
-        }
+        return normalizePositiveId(
+                request.context().productId(),
+                "context.productId"
+        );
     }
 
     private String normalizeItemAnalysisImageAssetId(
             AiJobCreateRequest request
     ) {
         if (request == null
-                || request.type()
-                != AiJobType.ITEM_ANALYSIS
+                || request.type() != AiJobType.ITEM_ANALYSIS
                 || request.context() == null) {
             throw new BusinessException(
                     ErrorCode.REQUEST_BODY_INVALID
             );
         }
 
-        String rawImageAssetId =
-                request.context().imageAssetId();
+        return normalizePositiveId(
+                request.context().imageAssetId(),
+                "context.imageAssetId"
+        );
+    }
 
-        if (rawImageAssetId == null
-                || rawImageAssetId.isBlank()) {
+    private String normalizePositiveId(
+            String rawValue,
+            String field
+    ) {
+        if (rawValue == null || rawValue.isBlank()) {
             throw new RequestValidationException(
-                    "context.imageAssetId",
+                    field,
                     "필수 입력값입니다."
             );
         }
 
         try {
-            long imageAssetId =
-                    Long.parseLong(
-                            rawImageAssetId.trim()
-                    );
+            long value = Long.parseLong(rawValue.trim());
 
-            if (imageAssetId <= 0L) {
+            if (value <= 0L) {
                 throw new NumberFormatException(
-                        "imageAssetId must be positive"
+                        "id must be positive"
                 );
             }
 
-            return String.valueOf(imageAssetId);
+            return String.valueOf(value);
         } catch (NumberFormatException exception) {
             throw new RequestValidationException(
-                    "context.imageAssetId",
+                    field,
                     "1 이상의 정수로 입력해 주세요."
             );
         }
+    }
+
+    private <T> T createWithinPolicy(
+            Long userId,
+            String idempotencyKey,
+            java.util.function.Supplier<T> creation
+    ) {
+        if (creationPolicyService == null) {
+            return creation.get();
+        }
+
+        return creationPolicyService.execute(
+                userId,
+                idempotencyKey,
+                creation
+        );
     }
 
     private String requireConfiguredModel() {

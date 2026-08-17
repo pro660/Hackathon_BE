@@ -2,6 +2,8 @@ package org.likelionhsu.hackathon.aijob.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 class AiJobRequestHasherTest {
@@ -33,5 +35,29 @@ class AiJobRequestHasherTest {
         assertThat(
                 hasher.hashItemAnalysis("51")
         ).hasSize(64);
+    }
+
+    @Test
+    void stylePlanHashIsDeterministicAndStyleTagOrderIndependent() {
+        String first = hasher.hashStylePlan(
+                "DATE",
+                List.of("NEAT", "GLAMOROUS"),
+                null,
+                true,
+                "ko"
+        );
+        String second = hasher.hashStylePlan(
+                "DATE",
+                List.of("GLAMOROUS", "NEAT"),
+                null,
+                true,
+                "ko"
+        );
+
+        assertThat(first).isEqualTo(
+                "149b287bf4f9ef3d8a7c1c46a9edf3355b72a26211151c7c7de94c90570f756a"
+        );
+        assertThat(second).isEqualTo(first);
+        assertThat(first).hasSize(64);
     }
 }

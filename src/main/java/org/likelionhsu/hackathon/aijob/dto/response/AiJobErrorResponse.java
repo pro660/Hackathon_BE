@@ -19,6 +19,8 @@ public record AiJobErrorResponse(
                     "AI 설명 생성에 실패했습니다.";
             case "AI_ITEM_ANALYSIS_FAILED" ->
                     "아이템 이미지 분석에 실패했습니다.";
+            case "AI_STYLE_PLAN_FAILED" ->
+                    "스마트 착용 추천 생성에 실패했습니다.";
             default ->
                     "AI 작업 처리 중 오류가 발생했습니다.";
         };
