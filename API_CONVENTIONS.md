@@ -2,7 +2,7 @@
 
 > 프론트엔드와 백엔드가 분리된 저장소에서 동일한 기준으로 API를 설계하고 연동하기 위한 팀 공통 규칙이다.
 >
-> **현행 검증 기준:** 2026-08-18 / Backend `main` `2554d4f` (PR #48 홈 집계 조회 API 반영)
+> **현행 검증 기준:** 2026-08-19 / Backend `main` `a9a7b85` (PR #49 API 공통 규칙 최신 구현 기준 동기화 반영)
 >
 > 이 문서는 현재 구현과 앞으로의 API 설계를 함께 안내한다. 문서와 코드가 일시적으로 어긋나는 경우에는 **실제 `main`의 Controller·DTO·공통 응답/예외 코드가 현재 실행 계약**이며, 차이를 발견하면 문서 또는 코드 중 하나를 임의로 추측해서 사용하지 말고 팀 합의를 거쳐 동기화한다.
 
@@ -483,7 +483,7 @@ GET /api/products?category=undefined
 한 필터에서 여러 값을 전달해야 하는 경우 기본적으로 동일한 Query Parameter 이름을 반복한다.
 
 ```http
-GET /api/example?style=CASUAL&style=MINIMAL
+GET /api/example?style=CASUAL&style=NEAT
 ```
 
 프론트 예:
@@ -499,9 +499,9 @@ styles.forEach((style) => {
 다음 방식을 API마다 섞어 쓰지 않는다.
 
 ```text
-?style=CASUAL,MINIMAL
-?style[]=CASUAL&style[]=MINIMAL
-?styles=CASUAL|MINIMAL
+?style=CASUAL,NEAT
+?style[]=CASUAL&style[]=NEAT
+?styles=CASUAL|NEAT
 ```
 
 정렬도 여러 조건을 지원하는 API라면 `sort`를 반복할 수 있다.
@@ -779,6 +779,8 @@ Content-Type: multipart/form-data
 - multipart part 이름: `file`
 - 요청 한 번에 이미지 한 장
 - JPEG / PNG 허용
+- multipart `file` part의 Content-Type은 `image/jpeg` 또는 `image/png`이며 실제 binary 형식과 일치해야 한다.
+- WebP, `application/octet-stream` 등은 현재 허용하지 않는다.
 - 최대 10MB
 - 실제 이미지 binary/dimensions 검증
 - 인증된 사용자만 사용
@@ -1542,7 +1544,7 @@ STYLE_PLAN context는 현재 다음 필드를 사용한다.
   "type": "STYLE_PLAN",
   "context": {
     "occasion": "DATE",
-    "styleTags": ["MINIMAL", "CASUAL"],
+    "styleTags": ["CASUAL", "NEAT"],
     "weatherCondition": "CLOUDY",
     "prioritizeOwnedItems": true,
     "language": "ko"
@@ -1550,13 +1552,30 @@ STYLE_PLAN context는 현재 다음 필드를 사용한다.
 }
 ```
 
-현재 STYLE_PLAN 주요 조건:
+현재 STYLE_PLAN context 허용값과 조건:
 
 ```text
-styleTags: 1~4개
-weatherCondition: nullable
-language: ko
+occasion (필수):
+DAILY | DATE | TRAVEL | GATHERING | CEREMONY | OUTDOOR | OTHER
+
+styleTags (필수):
+CASUAL | FORMAL | NEAT | GLAMOROUS
+- 1~4개
+- 중복 불가
+
+weatherCondition (선택):
+SUNNY | CLOUDY | RAINY | SNOWY | HOT | COLD | WINDY | INDOOR | OTHER
+
+prioritizeOwnedItems (필수):
+true | false
+
+language (필수):
+ko
 ```
+
+`weatherCondition`은 생략할 수 있지만 전달하는 경우 위 허용값 중 하나여야 한다.
+
+현재 `language`는 `ko`만 허용한다.
 
 타입별 context 필드를 섞어 보내지 않는다.
 
@@ -1662,6 +1681,61 @@ POST /api/ai-jobs
 }
 ```
 
+`result`의 JSON 구조는 `type`에 따라 다르며 공통 `{}` 구조로 고정되지 않는다.
+
+`ITEM_ANALYSIS` 성공 `result` 예:
+
+```json
+{
+  "brandName": "MCM",
+  "name": "토트백",
+  "category": "BAG",
+  "primaryColor": "BLACK",
+  "material": "LEATHER"
+}
+```
+
+`PURCHASE_UTILITY` 분석 완료 `result` 예:
+
+```json
+{
+  "status": "READY",
+  "analysisId": "12"
+}
+```
+
+`PURCHASE_UTILITY`는 분석에 필요한 정보가 부족하더라도 Job 처리 자체가 정상 완료된 경우 `SUCCEEDED` 상태에서 다음과 같은 `result`를 반환할 수 있다.
+
+```json
+{
+  "status": "INSUFFICIENT_DATA",
+  "analysisId": null,
+  "message": "..."
+}
+```
+
+`PURCHASE_UTILITY`가 `READY`이면 반환된 `analysisId`로 상세 분석을 조회한다.
+
+```http
+GET /api/purchase-utility-analyses/{analysisId}
+Authorization: Bearer <accessToken>
+```
+
+`STYLE_PLAN` 성공 `result` 예:
+
+```json
+{
+  "previewId": "job:41",
+  "title": "...",
+  "description": "...",
+  "ownedItems": [],
+  "recommendedProducts": [],
+  "generationType": "AI"
+}
+```
+
+각 타입의 세부 필드 계약은 실제 Controller·DTO·Swagger를 따른다.
+
 중요한 구분:
 
 **AI 처리 자체가 FAILED인 것과 HTTP 요청 실패는 다르다.**
@@ -1703,6 +1777,22 @@ Job 조회 요청이 정상적으로 처리되어 FAILED Job을 읽은 경우:
 AI 생성이 실패해도 규칙 기반 결과를 유지할 수 있는 기능에서는 `fallback`을 반환할 수 있다.
 
 프론트는 `status == FAILED`라는 이유만으로 `fallback`을 무시하지 않고 기능별 계약을 확인한다.
+
+생성 출처를 별도 필드로 제공하는 기능은 현재 다음 값을 사용한다.
+
+```text
+AI         → AI Provider 결과를 사용한 생성 결과
+RULE_BASED → 서버 규칙 기반 생성 또는 대체 결과
+```
+
+현재 대표 필드는 다음과 같다.
+
+```text
+STYLE_PLAN                  → generationType
+구매 활용성 분석 상세       → explanationGenerationType
+```
+
+모든 AI Job 타입이 동일한 생성 출처 필드를 반환한다고 가정하지 않는다.
 
 ---
 
