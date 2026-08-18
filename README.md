@@ -2,164 +2,151 @@
 
 2026 중앙해커톤 서비스 **입을래?**의 Spring Boot 백엔드 저장소입니다.
 
-> **문서 기준일:** 2026-08-17
-> **현재 구현 기준:** `main` `0749c9c` / PR #40 — ImageAsset + `ITEM_ANALYSIS` + 마이 아이템 provenance/최초 이미지 연계 반영
+> **문서 기준일:** 2026-08-19
+> **현재 구현 기준:** Backend `main` `3599d95` / PR #50 반영
 > **API 공통 규칙:** [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)
-> **운영 배포 방향:** Gabia 준비 중
-> **최종 검증:** 로컬 `./gradlew clean check` 성공 + PR #40 Backend CI 성공
+> **운영 목표 구조:** Frontend Vercel / Backend Gabia Cloud / Database Gabia MySQL
 >
-> README는 현재 구현 상태와 실행·테스트 방법을 빠르게 파악하기 위한 요약 문서입니다.
-> 세부 API 계약은 **실제 `main` 코드 → Flyway 스키마 → `API_CONVENTIONS.md` → README** 순으로 확인합니다.
+> README는 현재 구현 상태와 실행·테스트·연동 방법을 빠르게 파악하기 위한 요약 문서입니다.
+> 세부 API 계약이 README와 다를 경우 **현재 `main`의 Controller·DTO·설정·Flyway와 `API_CONVENTIONS.md`**를 우선 확인합니다.
 
 ---
 
 ## 1. 프로젝트 소개
 
-**입을래?**는 명품을 단순히 구매하는 데서 끝내지 않고,
-사용자가 보유한 아이템과 취향을 바탕으로 **구매 전 활용 가능성, 제품 추천, 보유 아이템 관리와 재활용 가치**를 높이는 서비스입니다.
+**입을래?**는 명품을 구매한 뒤 충분히 활용하지 못하는 문제를 줄이기 위해,
+사용자의 **취향·보유 아이템·상황**을 기반으로 제품의 활용 가능성을 분석하고
+구매부터 착용, 관리, 장소 추천까지 이어지는 활용 경험을 제공하는 서비스입니다.
 
-현재 백엔드는 다음 흐름을 중심으로 구현되어 있습니다.
+백엔드는 현재 다음 흐름을 지원합니다.
 
 1. 일반 회원가입·로그인 및 Kakao/Naver 소셜 로그인
 2. 사용자 취향 프로필 저장
-3. MCM 제품 카탈로그 조회·필터·찜
-4. 취향과 상황 기반 Rule-Based MCM 제품 추천
-5. 마이 아이템 등록·조회·수정·삭제
-6. 구매 전 활용 가능성 Rule-Based 분석
-7. 공통 AI Job을 통한 비동기 AI 작업 관리
-8. OpenAI Responses API를 통한 구매 활용성 AI 설명 생성
-9. 마이 아이템 이미지 업로드 및 `ITEM_ANALYSIS` 이미지 분석
-10. `ITEM_ANALYSIS` 결과 provenance를 보존한 마이 아이템 등록 및 최초 이미지 연결 검증
+3. MCM 제품 카탈로그 조회·검색 조건 적용
+4. 제품 찜 및 구매 후보 장바구니 관리
+5. 취향·상황 기반 MCM 제품 추천
+6. 마이 아이템 등록·조회·수정·삭제 및 이미지 관리
+7. 이미지 기반 `ITEM_ANALYSIS`
+8. 구매 전 활용 가능성 분석 및 AI 설명 생성
+9. 제품 패스포트 조회
+10. 스마트 착용 추천(`STYLE_PLAN`) 생성 및 스타일 플랜 저장
+11. 스타일 플랜 기반 장소 검색·추천·저장
+12. 맞춤 관리 가이드·캘린더·관리 알림
+13. 홈 화면용 집계 조회
 
 ---
 
 ## 2. 현재 구현 상태
 
-| 영역 | 상태 | 현재 `main` 기준 |
+| 영역 | 상태 | 현재 구현 |
 | --- | --- | --- |
-| 공통 응답·예외·시간 정책 | ✅ 구현 | 공통 응답 래퍼, 예외 처리, UTC/JPA 시간 정책 |
+| 공통 응답·예외 | ✅ 구현 | 공통 성공/오류 Wrapper, Validation·Business Exception 처리 |
+| 시간 정책 | ✅ 구현 | 서버/JPA/Jackson UTC, `Instant` 중심 정확한 시각 처리 |
 | 일반 인증 | ✅ 구현 | 이메일 인증, 회원가입, 로그인, 토큰 갱신, 로그아웃 |
 | 소셜 로그인 | ✅ 구현 | Kakao / Naver OAuth |
-| 계정 재인증 | ✅ 구현 | 비밀번호·소셜 재인증 기반 |
-| 마이페이지 / 회원 탈퇴 | ✅ 구현 | 내 정보 조회·수정, 재인증 후 회원 탈퇴 |
-| 취향 프로필 | ✅ 구현 | 조회 + 전체 교체 저장 |
-| MCM 제품 카탈로그 | ✅ 구현 | 목록·상세·카테고리·색상·가격 필터·다중 정렬·페이지네이션 |
-| MCM 샘플 데이터 | ✅ 구현 | `src/main/resources/data/mcm-products.json` 기반 import 구조 |
-| 제품 찜 | ✅ 구현 | 찜 등록·해제·목록 조회 |
-| 제품 추천 | ✅ 구현 | 취향·상황 기반 Rule-Based 추천 생성 및 조회 |
-| 마이 아이템 | ✅ 구현 | CRUD·검색·필터·정렬 + nullable `brandName` + `aiJobId` provenance 고정 + 소재 출처 정합성 검증 |
-| 구매 전 활용 가능성 | ✅ 구현 | Rule-Based 점수·요인·호환 아이템·관리 난이도 분석 |
-| 공통 AI Job | ✅ 구현 | 생성·조회·멱등성·상태·timeout·비동기 처리 기반 |
-| 구매 활용성 OpenAI 설명 | ✅ 구현 | Responses API, Structured Output, 24시간 캐시, 제한적 retry |
-| 마이 아이템 이미지 | ✅ 구현 | JPEG/PNG 업로드, Cloudinary 저장, 연결·교체·삭제, TEMP/삭제대기 자동 정리, AI 사용 중 보호 |
-| `ITEM_ANALYSIS` AI | ✅ 구현 | TEMPORARY ITEM 이미지 분석, Structured Output, 멱등 생성, 비동기 처리, 최대 1회 retry |
-| `ITEM_ANALYSIS` ↔ 마이 아이템 연계 | ✅ 구현 | SUCCEEDED Job provenance 검증, 소재 출처 검증, 최초 이미지 `input_hash` 일치 검증 |
-| 제품 패스포트 / 활용도 분석 | ⏳ 미구현 | 상위 기능 구현 필요 |
-| 착용 기록 / 다시 활용 안내 | ⏳ 미구현 | 상위 기능 구현 필요 |
-| 스마트 착용 추천 | ⏳ 미구현 | 구현 필요 |
-| 스타일 플랜 | 🧱 DB 기반 | V8 스키마 기반은 있으나 현재 controller/service 미구현 |
-| 장소 추천 | 🧱 DB 기반 | V8 스키마 기반은 있으나 현재 controller/service 미구현 |
-| 백엔드 운영 배포 | 🚧 준비 중 | Gabia 기준 운영 배포 준비 |
+| 재인증·계정 관리 | ✅ 구현 | 비밀번호·OAuth 재인증, 마이페이지, 회원 탈퇴 |
+| 취향 프로필 | ✅ 구현 | 조회 및 전체 교체 저장, 낙관적 락 |
+| MCM 제품 카탈로그 | ✅ 구현 | 목록·상세, 카테고리·색상·가격 필터, 정렬, 페이지네이션 |
+| MCM 제품 데이터 | ✅ 구현 | MCM 60개 샘플 데이터 + Importer/Validator |
+| 제품 찜 | ✅ 구현 | 찜 등록·해제·목록, 제품 응답 `favorited` |
+| 구매 후보 장바구니 | ✅ 구현 | 담기·제거·목록 조회, 제품 상세 `inCart` |
+| 제품 추천 | ✅ 구현 | 취향·상황 기반 Rule-Based 추천 생성·조회 |
+| 마이 아이템 | ✅ 구현 | CRUD, 검색·필터·정렬, Soft Delete |
+| ImageAsset | ✅ 구현 | JPEG/PNG 업로드, Cloudinary, 연결·교체·삭제·cleanup |
+| `ITEM_ANALYSIS` | ✅ 구현 | 이미지 기반 브랜드/이름/카테고리/색상/소재 분석 |
+| AI provenance | ✅ 구현 | 분석 Job·입력 이미지·마이 아이템 정합성 검증 |
+| 구매 전 활용 가능성 | ✅ 구현 | Rule-Based 점수, 요인, 호환 아이템, 관리 난이도 |
+| 구매 활용성 AI 설명 | ✅ 구현 | OpenAI Responses API, Structured Output, 캐시·fallback |
+| 제품 패스포트 | ✅ 구현 | 마이 아이템 제품 정보·구매 정보 read model |
+| 스마트 착용 추천 | ✅ 구현 | `STYLE_PLAN` AI 생성 + Rule-Based fallback |
+| 스타일 플랜 저장 | ✅ 구현 | 생성·목록·상세·수정·삭제, generation type·version 관리 |
+| 장소 검색 | ✅ 구현 | Kakao Local 기반 검색 |
+| 장소 추천 | ✅ 구현 | StylePlan occasion + 거리/카테고리 Rule-Based 추천 |
+| 장소 저장 | ✅ 구현 | 사용자 저장 장소 관리 |
+| 맞춤 관리 | ✅ 구현 | 관리 가이드·보관법·월별 관리 캘린더 |
+| 관리 알림 | ✅ 구현 | 아이템별 알림 설정, `CARE_REMINDER`, 알림 조회·읽음 처리 |
+| 홈 집계 API | ✅ 구현 | 추천·스타일·패스포트·장소 데이터를 홈 화면용으로 집계 |
+| 착용/사용 기록 API | ⏳ 미구현 | DB 초기 구조와 별개로 현재 별도 애플리케이션 API는 구현되지 않음 |
+| 운영 배포 | 🚧 연동 단계 | Gabia 기반 운영 환경 구성 및 FE 연동 대상 |
 
-> `AiJobType`에는 향후 확장을 위한 타입이 존재하며, **현재 외부 AI Job 생성 API에서 실제 지원하는 타입은 `PURCHASE_UTILITY`, `ITEM_ANALYSIS`**입니다.
+> DB 테이블이 존재하는 것과 애플리케이션 API가 구현된 것은 구분합니다.
+> README의 구현 상태는 현재 `main`의 Controller/Service 기준으로 작성합니다.
 
 ---
 
 ## 3. 최근 주요 반영 내역
 
-### PR #31 — Kakao / Naver 소셜 로그인
+### PR #42 — 제품 패스포트 조회 및 구매 메타데이터
 
-- OAuth 시작 및 callback 처리
-- 기존 사용자 로그인 / 신규 사용자 onboarding 분리
-- Refresh Token 쿠키 연동
-- 계정 삭제용 소셜 재인증 흐름
+- `GET /api/my-items/{myItemId}/passport`
+- 구매일·구매가격에 구매처·주문번호 메타데이터 추가
+- UserItem 기반 Passport read model
+- Flyway V17 반영
 
-### PR #32 — 마이페이지 및 회원 탈퇴
+### PR #43 — 스마트 착용 추천
 
-- 현재 사용자 정보 조회·수정
-- 비밀번호 / OAuth 재인증
-- 재인증 토큰 기반 회원 탈퇴
-- 사용자 소유 데이터 삭제 처리
+- 공통 AI Job의 `STYLE_PLAN` 실제 처리 연결
+- 사용자의 보유 아이템과 MCM 제품을 조합한 착용 추천 생성
+- OpenAI Responses API + Structured Output
+- AI 사용 불가/실패 시 deterministic Rule-Based fallback
+- `generationType: AI | RULE_BASED`
 
-### PR #33 — 마이 아이템 조회 및 관리
+### PR #44 — 스타일 플랜 CRUD
 
-- 마이 아이템 CRUD
-- 이름·브랜드 검색
-- 카테고리·색상 필터
-- 다중 정렬 및 페이지네이션
-- Soft Delete
-- 이미지/AI Job 연계 검증 기반
+- `POST /api/style-plans`
+- `GET /api/style-plans`
+- `GET /api/style-plans/{stylePlanId}`
+- `PATCH /api/style-plans/{stylePlanId}`
+- `DELETE /api/style-plans/{stylePlanId}`
+- AI Job 결과 저장 시 조합 재검증
+- `version` 기반 optimistic locking
 
-### PR #34 — 구매 전 활용 가능성 분석 기반
+### PR #45 — 맞춤 관리 가이드·캘린더 및 관리 알림
 
-- 제품과 사용자 데이터를 이용한 Rule-Based 활용성 분석
-- 취향·아이템 조합·계절·카테고리 요인 점수
-- 호환 마이 아이템 snapshot 저장
-- 분석 결과 상세 조회
-- AI 설명 생성을 위한 Port / Job 기반 마련
+- 소재별 관리·보관 가이드
+- 구매일 기반 월별 관리 캘린더
+- 아이템별 관리 알림 설정
+- `CARE_REMINDER` 서비스 내부 알림
+- 알림 목록·읽음 상태 변경
+- Flyway V18 반영
 
-### PR #35 — 구매 활용성 관리 난이도
+### PR #46 — 장소 검색·추천·저장
 
-- 소재 기반 관리 난이도 분석
-- `EASY`, `MODERATE`, `HARD`, `UNKNOWN`
-- Rule-Based fallback 설명에 관리 난이도 반영
-- Value Score 자체와 관리 난이도는 분리
+- Kakao Local 기반 장소 검색
+- StylePlan 기반 장소 추천
+- 카테고리 적합도 + 거리 적합도 Rule-Based 순위화
+- 사용자 저장 장소 관리
+- 추천 과정 자체에서는 OpenAI를 호출하지 않음
 
-### PR #36 — 공통 AI Job + 구매 활용성 OpenAI
+### PR #47 — MCM 제품 확인 장바구니
 
-- 공통 `POST /api/ai-jobs`
-- 공통 `GET /api/ai-jobs/{jobId}`
-- `Idempotency-Key` + `request_hash`
-- `PENDING / PROCESSING / SUCCEEDED / FAILED` 상태 관리
-- DB clock 기준 2분 stale timeout
-- Purchase Utility 비동기 processor 연결
-- deterministic `input_hash`
-- 동일 입력의 최근 24시간 AI summary cache
-- OpenAI Responses API 연동
-- Structured Output `{ "summary": "..." }`
-- retryable 오류에 한해 최대 1회 재시도
-- AI 실패 시 기존 Rule-Based 분석 결과 보존
+- `PUT /api/products/{productId}/cart`
+- `DELETE /api/products/{productId}/cart`
+- `GET /api/cart-items`
+- 사용자·제품 단위 UNIQUE 관계와 멱등 담기
+- 제품 상세 응답에 `inCart`
+- Flyway V19 반영
 
-### PR #38 — 마이 아이템 이미지 업로드 및 ImageAsset 생명주기
+### PR #48 — 홈 집계 조회 API
 
-- `POST /api/image-assets` 기반 JPEG/PNG 업로드
-- Cloudinary 저장 및 ImageAsset 메타데이터 관리
-- `TEMPORARY → ACTIVE → DELETE_PENDING → DELETED` lifecycle
-- 마이 아이템 이미지 연결·교체·삭제
-- 24시간 TEMPORARY cleanup
-- DELETE_PENDING 삭제 재시도 및 재시작 복구
-- AI Job 사용 중 TEMPORARY 이미지 삭제 보호
+- `GET /api/home`
+- 홈 화면에서 필요한 저장 데이터를 한 번에 조회하는 Read Model
+- 조회 시 새 AI Job/OpenAI/Kakao 검색을 숨은 부작용으로 실행하지 않음
+- Flyway V20 조회 인덱스 반영
 
-### PR #39 — 마이 아이템 이미지 기반 `ITEM_ANALYSIS`
+### PR #49 · #50 — API 문서 최신화
 
-- 공통 AI Job의 `ITEM_ANALYSIS` 타입 실제 처리 연결
-- ImageAsset 기반 deterministic `input_hash`
-- TEMPORARY ITEM 이미지와 AI Job 바인딩
-- OpenAI Responses API 이미지 분석
-- Structured Output 기반 아이템 속성 추출
-- `input_hash` / `result_json` 성공 결과 저장
-- 비동기 processor 및 최대 1회 제한적 retry
-- AI Job 조회를 통한 분석 결과 제공
-
-### PR #40 — `ITEM_ANALYSIS` 마이 아이템 연동 및 provenance 검증
-
-- `brandName` 선택값 전환 및 Flyway V16 추가
-- 생성 시 `aiJobId`를 등록 흐름 provenance로 저장하고 이후 PATCH 변경 금지
-- `AI_ESTIMATED` 소재는 ITEM_ANALYSIS 결과 소재와 일치해야 함
-- `PRODUCT_DATA` 소재는 연결 Product 소재와 일치해야 함
-- 실제 소재/제품 변경 시에만 필요한 provenance 전환 수행
-- AI 기반 마이 아이템의 최초 이미지가 분석 입력 이미지와 동일한지 `input_hash`로 검증
-- ImageAsset의 최신 `ai_job_id`와 UserItem의 고정 provenance를 분리
-- PENDING/PROCESSING AI Job이 사용하는 TEMPORARY 이미지 attach 차단
-- 삭제된 과거 이미지까지 포함한 attachment history로 최초/교체 판정
-- `IMAGE_ASSET_ANALYSIS_MISMATCH` 409 오류 추가
-- 단위 테스트 + Testcontainers/MySQL 통합 테스트 + Backend CI 통과
+- Stateless JWT / Cookie / Trusted Origin 계약 현행화
+- 공통 AI Job·Idempotency·polling 계약 현행화
+- STYLE_PLAN 실제 허용값 반영
+- 이미지 multipart MIME 계약 보강
+- AI Job 타입별 결과 구조 보강
+- `.env.example`에 OpenAI 환경변수 추가
+- 과거 Railway 중심 문구 제거
 
 ---
 
 ## 4. 기술 스택
-
-### Application
 
 | 구분 | 기술 |
 | --- | --- |
@@ -167,7 +154,7 @@
 | Framework | Spring Boot 4.1.0 |
 | Build | Gradle Wrapper 9.5.1 |
 | Web | Spring Web MVC |
-| Persistence | Spring Data JPA |
+| Persistence | Spring Data JPA + 일부 JDBC Repository |
 | Database | MySQL |
 | Authentication | Spring Security + OAuth2 Resource Server + JWT |
 | OAuth | Kakao / Naver |
@@ -175,209 +162,138 @@
 | DB Migration | Flyway |
 | API Docs | springdoc-openapi 3.1.0 / Swagger UI |
 | AI | OpenAI Responses API |
-| Image Storage | Cloudinary |
-| Test | JUnit 5, Mockito, Testcontainers 2.0.5, H2 |
+| Image Storage | Cloudinary HTTP5 2.4.0 |
+| Place Provider | Kakao Local API |
+| Test | JUnit 5, Spring Test, H2, Testcontainers 2.0.5 |
 | CI | GitHub Actions |
 
 ### 주요 설계 원칙
 
-- API 공통 prefix: `/api`
-- 인증된 API는 Bearer Access Token 사용
-- Refresh Token은 서버 관리 쿠키 기반
+- 모든 백엔드 API는 `/api` prefix 사용
+- 보호 API는 `Authorization: Bearer <accessToken>` 사용
+- Refresh Token은 서버 관리 `HttpOnly` Cookie 사용
+- 서버 Session에 로그인 상태를 저장하지 않는 Stateless JWT 구조
 - JPA `ddl-auto=validate`
-- DB 변경은 Flyway migration으로만 관리
-- 서버/JPA 시간 기준은 UTC
-- API 공통 응답·오류 형식 통일
-- AI 처리 실패가 핵심 Rule-Based 결과를 파괴하지 않도록 fallback 유지
-- AI Job은 기능별로 중복 구현하지 않고 공통 기반을 확장
-- UserItem의 `aiJobId`는 생성 흐름 provenance이며 생성 후 변경하지 않음
-- ImageAsset의 `ai_job_id`는 최신 분석 Job 바인딩이므로 UserItem provenance와 별도 의미를 가짐
+- DB 구조 변경은 기존 Migration 수정이 아니라 새 Flyway Migration 추가
+- 서버/JPA/Jackson의 정확한 시각 기준은 UTC
+- 공통 성공·오류 응답 구조 사용
+- AI 기능마다 Job 시스템을 새로 만들지 않고 공통 `/api/ai-jobs` 재사용
+- AI가 실패해도 가능한 기능은 Rule-Based fallback 유지
+- 외부 Provider의 Secret/API Key는 저장소에 커밋하지 않음
 
 ---
 
-## 5. 패키지 구조
-
-현재 `src/main/java/org/likelionhsu/hackathon`의 주요 도메인은 다음과 같습니다.
+## 5. 운영 목표 아키텍처
 
 ```text
-hackathon/
+Browser
+  │
+  │  /api/**
+  ▼
+Vercel Frontend
+  │
+  │  rewrite / proxy
+  ▼
+Gabia Cloud
+Spring Boot Backend
+  │
+  ├── Gabia MySQL
+  ├── OpenAI Responses API
+  ├── Cloudinary
+  ├── Kakao Local API
+  └── Kakao / Naver OAuth
+```
+
+운영 브라우저는 프론트 Origin의 `/api/**`를 호출하고,
+프론트 rewrite/proxy를 통해 백엔드에 전달하는 구조를 기본으로 합니다.
+
+백엔드 코드는 특정 프론트 배포 URL을 하드코딩하지 않고
+`CORS_ALLOWED_ORIGIN`, OAuth redirect 관련 환경변수 등으로 환경별 값을 주입합니다.
+
+---
+
+## 6. 주요 패키지 구조
+
+```text
+src/main/java/org/likelionhsu/hackathon/
 ├─ aijob/             # 공통 AI Job 생성·조회·상태·멱등성
 ├─ auth/              # 일반 인증, JWT, OAuth, 재인증
+├─ careguide/         # 관리 가이드·보관법·캘린더·알림 설정
+├─ cart/              # MCM 구매 후보 장바구니
 ├─ common/            # 공통 설정, 응답, 예외, enum, health
-├─ imageasset/        # 이미지 업로드, Cloudinary, ImageAsset lifecycle/cleanup
-├─ itemanalysis/      # ITEM_ANALYSIS 입력 해시, processor, OpenAI 이미지 분석
+├─ home/              # 홈 화면 집계 Read Model
+├─ imageasset/        # 이미지 업로드, Cloudinary, lifecycle/cleanup
+├─ itemanalysis/      # ITEM_ANALYSIS 및 OpenAI 이미지 분석
+├─ notification/      # 서비스 내부 알림
+├─ place/             # Kakao Local 검색·장소 추천·저장
 ├─ preference/        # 사용자 취향 프로필
 ├─ product/           # MCM 제품 카탈로그 및 import
 ├─ purchaseutility/   # 구매 전 활용 가능성 + AI 설명
-├─ recommendation/    # MCM Rule-Based 제품 추천
-├─ user/              # 마이페이지, 회원 탈퇴
-├─ useritem/          # 마이 아이템 CRUD + 이미지/AI provenance 연계
+├─ recommendation/    # MCM 제품 추천
+├─ styleplan/         # STYLE_PLAN AI + 스타일 플랜 저장
+├─ user/              # 마이페이지·회원 탈퇴
+├─ useritem/          # 마이 아이템·제품 패스포트·이미지 연계
 └─ wishlist/          # 제품 찜
 ```
 
-DB에는 Style Plan / Place 등 이후 기능을 위한 스키마도 일부 존재하지만,
-**현재 Java application package가 존재하는 기능과 실제 API 구현 여부를 구분해서 봐야 합니다.**
+---
+
+## 7. 주요 API 그룹
+
+세부 Request/Response, Validation, Enum 값은 Swagger와
+[`API_CONVENTIONS.md`](./API_CONVENTIONS.md)를 기준으로 확인합니다.
+
+| 영역 | 주요 Endpoint |
+| --- | --- |
+| Health | `GET /api/health` |
+| Auth | `/api/auth/**` |
+| User | `/api/users/me/**` |
+| Preferences | `GET/PUT /api/preferences` |
+| Products | `/api/products/**` |
+| Wishlist | `GET /api/wishlists`, `PUT/DELETE /api/products/{productId}/favorite` |
+| Cart | `GET /api/cart-items`, `PUT/DELETE /api/products/{productId}/cart` |
+| Recommendations | `POST /api/recommendations`, `GET /api/recommendations/{recommendationId}` |
+| My Items | `/api/my-items/**` |
+| Product Passport | `GET /api/my-items/{myItemId}/passport` |
+| Care | `/api/my-items/{myItemId}/care-guide`, `/storage-guide`, `/care-calendar`, `/care-reminder-setting` |
+| ImageAsset | `/api/image-assets/**` |
+| AI Jobs | `POST /api/ai-jobs`, `GET /api/ai-jobs/{jobId}` |
+| Purchase Utility | `GET /api/purchase-utility-analyses/{analysisId}` |
+| Style Plans | `/api/style-plans/**` |
+| Place Search/Save | `/api/places/**` |
+| StylePlan Place Recommendation | `POST /api/style-plans/{stylePlanId}/place-recommendations` |
+| Notifications | `/api/notifications/**` |
+| Home | `GET /api/home` |
+
+### Swagger / OpenAPI
+
+로컬 서버 실행 후:
+
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
 ---
 
-## 6. 주요 API
+## 8. 공통 AI Job
 
-아래는 현재 `main`에 실제 Controller가 존재하는 주요 API 그룹입니다.
+AI 기능은 공통 비동기 Job API를 사용합니다.
 
-### Health
+```http
+POST /api/ai-jobs
+Authorization: Bearer <accessToken>
+Idempotency-Key: <required>
+Content-Type: application/json
+```
 
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| GET | `/api/health` | 서버 상태 확인 |
-
-### Auth
-
-Base path: `/api/auth`
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| POST | `/email-verifications` | 이메일 인증번호 요청 |
-| POST | `/email-verifications/confirm` | 이메일 인증 확인 |
-| GET | `/login-ids/{loginId}/availability` | 로그인 ID 중복 확인 |
-| POST | `/signup` | 일반 회원가입 |
-| POST | `/login` | 일반 로그인 |
-| POST | `/refresh` | Access Token 갱신 |
-| POST | `/logout` | 로그아웃 |
-| GET | `/oauth/{provider}` | Kakao/Naver OAuth 시작 |
-| GET | `/oauth/{provider}/callback` | OAuth callback |
-| POST | `/oauth/signup` | 소셜 신규 사용자 가입 완료 |
-| POST | `/reauthentications` | 비밀번호 기반 재인증 |
-| GET | `/oauth/{provider}/reauthentication` | 소셜 계정 재인증 시작 |
-
-### User
-
-Base path: `/api/users/me`
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| GET | `/api/users/me` | 내 정보 조회 |
-| PATCH | `/api/users/me` | 닉네임·성별 부분 수정 |
-| DELETE | `/api/users/me` | 재인증 확인 후 회원 탈퇴 |
-
-### Preferences
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| GET | `/api/preferences` | 내 취향 프로필 조회 |
-| PUT | `/api/preferences` | 내 취향 프로필 전체 교체 저장 |
-
-### Products
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| GET | `/api/products` | MCM 제품 목록 / 필터 / 정렬 / 페이지네이션 |
-| GET | `/api/products/{productId}` | MCM 제품 상세 |
-
-주요 목록 조건:
-
-- `category`
-- `color`
-- `minPrice`
-- `maxPrice`
-- `page`
-- `size`
-- `sort=createdAt|name|price,asc|desc`
-
-### Wishlist
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| PUT | `/api/products/{productId}/favorite` | 제품 찜 |
-| DELETE | `/api/products/{productId}/favorite` | 제품 찜 해제 |
-| GET | `/api/wishlists` | 찜 목록 조회 |
-
-### Recommendations
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| POST | `/api/recommendations` | Rule-Based MCM 제품 추천 생성 |
-| GET | `/api/recommendations/{recommendationId}` | 추천 결과 상세 조회 |
-
-현재 추천은 **OpenAI 추천이 아니라 서버 Rule-Based 추천**입니다.
-
-### My Items
-
-Base path: `/api/my-items`
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| GET | `/api/my-items` | 목록·검색·필터·정렬 |
-| POST | `/api/my-items` | 마이 아이템 등록 |
-| GET | `/api/my-items/{myItemId}` | 상세 조회 |
-| PATCH | `/api/my-items/{myItemId}` | 부분 수정 |
-| DELETE | `/api/my-items/{myItemId}` | Soft Delete |
-
-목록에서 현재 지원하는 주요 조건:
-
-- 이름·브랜드 `keyword` 검색
-- `category`
-- `color`
-- `page`, `size`
-- `createdAt`, `name`, `purchaseDate`, `nextCareDate` 정렬
-
-> 현재 마이 아이템 **정보 CRUD, 이미지 API, `ITEM_ANALYSIS` provenance 연계까지 구현**되어 있습니다.
-
-#### 마이 아이템 등록 / provenance 정책
-
-- `brandName`은 선택값이며 `null` 저장 가능
-- `aiJobId` 없이 생성하면 일반 수동 등록 흐름
-- `aiJobId`가 있으면 현재 사용자의 **SUCCEEDED `ITEM_ANALYSIS` Job**이어야 함
-- provenance Job은 유효한 64자리 SHA-256 `input_hash`와 파싱 가능한 `result_json`을 가져야 함
-- 생성된 UserItem의 `aiJobId`는 이후 PATCH에서 추가·교체·삭제할 수 없음
-- `material == null`이면 `materialSource == null`
-- `materialSource == AI_ESTIMATED`이면 저장된 ITEM_ANALYSIS 결과의 `material`과 정확히 일치해야 함
-- `materialSource == PRODUCT_DATA`이면 연결 Product의 `material`과 정확히 일치해야 함
-- 사용자가 직접 입력·수정한 소재는 `USER_CONFIRMED` 사용
-- PATCH에서 같은 소재/같은 Product를 다시 보내는 것만으로 provenance가 불필요하게 변경되지 않음
-
-#### My Item Images
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| POST | `/api/image-assets` | JPEG/PNG 한 장을 multipart `file`로 업로드해 TEMPORARY ImageAsset 생성 |
-| DELETE | `/api/image-assets/{imageAssetId}` | 연결 전 TEMPORARY 이미지 폐기 |
-| PUT | `/api/my-items/{myItemId}/images/{imageAssetId}` | TEMPORARY 이미지를 연결하거나 기존 ACTIVE 이미지를 교체 |
-| DELETE | `/api/my-items/{myItemId}/images/{imageAssetId}` | 연결된 ACTIVE 이미지 삭제 |
-
-MVP 이미지 정책:
-
-- 요청 한 번에 이미지 한 장
-- JPEG / PNG만 허용
-- 최대 10MB
-- Cloudinary 저장
-- UserItem 하나에는 최대 1개의 `ACTIVE` 이미지 유지
-- UserItem은 이미지 없이도 생성 가능
-- `TEMPORARY → ACTIVE → DELETE_PENDING → DELETED` lifecycle 사용
-- 24시간이 지난 미연결 TEMPORARY 이미지는 cleanup 대상
-- `PENDING / PROCESSING` AI Job이 사용하는 TEMPORARY 이미지는 **attach·명시적 삭제·TTL 정리에서 보호**
-- Cloudinary 삭제 실패 시 `DELETE_PENDING`을 유지하고 이후 cleanup에서 재시도
-- AI provenance가 있는 UserItem의 **첫 이미지**는 저장된 Job의 `input_hash`와 대상 ImageAsset 해시가 일치해야 함
-- 여기서 “첫 이미지”는 현재 ACTIVE 여부가 아니라 과거 ITEM 이미지 연결 이력이 한 번도 없는 경우를 뜻함
-- DELETED 이미지도 `user_item_id` 이력을 유지하므로 삭제 후 새 이미지는 “첫 이미지”가 아니라 교체로 취급
-- ImageAsset의 최신 `ai_job_id`가 다른 Job으로 바뀌어도 UserItem의 고정 provenance Job `input_hash`를 기준으로 검증
-
-### AI Jobs
-
-Base path: `/api/ai-jobs`
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| POST | `/api/ai-jobs` | AI 작업 멱등 생성 |
-| GET | `/api/ai-jobs/{jobId}` | AI 작업 상태·결과 조회 |
-
-현재 외부에서 생성 가능한 타입:
+현재 지원 타입:
 
 ```text
 PURCHASE_UTILITY
 ITEM_ANALYSIS
+STYLE_PLAN
 ```
 
-AI Job 상태:
+상태:
 
 ```text
 PENDING
@@ -386,261 +302,292 @@ SUCCEEDED
 FAILED
 ```
 
-`ITEM_ANALYSIS` 요청 예시:
-
-```json
-{
-  "type": "ITEM_ANALYSIS",
-  "context": {
-    "imageAssetId": "51"
-  }
-}
-```
-
-요청에는 `Idempotency-Key` 헤더가 필요하며, 성공한 `ITEM_ANALYSIS` Job은 이후 UserItem 등록 provenance와 첫 이미지 검증에 사용되는 `input_hash` / `result_json`을 보존합니다.
-
-### Purchase Utility
-
-| Method | Endpoint | 설명 |
-| --- | --- | --- |
-| GET | `/api/purchase-utility-analyses/{analysisId}` | 구매 활용성 분석 상세 조회 |
-
-구매 활용성 분석 생성은 현재 공통 AI Job의 `PURCHASE_UTILITY` 작업 흐름과 연결됩니다.
-
----
-
-## 7. 구매 활용성 분석
-
-구매 활용성 기능은 **Rule-Based 핵심 분석 + 선택적 AI 설명** 구조입니다.
+기본 흐름:
 
 ```text
-제품 구매 활용성 요청
+POST /api/ai-jobs
         │
         ▼
-공통 AI Job 생성
+      jobId
         │
         ▼
-Rule-Based 활용성 분석
+GET /api/ai-jobs/{jobId}
         │
-        ├─ 정보 부족
-        │    └─ OpenAI 호출 없이 결과 종료
+        ├── PENDING / PROCESSING → polling
         │
-        └─ 분석 가능
-             │
-             ▼
-      deterministic input_hash
-             │
-             ▼
-      최근 24시간 cache 조회
-             │
-        ┌────┴────┐
-        │         │
-    cache hit   cache miss
-        │         │
-        │         ▼
-        │    OpenAI Responses API
-        │         │
-        └────┬────┘
-             ▼
-       분석 결과 최종화
+        ├── SUCCEEDED → result 사용
+        └── FAILED → error와 기능별 fallback 확인
 ```
 
-### Rule-Based 분석 요소
+### OpenAI 설정
 
-- 사용자 취향 적합도
-- 보유 마이 아이템과의 조합 가능성
-- 계절 적합성
-- 카테고리 조합성
-- 호환 가능한 보유 아이템
-- 소재 기반 관리 난이도
+현재 세 AI 기능은 동일한 환경변수를 사용합니다.
 
-### AI 설명 정책
+```env
+OPENAI_API_KEY=change-me
+OPENAI_MODEL=gpt-5.6-luna
+```
 
-- Rule-Based 계산 사실만 AI 입력으로 사용
-- Structured Output:
-  ```json
-  {
-    "summary": "..."
-  }
-  ```
-- 동일 semantic input의 최근 24시간 성공 결과 재사용
-- timeout / 통신 / 일부 provider 오류 / 잘못된 구조화 응답만 최대 1회 재시도
-- 최종 AI 실패 시 Rule-Based 분석은 그대로 유지
+`OPENAI_API_KEY`가 없는 환경에서는 OpenAI Adapter가 활성화되지 않으며,
+기능별 정책에 따라 Rule-Based 결과 또는 실패 상태를 사용합니다.
+
+실제 API Key는 `.env.example`, README, GitHub Issue/PR 등에 기록하지 않습니다.
 
 ---
 
-## 8. 공통 AI Job
+## 9. 이미지 업로드 / ITEM_ANALYSIS
 
-AI Job은 특정 AI 기능 하나에 종속된 테이블/API가 아니라,
-앞으로 여러 AI 기능에서 재사용하기 위한 **공통 비동기 작업 관리 기반**입니다.
+### 이미지 업로드
 
-공통으로 담당하는 것:
+```http
+POST /api/image-assets
+Content-Type: multipart/form-data
+```
 
-- Job ID 발급
-- 사용자별 소유권
-- `PENDING / PROCESSING / SUCCEEDED / FAILED`
-- `Idempotency-Key`
-- `request_hash`
-- model / prompt version 기록
-- `input_hash`
-- `result_json`
-- retry count
-- 오류 상태
-- stale timeout
-- 결과 조회
+현재 주요 계약:
 
-새로운 AI 기능을 붙일 때는 공통 AI Job 전체를 다시 만드는 대신 다음을 확장합니다.
+- multipart part 이름: `file`
+- JPEG / PNG
+- `image/jpeg` 또는 `image/png`
+- 실제 binary 형식과 Content-Type 일치 검증
+- 최대 10MB
+- 인증된 사용자만 사용
+- Cloudinary 저장
+
+ImageAsset lifecycle:
 
 ```text
-공통 AI Job
-├─ PURCHASE_UTILITY  ← 현재 실제 연결 완료
-├─ ITEM_ANALYSIS     ← 현재 실제 연결 완료 + UserItem provenance 연계 완료
-└─ STYLE_PLAN        ← 향후 구현 필요
+TEMPORARY
+   │
+   ▼
+ACTIVE
+   │
+   ▼
+DELETE_PENDING
+   │
+   ▼
+DELETED
 ```
 
-기능별로 별도 구현이 필요한 부분은 입력 validation, processor, prompt/schema, AI adapter, 결과 저장 방식입니다.
+현재 MVP에서는 UserItem 하나에 ACTIVE ITEM 이미지를 최대 1개 유지합니다.
 
-`ITEM_ANALYSIS`의 경우 UserItem 생성 이후에도 분석 Job의 의미가 필요하므로, UserItem에 저장된 `aiJobId`를 **등록 시점의 고정 provenance**로 사용합니다. ImageAsset의 `ai_job_id`는 동일 이미지의 최신 AI Job으로 재바인딩될 수 있어 두 값의 의미를 동일하게 취급하지 않습니다.
+### ITEM_ANALYSIS 흐름
+
+```text
+이미지 업로드
+  ↓
+ImageAsset(TEMPORARY)
+  ↓
+POST /api/ai-jobs
+type = ITEM_ANALYSIS
+  ↓
+OpenAI 이미지 분석
+  ↓
+brandName / name / category / primaryColor / material
+  ↓
+사용자 확인
+  ↓
+UserItem 등록
+  ↓
+최초 이미지 연결 및 provenance 검증
+```
+
+구매일·구매가격·구매처·메모처럼 이미지에서 신뢰성 있게 판단할 수 없는 값은
+사용자 입력 정보로 관리합니다.
 
 ---
 
-## 9. OpenAI 설정
+## 10. 스마트 착용 추천 / STYLE_PLAN
 
-구매 활용성 AI 설명과 `ITEM_ANALYSIS` 이미지 분석은 OpenAI Responses API를 사용합니다.
+`STYLE_PLAN`은 보유 아이템과 MCM 제품을 조합해 착용 추천 preview를 생성합니다.
 
-### 환경변수
+현재 context 핵심 값:
 
-| 변수 | 필수 여부 | 설명 |
-| --- | --- | --- |
-| `OPENAI_API_KEY` | AI 사용 시 필수 | 값이 있을 때 OpenAI adapter 활성화 |
-| `OPENAI_MODEL` | 선택 | 미지정 시 현재 코드 기본값 `gpt-5.6-luna` |
+```text
+occasion:
+DAILY | DATE | TRAVEL | GATHERING | CEREMONY | OUTDOOR | OTHER
 
-`OPENAI_API_KEY`가 없으면 애플리케이션 전체가 실패하는 것이 아니라
-**OpenAI adapter만 생성되지 않으며**, 구매 활용성의 Rule-Based 분석은 유지되고 `ITEM_ANALYSIS` 작업은 AI 분석을 수행할 수 없습니다.
+styleTags:
+CASUAL | FORMAL | NEAT | GLAMOROUS
 
-> 현재 `.env.example`에는 OpenAI 변수 예시가 아직 추가되어 있지 않습니다.
-> 또한 production 항목에는 과거 Railway 기준 문구가 남아 있습니다.
-> Gabia 실제 배포 전에 `.env.example`과 production 환경설정을 함께 정리하는 것이 좋습니다.
+weatherCondition:
+SUNNY | CLOUDY | RAINY | SNOWY | HOT | COLD | WINDY | INDOOR | OTHER
+
+language:
+ko
+```
+
+AI 생성 성공 시 `generationType=AI`,
+AI를 사용할 수 없거나 생성에 실패해 규칙 기반 결과를 사용하는 경우
+`generationType=RULE_BASED`로 구분할 수 있습니다.
+
+AI Job 결과는 자동 저장되지 않습니다.
+사용자가 preview를 확정한 뒤 `/api/style-plans`로 저장합니다.
 
 ---
 
-## 10. DB / Flyway
+## 11. 장소 검색·추천
 
-현재 `main`의 최신 Flyway migration은 **V16**입니다.
+장소 기능은 Kakao Local API를 사용합니다.
 
-| Version | 역할 |
+주요 특징:
+
+- 장소 검색
+- 장소 결과 DB materialization
+- 사용자 저장 장소
+- StylePlan occasion 기반 추천
+- 카테고리 적합도와 거리 적합도를 이용한 Rule-Based ranking
+- 추천 자체에는 OpenAI를 사용하지 않음
+
+```http
+POST /api/style-plans/{stylePlanId}/place-recommendations
+```
+
+현재 추천 결과는 최대 3개이며, 해당 StylePlan의 기존 추천 장소 연결을 교체합니다.
+
+---
+
+## 12. 맞춤 관리와 알림
+
+관리 기능은 `UserItem.material`, `purchaseDate`와
+서버의 관리 정책 리소스를 기반으로 계산합니다.
+
+주요 기능:
+
+- 관리 가이드
+- 보관법
+- 월별 관리 캘린더
+- 아이템별 관리 알림 ON/OFF
+- 예정일 도래 시 `CARE_REMINDER`
+- 서비스 내부 알림 목록 및 읽음 상태 관리
+
+Scheduler는 환경 설정으로 활성화하며 기본 설정값과 운영 설정이 다를 수 있습니다.
+
+---
+
+## 13. Database / Flyway
+
+현재 DB Migration은 **V1 ~ V20**까지 존재합니다.
+
+최근 Migration:
+
+| Version | 내용 |
 | --- | --- |
-| V1 | 사용자·일반 인증 기반 |
-| V2 | AI Job 테이블 |
-| V3 | 제품 카탈로그 |
-| V4 | 취향 프로필·찜 |
-| V5 | 마이 아이템·이미지 |
-| V6 | 착용/관리 기록 초기 스키마 |
-| V7 | 제품 추천 |
-| V8 | 스타일 플랜·장소 DB 기반 |
-| V9 | Product Tag 구조 정리 |
-| V10 | Product Tag 기준 데이터 |
-| V11 | User Item 관리 스키마 단순화 |
-| V12 | Purchase Utility 중복 점수 컬럼 정리 |
-| V13 | 계정 재인증 토큰 |
-| V14 | Purchase Utility 관리 난이도 |
-| V15 | 공통 AI Job request identity |
-| V16 | `user_items.brand_name` nullable 전환 |
+| V16 | UserItem `brandName` nullable 허용 |
+| V17 | UserItem 구매 메타데이터 추가 |
+| V18 | 관리 알림 설정·Notification 테이블 |
+| V19 | Cart Items 테이블 |
+| V20 | Home 조회 인덱스 |
 
-V16:
+원칙:
 
-```sql
-ALTER TABLE user_items
-    MODIFY COLUMN brand_name VARCHAR(100) NULL DEFAULT NULL;
+```text
+이미 적용된 V1~V20 수정 금지
+        ↓
+추가 DB 변경 필요
+        ↓
+V21+ 신규 Migration 작성
 ```
 
-### Migration 규칙
+로컬/운영 모두 JPA schema 자동 변경이 아니라:
 
-- 이미 공유·커밋된 기존 migration 파일은 수정하지 않습니다.
-- 스키마 변경은 항상 다음 버전 migration을 추가합니다.
-- Hibernate는 `ddl-auto=validate`로 실제 스키마와 Entity 불일치를 검증합니다.
-- MySQL 기반 migration은 Testcontainers integration test로 검증합니다.
+```properties
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+를 사용합니다.
 
 ---
 
-## 11. 로컬 실행
+## 14. MCM 제품 샘플 데이터
 
-### 요구사항
+제품 데이터:
+
+```text
+src/main/resources/data/mcm-products.json
+```
+
+현재 MCM 샘플 제품 60개를 기준으로 Importer/Validator가 구성되어 있습니다.
+
+Importer는 기본 비활성화입니다.
+
+```env
+APP_PRODUCT_IMPORT_ENABLED=false
+```
+
+제품 적재가 필요한 환경에서만 명시적으로 활성화합니다.
+
+```env
+APP_PRODUCT_IMPORT_ENABLED=true
+```
+
+운영 DB에서 활성화 여부를 변경하기 전에 현재 적재 상태와 배포 절차를 확인합니다.
+
+---
+
+## 15. 로컬 실행
+
+### 요구 환경
 
 - Java 21
 - MySQL
-- Docker Desktop
-  - 전체 integration test / Testcontainers 실행 시 필요
+- Docker Desktop — `integrationTest`, `clean check`의 Testcontainers 실행 시 필요
 - Git
 
-Gradle은 별도 설치 대신 repository의 wrapper를 사용합니다.
+### 1) 저장소 준비
 
-### 1) MySQL 준비
-
-기본 local 설정:
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/hackathon_db?serverTimezone=UTC&characterEncoding=UTF-8
-spring.datasource.username=${DB_USERNAME:hackathon}
-spring.datasource.password=${DB_PASSWORD}
+```bash
+git clone https://github.com/pro660/Hackathon_BE.git
+cd Hackathon_BE
 ```
 
-따라서 로컬 MySQL에 `hackathon_db`를 준비하고 환경변수를 설정합니다.
+### 2) 로컬 MySQL 준비
 
-PowerShell 예시:
+기본 로컬 설정은 다음 값을 사용합니다.
 
-```powershell
-$env:DB_USERNAME="hackathon"
-$env:DB_PASSWORD="your-password"
+```text
+host: localhost
+port: 3306
+database: hackathon_db
+username: hackathon
 ```
 
-### 2) 인증 관련 환경변수
+팀원 환경에 따라 환경변수로 변경할 수 있습니다.
 
-개발 환경에서는 일부 기본값이 있지만 팀 단위 테스트에서는 명시적인 값을 권장합니다.
+### 3) 환경변수 설정
 
-```powershell
-$env:JWT_SECRET="replace-with-at-least-32-random-characters"
-$env:CORS_ALLOWED_ORIGIN="http://localhost:3000"
+저장소의 `.env.example`을 변수 목록 참고용으로 사용합니다.
+
+최소 로컬 예:
+
+```env
+SPRING_PROFILES_ACTIVE=local
+DB_USERNAME=hackathon
+DB_PASSWORD=<local-db-password>
+CORS_ALLOWED_ORIGIN=http://localhost:3000
+JWT_SECRET=<local-development-secret>
 ```
 
-Kakao / Naver OAuth를 사용할 경우:
+외부 기능을 사용할 경우 필요한 값:
 
-```powershell
-$env:KAKAO_CLIENT_ID="..."
-$env:KAKAO_CLIENT_SECRET="..."
-$env:NAVER_CLIENT_ID="..."
-$env:NAVER_CLIENT_SECRET="..."
+```env
+OPENAI_API_KEY=<secret>
+OPENAI_MODEL=gpt-5.6-luna
+
+CLOUDINARY_CLOUD_NAME=<value>
+CLOUDINARY_API_KEY=<value>
+CLOUDINARY_API_SECRET=<secret>
+
+KAKAO_LOCAL_REST_API_KEY=<secret>
 ```
 
-OpenAI 기능을 실제 호출하려면:
+Kakao/Naver 소셜 로그인을 사용할 경우 해당 OAuth 환경변수도 설정합니다.
 
-```powershell
-$env:OPENAI_API_KEY="..."
-$env:OPENAI_MODEL="gpt-5.6-luna"
-```
+> 실제 Secret을 Git에 커밋하지 마세요.
 
-마이 아이템 이미지를 실제 Cloudinary에 업로드하려면:
+### 4) 실행
 
-```powershell
-$env:CLOUDINARY_CLOUD_NAME="..."
-$env:CLOUDINARY_API_KEY="..."
-$env:CLOUDINARY_API_SECRET="..."
-```
-
-이미지 자동 정리는 local에서 기본 비활성화되고 production profile에서는 기본 활성화됩니다.
-필요하면 `IMAGE_ASSET_CLEANUP_ENABLED`로 명시적으로 제어할 수 있습니다.
-
-### 3) 선택: MCM 제품 데이터 import
-
-```powershell
-$env:APP_PRODUCT_IMPORT_ENABLED="true"
-```
-
-제품 import가 필요하지 않은 실행에서는 기본값 `false`를 사용할 수 있습니다.
-
-### 4) 서버 실행
-
-Windows:
+Windows PowerShell:
 
 ```powershell
 .\gradlew.bat bootRun
@@ -652,168 +599,122 @@ macOS / Linux:
 ./gradlew bootRun
 ```
 
-기본 local profile이 적용되며 서버는 기본적으로 `8080` 포트를 사용합니다.
-
-### 5) Health 확인
-
-```http
-GET http://localhost:8080/api/health
-```
-
-예상 응답의 핵심 값:
-
-```json
-{
-  "data": {
-    "status": "ok",
-    "message": "Hackathon backend is running"
-  }
-}
-```
-
----
-
-## 12. Swagger / OpenAPI
-
-애플리케이션 실행 후 springdoc 기본 경로를 사용합니다.
+기본 포트:
 
 ```text
-Swagger UI
-http://localhost:8080/swagger-ui/index.html
-
-OpenAPI JSON
-http://localhost:8080/v3/api-docs
+http://localhost:8080
 ```
-
-OpenAPI에는 Bearer JWT 보안 스키마 `bearerAuth`가 정의되어 있습니다.
 
 ---
 
-## 13. 테스트
-
-테스트는 **빠른 단위 테스트와 MySQL Testcontainers integration test를 분리**합니다.
+## 16. 테스트
 
 ### 일반 테스트
+
+Windows:
 
 ```powershell
 .\gradlew.bat test
 ```
 
-`@Tag("integration")` 테스트는 제외합니다.
+macOS / Linux:
 
-### Integration Test
+```bash
+./gradlew test
+```
 
-Docker가 실행 중이어야 합니다.
+`test`는 `@Tag("integration")` 테스트를 제외합니다.
+
+### MySQL Testcontainers 통합 테스트
+
+Docker Desktop이 실행 중이어야 합니다.
+
+Windows:
 
 ```powershell
 .\gradlew.bat integrationTest
 ```
 
-### 전체 최종 검증
+macOS / Linux:
+
+```bash
+./gradlew integrationTest
+```
+
+### 전체 검증
 
 ```powershell
 .\gradlew.bat clean check
 ```
 
-`check`는 `integrationTest`까지 포함합니다.
+또는:
 
-2026-08-17 PR #40 / `0749c9c` 기준 최종 검증:
-
-```text
-Local
-BUILD SUCCESSFUL in 6m 57s
-
-GitHub Actions
-Backend CI #55: success
+```bash
+./gradlew clean check
 ```
 
-### GitHub Actions
+현재 Gradle 설정에서 `check`는 `integrationTest`에도 의존하므로 Docker가 필요합니다.
 
-`.github/workflows/ci.yml`의 `Backend CI`는 다음 시점에 실행됩니다.
+---
+
+## 17. GitHub Actions CI
+
+CI는 다음 시점에 실행됩니다.
 
 - `main` 대상 Pull Request
 - `main` push
 
-CI 명령:
+환경:
+
+```text
+Ubuntu
+Java 21 Temurin
+Gradle
+timeout 30 minutes
+```
+
+실행 명령:
 
 ```bash
 ./gradlew clean check --no-daemon
 ```
 
-CI timeout은 10분입니다.
+따라서 PR 전에 로컬에서도 가능한 경우 `clean check`로 전체 회귀를 확인합니다.
 
 ---
 
-## 14. 인증 구조 요약
+## 18. 환경변수
 
-현재 인증 구조는 **서버 세션 방식이 아니라 JWT/OAuth2 기반**입니다.
+정확한 변수 목록은 [`.env.example`](./.env.example)을 참고합니다.
 
-### 일반 로그인
+### Local / 공통
 
 ```text
-회원가입/로그인
-    │
-    ├─ Access Token → API 요청의 Bearer JWT
-    │
-    └─ Refresh Token → 서버 관리 Cookie
+SPRING_PROFILES_ACTIVE
+DB_USERNAME
+DB_PASSWORD
+CORS_ALLOWED_ORIGIN
+JWT_ISSUER
+JWT_SECRET
+REFRESH_COOKIE_SECURE
+OAUTH_COOKIE_SECURE
+REAUTH_COOKIE_SECURE
+AUTH_LOG_VERIFICATION_CODE
+FRONTEND_OAUTH_SUCCESS_URL
+FRONTEND_OAUTH_ONBOARDING_URL
+FRONTEND_REAUTHENTICATION_SUCCESS_URL
+NAVER_CLIENT_ID
+NAVER_CLIENT_SECRET
+NAVER_REDIRECT_URI
+KAKAO_CLIENT_ID
+KAKAO_CLIENT_SECRET
+KAKAO_REDIRECT_URI
 ```
 
-### 소셜 로그인
+### Production DB
 
 ```text
-GET /api/auth/oauth/{provider}
-        │
-        ▼
-Kakao / Naver
-        │
-        ▼
-OAuth callback
-        │
-        ├─ 기존 사용자 → 로그인 완료
-        └─ 신규 사용자 → onboarding → 소셜 가입 완료
-```
-
-### 회원 탈퇴
-
-민감 작업인 회원 탈퇴는 최근 재인증을 요구합니다.
-
-- 일반 계정: 비밀번호 재인증
-- 소셜 계정: OAuth 재인증
-- 유효한 재인증 확인 후 사용자 및 소유 데이터 삭제
-
----
-
-## 15. API 공통 규칙
-
-API 공통 규칙의 상세 원본은 [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)를 사용합니다.
-
-주요 원칙:
-
-- JSON body: `camelCase`
-- DB: `snake_case`
-- 시간: UTC ISO-8601
-- 목록 API: 0-base page
-- 공통 성공 응답: `ApiResponse`
-- 공통 오류 응답: `ErrorResponse`
-- 인증 API: Bearer JWT
-- 사용자 소유 리소스는 로그인 사용자 기준으로 조회·검증
-- 세부 상태 코드·오류 코드는 실제 Controller / `ErrorCode` / API 규칙 문서를 우선
-
----
-
-## 16. 배포 상태
-
-### 현재 방향
-
-- 백엔드 운영 배포 대상: **Gabia**
-- 현재 상태: **운영 배포 준비 중**
-- 운영 DB: MySQL 기준
-
-### 현재 설정상 주의점
-
-현재 repository의 `application-prod.properties`와 `.env.example`에는 다음과 같은 변수명이 남아 있습니다.
-
-```text
+PORT
 MYSQLHOST
 MYSQLPORT
 MYSQLDATABASE
@@ -821,173 +722,135 @@ MYSQLUSER
 MYSQLPASSWORD
 ```
 
-또 `.env.example`에는 과거 Railway 기준 설명 문구가 남아 있습니다.
+운영에서는 반드시:
 
-따라서 **Gabia 실제 배포 전에 production 환경변수와 문서 표현을 한 번 정리해야 합니다.**
-README에서는 현재 팀의 실제 배포 방향인 Gabia를 기준으로 관리합니다.
+```env
+SPRING_PROFILES_ACTIVE=prod
+```
 
----
+를 활성화합니다.
 
-## 17. 아직 구현되지 않은 주요 기능
-
-현재 DB 테이블이 존재하는 것과 API가 실제 구현된 것은 구분해야 합니다.
-
-### `ITEM_ANALYSIS` 프론트 연계
-
-`ITEM_ANALYSIS`의 백엔드 분석 및 UserItem 연계 계약은 구현되었습니다.
-
-현재 백엔드 완료 범위:
-
-- JPEG/PNG 업로드 및 실제 이미지 검증
-- Cloudinary 저장
-- ImageAsset lifecycle 및 마이 아이템 연결·교체·삭제
-- 24시간 TEMPORARY cleanup
-- DELETE_PENDING 재시도 및 재시작 복구
-- 회원 탈퇴 시 이미지 저장소 정리 큐 유지
-- 공통 AI Job 기반 `ITEM_ANALYSIS` 요청 validation
-- Item Analysis 비동기 processor
-- OpenAI 이미지 분석 adapter + Structured Output
-- retryable 오류 최대 1회 재시도
-- SUCCEEDED Job provenance의 `input_hash` / `result_json` 검증
-- 마이 아이템 생성 시 `aiJobId` 고정 provenance 저장
-- `AI_ESTIMATED` / `PRODUCT_DATA` 소재 출처 정합성 검증
-- AI 기반 첫 이미지 `input_hash` 일치 검증
-- AI 사용 중 TEMPORARY 이미지 attach 차단
-
-남은 것은 **프론트에서 분석 결과를 보여주고 사용자가 확인·수정한 뒤 `POST /api/my-items`와 최초 이미지 연결 API를 실제 화면 흐름으로 이어 붙이고 E2E 확인하는 작업**입니다.
-
-### 제품 패스포트 / 활용도
-
-아직 상위 서비스/API 구현이 필요합니다.
-
-예정 범위 예:
-
-- 사용/착용 이력
-- 제품 활용도 집계
-- 다시 활용할 제품 안내
-- 제품 단위 활동/관리 정보 표시
-
-### 스마트 착용 / 스타일 플랜
-
-V8 DB 기반은 존재하지만 현재 application layer 구현은 완료되지 않았습니다.
-
-### 장소 추천
-
-V8 장소 관련 DB 기반은 있으나 현재 Place Controller / Service는 없습니다.
-
-프로젝트 방향상 장소 추천 구현 시 후보 검색과 백엔드 Rule-Based ranking, 프론트 지도 표시를 분리하는 방향을 사용합니다.
-
----
-
-## 18. 다음 개발 흐름
-
-현재 `main` 기준으로 기반 기능은 상당 부분 구현되었습니다.
-
-다음 작업 후보는 다음과 같습니다.
-
-1. FE의 `ITEM_ANALYSIS` 결과 확인·수정 → 마이 아이템 생성 → 최초 이미지 연결 흐름 통합/E2E 확인
-2. 제품 패스포트 / 착용 기록 / 활용도 분석
-3. 스마트 착용 추천 및 스타일 플랜
-4. 장소 추천
-5. Gabia 운영 배포 및 프론트엔드 실서버 연동
-6. `.env.example` / production 설정 최신화
-
-실제 작업 순서는 해커톤 일정과 FE 연동 우선순위에 따라 조정합니다.
-
----
-
-## 19. Git 협업 규칙
-
-### 기본 흐름
+### Product / Image / Place / AI
 
 ```text
-main 최신화
-  ↓
-기능 브랜치 생성
-  ↓
-기능 구현 + 관련 테스트
-  ↓
-push
-  ↓
-Pull Request
-  ↓
-검증
-  ↓
-Squash and merge
+APP_PRODUCT_IMPORT_ENABLED
+
+CLOUDINARY_CLOUD_NAME
+CLOUDINARY_API_KEY
+CLOUDINARY_API_SECRET
+IMAGE_ASSET_CLEANUP_ENABLED
+
+KAKAO_LOCAL_REST_API_KEY
+
+OPENAI_API_KEY
+OPENAI_MODEL
 ```
 
-브랜치 예:
-
-```text
-feat/item-analysis
-fix/ai-job-timeout
-docs/readme-current-status
-```
-
-커밋 / PR prefix:
-
-```text
-[FEAT]
-[FIX]
-[DOCS]
-[CHORE]
-[TEST]
-[REFACTOR]
-```
-
-### 작업 전
-
-```powershell
-git switch main
-git pull --ff-only origin main
-git switch -c feat/<feature-name>
-```
-
-### PR 전 최종 확인
-
-```powershell
-git diff --check
-.\gradlew.bat clean check
-```
-
-작업 중 생성한 개인 백업 파일, 임시 patch, 로컬 문서는 `git add .`로 한꺼번에 추가하지 않고 실제 반영할 파일만 명시적으로 stage합니다.
+실제 운영 비밀값은 Gabia의 배포 환경 또는 별도 Secret 관리 영역에서 주입하며
+저장소 파일에 직접 기록하지 않습니다.
 
 ---
 
-## 20. 현재 기준 요약
+## 19. 운영 배포 시 확인 사항
+
+현재 프로젝트의 운영 목표는 다음 구성입니다.
 
 ```text
-서비스           입을래?
-Backend          Java 21 / Spring Boot 4.1.0
-DB               MySQL + Flyway V1~V16
-Auth             JWT + Refresh Cookie + Kakao/Naver OAuth
-Catalog          MCM 제품 조회/필터/정렬
-Preference       취향 프로필 조회/저장
-Wishlist         제품 찜
-Recommendation   Rule-Based 제품 추천
-My Item          CRUD + 검색/필터/정렬 + ImageAsset + ITEM_ANALYSIS provenance 연계
-Purchase Utility Rule-Based 분석 + 관리 난이도
-AI Job           공통 비동기 작업 기반
-OpenAI           Purchase Utility 설명 + ITEM_ANALYSIS 이미지 분석 연결 완료
-Testing          Unit + Testcontainers Integration
-CI               GitHub Actions clean check
-Deployment       Gabia 준비 중
-main             0749c9c / PR #40
+Frontend  → Vercel
+Backend   → Gabia Cloud
+Database  → Gabia MySQL
 ```
+
+백엔드 운영 환경의 주요 확인 항목:
+
+- Java 21
+- `SPRING_PROFILES_ACTIVE=prod`
+- Gabia MySQL 접속 정보
+- `JWT_SECRET`
+- 실제 Vercel Origin을 사용한 `CORS_ALLOWED_ORIGIN`
+- OAuth Client ID / Secret / Redirect URI
+- OpenAI 환경변수
+- Cloudinary 환경변수
+- Kakao Local REST API Key
+- 외부 Provider로의 HTTPS outbound 통신
+- Flyway V1~V20 적용
+- JPA `ddl-auto=validate`
+
+운영 배포 주소나 실제 Secret 값은 README에 기록하지 않습니다.
 
 ---
 
-## 문서 유지 원칙
+## 20. 현재 프로젝트 단계
 
-README의 상태 정보는 구현 진행에 따라 쉽게 오래될 수 있습니다.
+현재 `main`에는 MVP 백엔드의 주요 도메인 기능이 대부분 구현되어 있습니다.
 
-따라서 기능 상태를 판단할 때는 다음 순서를 권장합니다.
+### 구현 완료 중심 영역
 
-1. 현재 GitHub `main`
-2. Flyway migration / DB constraint
-3. 실제 Controller / Service / Repository
-4. `API_CONVENTIONS.md`
+```text
+인증
+취향
+MCM 제품
+찜 / 장바구니
+제품 추천
+마이 아이템
+이미지 / ITEM_ANALYSIS
+구매 활용 가능성
+제품 패스포트
+스마트 착용 추천
+스타일 플랜
+장소 검색·추천·저장
+관리 가이드·알림
+홈 집계
+```
+
+### 이후 통합 단계에서 중점 확인할 영역
+
+```text
+Frontend ↔ Backend 실제 API 연동
+운영 환경변수 / OAuth Redirect / CORS 검증
+Gabia MySQL + Flyway 운영 검증
+OpenAI / Cloudinary / Kakao Local 운영 연동
+전체 사용자 시나리오 E2E
+시연 데이터와 오류/fallback 시나리오 점검
+```
+
+착용/사용 기록 및 이를 기반으로 한 별도 활용도 통계 API는
+현재 구현 완료 영역으로 표시하지 않습니다.
+
+---
+
+## 21. API 계약 우선순위
+
+API 연동 중 문서와 코드가 일시적으로 다를 경우 다음 순서로 확인합니다.
+
+1. 현재 `main`의 Controller / DTO / Service / 설정
+2. 현재 Flyway schema
+3. [`API_CONVENTIONS.md`](./API_CONVENTIONS.md)
+4. Swagger / OpenAPI
 5. README
-6. 과거 설계·인수인계 문서
 
-README에서 **“구현 완료”**라고 표시하려면 실제 `main`에 코드와 필요한 테스트가 반영된 상태여야 합니다.
+README는 프로젝트 전체를 빠르게 이해하기 위한 문서이며,
+필드 단위 계약은 `API_CONVENTIONS.md`와 실제 구현을 기준으로 판단합니다.
+
+---
+
+## 22. 문서 및 개발 변경 원칙
+
+- 실제 Secret/API Key/Password를 Git에 커밋하지 않습니다.
+- 기존 적용 Flyway Migration을 수정하지 않습니다.
+- API 계약 변경 시 프론트엔드 영향 여부를 확인합니다.
+- AI 기능은 기존 공통 AI Job을 재사용합니다.
+- 문서 전용 변경과 기능 코드 변경은 가능한 한 PR 범위를 분리합니다.
+- PR 전 `git diff --check`를 확인합니다.
+- 기능 변경은 관련 테스트와 필요 시 `clean check`까지 검증합니다.
+
+---
+
+## 23. 관련 문서
+
+- [`API_CONVENTIONS.md`](./API_CONVENTIONS.md) — API 공통 계약 및 프론트 연동 규칙
+- [`.env.example`](./.env.example) — 필요한 환경변수 이름과 안전한 예시
+- [`build.gradle`](./build.gradle) — 의존성 및 test/integrationTest/check 구성
+- [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — Backend CI
+- [`src/main/resources/db/migration`](./src/main/resources/db/migration) — Flyway Migration
+- [`src/main/resources/data/mcm-products.json`](./src/main/resources/data/mcm-products.json) — MCM 제품 데이터
