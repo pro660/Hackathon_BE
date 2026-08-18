@@ -1,245 +1,305 @@
 # 입을래? API 공통 규칙
 
 > 프론트엔드와 백엔드가 분리된 저장소에서 동일한 기준으로 API를 설계하고 연동하기 위한 팀 공통 규칙이다.
-
-## 1. 핵심 합의 사항
-
-| 항목            | 팀 규칙                                                                    |
-| --------------- | -------------------------------------------------------------------------- |
-| API 공통 경로   | 도메인 말단에 `/api`를 사용하며 `v1,v2,MVP`와 같은 경로는 사용하지 않는다. |
-| 환경별 주소     | 소스 코드에 직접 작성하지 않고 환경변수로 관리한다.                        |
-| 요청 경로       | 환경변수에 `/api`를 포함하고, 개별 요청에는 리소스 경로만 작성한다.        |
-| 성공 응답       | `{ "success": true, "data": ... }`                                         |
-| 오류 응답       | `{ "success": false, "error": { "code", "message" } }`                     |
-| Validation 오류 | `error.fields` 배열에 필드별 오류를 담는다.                                |
-| 필드 포함 규칙  | 성공 응답에는 `error`를, 오류 응답에는 `data`를 포함하지 않는다.           |
-| 날짜·시간       | ISO 8601 형식을 사용한다.                                                  |
-| 기준 시간대     | 서버·DB·API는 UTC, 화면 표시는 `Asia/Seoul`을 사용한다.                    |
-| Enum            | 영문 대문자 `SNAKE_CASE`를 사용한다.                                       |
-| 응답 값 없음    | 단일 값은 `null`, 목록은 `[]`을 반환한다.                                  |
-| ID              | API에서는 문자열로 전달한다.                                               |
-| ID 필드명        | `productId`, `myItemId`처럼 대상 리소스 이름을 포함한다.                    |
-| 이름 표기        | Endpoint는 `kebab-case`, API 필드는 `lowerCamelCase`, DB 컬럼은 `snake_case`를 사용한다. |
-| 원화 금액       | 원 단위 정수로 전달한다.                                                   |
-| 목록 조회       | 계속 증가할 수 있는 목록은 `page`, `size`, `sort` 기반 페이지네이션을 사용하고, 작은 고정 목록은 배열로 반환한다. |
+>
+> **현행 검증 기준:** 2026-08-18 / Backend `main` `2554d4f` (PR #48 홈 집계 조회 API 반영)
+>
+> 이 문서는 현재 구현과 앞으로의 API 설계를 함께 안내한다. 문서와 코드가 일시적으로 어긋나는 경우에는 **실제 `main`의 Controller·DTO·공통 응답/예외 코드가 현재 실행 계약**이며, 차이를 발견하면 문서 또는 코드 중 하나를 임의로 추측해서 사용하지 말고 팀 합의를 거쳐 동기화한다.
 
 ---
 
-## 2. API 기본 주소와 `/api` 위치
+## 1. 핵심 합의 사항
 
-### 2.1 기본 주소
+| 항목 | 팀 규칙 |
+| --- | --- |
+| API 공통 경로 | 모든 백엔드 API는 `/api`를 공통 prefix로 사용한다. `/v1`, `/v2`, `/MVP` 같은 버전 경로는 현재 사용하지 않는다. |
+| 운영 호출 구조 | 브라우저는 프론트 Origin의 `/api/**`를 호출하고 프론트 rewrite/proxy를 통해 백엔드로 전달하는 구조를 기본으로 한다. 현재 백엔드 운영 배포 방향은 Gabia이다. |
+| 환경별 주소 | API 주소, 인증 키, 외부 Provider 키 등은 소스 코드에 직접 작성하지 않고 환경변수 또는 배포 설정으로 관리한다. |
+| 인증 | 일반 인증 API는 Bearer Access Token을 사용하고, Refresh Token은 서버 관리 `HttpOnly` Cookie를 사용한다. 서버 Session은 사용하지 않는 Stateless JWT 구조이다. |
+| 성공 응답 | 응답 본문이 있는 일반 성공은 `{ "success": true, "data": ... }` 형식을 사용한다. |
+| 오류 응답 | 일반 요청 실패는 `{ "success": false, "error": { "code", "message" } }` 형식을 사용한다. |
+| Validation 오류 | `error.fields` 배열에 필드별 오류를 담는다. |
+| 204 응답 | `204 No Content`에는 JSON 응답 본문을 보내지 않는다. |
+| Redirect 응답 | OAuth 시작/Callback처럼 Redirect가 목적이면 `302 Found + Location`을 사용하고 `ApiResponse` JSON을 사용하지 않는다. |
+| 날짜·시간 | ISO 8601 형식을 사용한다. 정확한 시각은 UTC `Instant` 기준이다. |
+| 기준 시간대 | 서버·DB·API의 정확한 시각은 UTC, 화면 표시는 프론트에서 `Asia/Seoul`로 변환한다. |
+| Enum | API Enum 값은 영문 대문자 `SNAKE_CASE`를 사용한다. |
+| 응답의 ID | 현재 주요 응답 DTO의 ID는 문자열로 반환한다. |
+| 요청의 ID | 기존 구현에는 문자열 ID와 숫자 ID 요청 DTO가 모두 있으므로 각 Endpoint 계약을 따른다. 표현 변경은 Breaking Change로 취급한다. |
+| 이름 표기 | Endpoint는 `kebab-case`, JSON/Query/Path 이름은 `lowerCamelCase`, DB 컬럼은 `snake_case`를 사용한다. |
+| 원화 금액 | 원 단위 정수 JSON number로 전달한다. |
+| 점수 | 표시용 문자열이 아니라 JSON number로 전달한다. 정수뿐 아니라 `BigDecimal` 기반 소수 점수도 허용한다. |
+| 목록 조회 | 계속 증가할 수 있는 목록은 `page`, `size`, `sort` 기반 페이지네이션을 사용하고, 작고 제한된 목록은 배열로 반환할 수 있다. |
+| 상태 변경 | 찜·장바구니·장소 저장처럼 최종 상태를 설정하는 API는 가능한 한 멱등적으로 설계한다. |
+| PATCH 충돌 방지 | 낙관적 락을 사용하는 리소스는 조회 응답의 `version`을 PATCH 요청에 함께 보내고 충돌 시 `409`를 반환한다. |
+| 비동기 AI | AI 기능별 Job 시스템을 새로 만들지 않고 공통 `/api/ai-jobs` 계약을 사용한다. |
 
-API의 공통 경로는 `/api`로 통일한다. 별도의 버전 경로인 `/v1`은 붙이지 않는다.
+---
+
+## 2. API 기본 주소와 프론트 호출 방식
+
+### 2.1 `/api` 위치
+
+API 공통 prefix는 `/api`이다.
 
 ```text
-로컬 개발: http://localhost:8080/api
-운영 환경: https://프론트도메인/api
+로컬 백엔드: http://localhost:8080/api
+운영 브라우저: https://프론트도메인/api
 ```
 
-운영 브라우저는 Vercel 프론트 도메인의 `/api/**`를 호출하고 Vercel이 요청을 Railway 백엔드로 rewrite한다. 브라우저가 Railway 백엔드 주소를 직접 호출하지 않는다.
+운영 브라우저 호출 구조는 다음을 기본으로 한다.
 
-운영 환경의 API 기본 주소는 다음처럼 상대 경로로 둔다.
+```text
+Browser
+→ Frontend Origin /api/**
+→ Frontend rewrite/proxy
+→ Backend
+```
+
+현재 백엔드 운영 배포 방향은 Gabia이지만, 프론트 코드가 특정 백엔드 업체의 주소에 직접 종속되지 않도록 `/api` 상대 경로 사용을 기본으로 한다.
+
+운영 환경 예시:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=/api
 ```
 
-브라우저가 백엔드 서버를 직접 호출하는 로컬 개발 환경의 예시는 다음과 같다.
+로컬에서 브라우저가 백엔드를 직접 호출하는 예시:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
 ```
 
-`NEXT_PUBLIC_`이 붙은 환경변수는 브라우저에 공개될 수 있다. API 기본 주소는 공개되어도 되는 값이지만, API 키나 비밀번호 같은 비밀 값은 절대 넣지 않는다.
+환경변수에 이미 `/api`가 포함되어 있으므로 개별 요청에서 `/api`를 중복해서 붙이지 않는다.
+
+```ts
+// 권장
+api.get("/products");
+
+// 비권장: baseURL에 /api가 이미 있다면 중복될 수 있음
+api.get("/api/products");
+```
 
 ### 2.2 환경변수 파일 관리
 
-- 실제 값은 `.env.local` 등 배포 환경에 맞는 파일이나 배포 서비스 설정에 저장한다.
-- 실제 환경변수 파일은 Git에 올리지 않는다.
-- 변수 이름과 예시만 담은 `.env.example`은 저장소에 올린다.
-
-`.env.example` 예시:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
-```
+- 실제 비밀 값은 `.env.local`, 배포 서비스 Secret/Environment 설정 등 Git에 올라가지 않는 위치에 저장한다.
+- `.env.example`에는 변수 이름과 안전한 예시만 저장한다.
+- `NEXT_PUBLIC_`처럼 브라우저에 노출되는 변수에는 API Key, Client Secret, JWT Secret, Cloudinary Secret 등을 넣지 않는다.
+- 백엔드 외부 Provider Key는 서버 환경변수로만 관리한다.
 
 ### 2.3 Axios 공통 인스턴스
+
+공통 Axios 인스턴스에서 모든 요청의 `Content-Type`을 `application/json`으로 강제하지 않는다.
+
+현재 프로젝트에는 JSON 요청뿐 아니라 `multipart/form-data` 이미지 업로드가 존재하므로 브라우저/Axios가 요청 데이터에 맞는 `Content-Type`과 multipart boundary를 설정하도록 둔다.
 
 ```ts
 import axios from "axios";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+});
+```
+
+JSON 요청:
+
+```ts
+api.post("/auth/login", {
+  loginId: "user1234",
+  password: "example-password",
+});
+```
+
+이미지 업로드:
+
+```ts
+const formData = new FormData();
+formData.append("file", file);
+
+api.post("/image-assets", formData);
+```
+
+`FormData` 요청에서 브라우저가 설정해야 할 multipart boundary를 프론트가 임의 문자열로 고정하지 않는다.
+
+### 2.4 Bearer Access Token
+
+일반 보호 API는 Access Token을 `Authorization` Header로 전달한다.
+
+```http
+Authorization: Bearer <accessToken>
+```
+
+예:
+
+```ts
+api.get("/products", {
   headers: {
-    "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`,
   },
 });
 ```
 
-환경변수에 이미 `/api`가 포함되어 있으므로 개별 요청에는 `/api`를 다시 붙이지 않는다.
+Access Token을 어떤 프론트 상태 저장 방식으로 보관할지는 프론트 구현 정책으로 관리하되, API 계약상 전달 방식은 Bearer Header이다.
 
-```ts
-// 권장: GET http://localhost:8080/api/products
-api.get("/products");
+### 2.5 Refresh Cookie와 Cookie 요청
 
-// 금지: /api가 중복될 수 있음
-api.get("/api/products");
-```
+Refresh Token은 서버가 Cookie로 설정하고 읽는다.
 
-### 2.4 Cookie 요청과 Origin 보안 규칙
-
-운영 환경에서는 Vercel의 `/api/**` rewrite를 통해 브라우저 기준 동일 Origin 요청을 사용한다.
+현재 Refresh Cookie의 핵심 정책은 다음과 같다.
 
 ```text
-Browser
-→ Vercel /api/**
-→ Railway Backend
+HttpOnly: true
+SameSite: Lax
+Path: /api/auth
+Secure: 환경별 설정, 운영 true
 ```
 
-따라서 운영 Fetch 요청은 기본 `credentials: "same-origin"`을 사용할 수 있다.
+프론트 JavaScript가 Refresh Token 문자열을 직접 읽어서 Header에 복사하는 방식은 사용하지 않는다.
 
-로컬에서 프론트 `http://localhost:3000`과 백엔드 `http://localhost:8080`을 직접 연결할 때 Cookie가 필요한 요청은 다음과 같이 처리한다.
+운영에서 브라우저 기준 동일 Origin `/api/**` 호출을 사용하면 기본 Cookie 동작을 활용할 수 있다.
+
+로컬에서 프론트 `http://localhost:3000`과 백엔드 `http://localhost:8080`을 직접 연결하는 cross-origin Cookie 요청은 credential을 포함한다.
+
+Fetch 예시:
 
 ```js
 fetch("http://localhost:8080/api/auth/refresh", {
   method: "POST",
-  credentials: "include"
+  credentials: "include",
 });
 ```
 
-Axios를 사용하면 Cookie가 필요한 로컬 cross-origin 요청에 `withCredentials: true`를 설정한다.
+Axios 예시:
 
-백엔드는 로컬 cross-origin Cookie 요청에 다음 원칙을 적용한다.
-
-```text
-allowCredentials(true)
-정확한 CORS 허용 Origin 사용
-Wildcard Origin 사용 금지
+```ts
+api.post("/auth/refresh", undefined, {
+  withCredentials: true,
+});
 ```
 
-**CORS 허용 Origin과 인증 POST의 신뢰 Origin 검증은 별개의 설정이다.**
+### 2.6 CORS와 Trusted Origin
 
-Swagger UI를 포함한 로컬 신뢰 Origin을 어떤 환경변수 구조로 관리할지는 이 문서에서 확정하지 않고 7번 실행 환경·환경변수 세팅 보완 단계에서 결정한다.
+백엔드 CORS는 현재 `/api/**`에 대해 정확한 허용 Origin을 사용하고 `allowCredentials(true)`를 적용한다.
+
+```text
+GET
+POST
+PUT
+PATCH
+DELETE
+OPTIONS
+```
+
+Wildcard Origin과 credential 요청을 조합하지 않는다.
+
+현재 허용 Origin 설정은 다음 백엔드 설정을 사용한다.
+
+```properties
+app.cors.allowed-origin=${CORS_ALLOWED_ORIGIN:http://localhost:3000}
+```
+
+**CORS 허용 Origin과 인증 POST의 Trusted Origin 검증은 목적이 다르다.**
+
+- CORS: 브라우저의 cross-origin 접근 허용 정책
+- Trusted Origin: 인증/민감 Cookie 변경 POST를 서버에서 추가 검증하는 정책
+
+현재 `TrustedOriginFilter`도 `app.cors.allowed-origin`의 값을 기준으로 요청의 `Origin` Header가 정확히 일치하는지 확인한다.
 
 ---
 
 ## 3. URL 및 요청 작성 규칙
 
-- 리소스 이름은 복수 명사와 소문자 케밥 표기법을 사용한다.
-- 동작을 URL에 넣기보다 HTTP Method로 표현한다.
-- 경로의 ID 이름은 어떤 리소스의 ID인지 알 수 있게 작성한다.
+### 3.1 기본 REST 규칙
+
+- 리소스 이름은 가능한 한 복수 명사와 소문자 `kebab-case`를 사용한다.
+- 일반 CRUD는 동사를 URL에 중복해서 쓰지 않는다.
 - 검색·필터·정렬·페이지 정보는 Query Parameter로 전달한다.
+- 부모에 종속된 리소스는 필요한 경우 하위 리소스로 표현한다.
 
 ```http
 GET    /api/products
 GET    /api/products/{productId}
-POST   /api/products
-PATCH  /api/products/{productId}
-DELETE /api/products/{productId}
-
-GET /api/products?page=0&size=20&sort=createdAt,desc
+GET    /api/my-items/{myItemId}
+PATCH  /api/my-items/{myItemId}
+DELETE /api/my-items/{myItemId}
 ```
 
-다음과 같이 동사를 URL에 중복해서 쓰는 방식은 피한다.
+비권장:
 
 ```http
 POST /api/createProduct
 GET  /api/getProducts
+POST /api/toggleFavorite
 ```
 
-### 3.0 인증 Endpoint 예외 및 Origin 검증
+### 3.2 인증 Endpoint 예외
 
-`/api/auth/**` 인증 흐름은 일반 CRUD와 달리 인증 동작의 의미가 중요한 경우 필요한 동작형 Endpoint를 허용한다.
+`/api/auth/**`는 일반 CRUD와 달리 인증 흐름 자체가 동작의 의미이므로 필요한 동작형 Endpoint를 허용한다.
 
-대표적인 확정 예외는 다음과 같다.
+현재 주요 예시는 다음과 같다.
 
 ```http
+POST /api/auth/email-verifications
+POST /api/auth/email-verifications/confirm
 POST /api/auth/signup
 POST /api/auth/login
+POST /api/auth/oauth/signup
+POST /api/auth/reauthentications
 POST /api/auth/refresh
 POST /api/auth/logout
-POST /api/auth/email-verifications/confirm
+
+GET /api/auth/oauth/{provider}
+GET /api/auth/oauth/{provider}/callback
+GET /api/auth/oauth/{provider}/reauthentication
 ```
 
-OAuth 흐름의 인증 Endpoint도 같은 예외 범위로 본다.
-
-다음 브라우저 인증 POST는 인증 처리 또는 Cookie 변경 전에 허용된 신뢰 `Origin`인지 검증한다.
+현재 다음 **POST** 요청은 인증 처리 또는 민감 Cookie 변경 전에 Trusted Origin 검증 대상이다.
 
 ```http
 POST /api/auth/signup
 POST /api/auth/login
 POST /api/auth/oauth/signup
+POST /api/auth/reauthentications
 POST /api/auth/refresh
 POST /api/auth/logout
 ```
 
-`Origin`이 누락되거나 `null`이거나 허용 목록과 정확히 일치하지 않으면 다음 오류를 반환한다.
+`Origin`이 누락되거나 `null`이거나 허용 Origin과 정확히 일치하지 않으면:
 
 ```text
 HTTP 403
 ErrorCode: ORIGIN_NOT_ALLOWED
 ```
 
-OAuth Provider Callback은 외부 공급자에서 돌아오는 요청이므로 위 인증 POST Origin 검증 대상에서 제외하고 기존 `oauth_state` 검증을 적용한다.
+OAuth Provider Callback은 외부 공급자에서 돌아오는 요청이므로 위 POST Trusted Origin 검사 대상이 아니며 OAuth `state` 검증을 사용한다.
 
-CORS 허용 Origin과 인증 POST의 신뢰 Origin 검증은 별도 설정이며 구체적인 신뢰 Origin 환경변수 구조는 7번에서 확정한다.
-
-### 3.1 이름 표기 규칙
-
-API와 백엔드 내부에서 사용하는 이름은 다음 기준으로 통일한다.
+### 3.3 이름 표기 규칙
 
 | 대상 | 규칙 | 예시 |
 | --- | --- | --- |
-| Endpoint 경로 | 소문자 `kebab-case`, 가능한 한 복수 명사 | `/products`, `/my-items`, `/style-plans` |
-| Path Variable | `lowerCamelCase` | `{productId}`, `{myItemId}` |
-| Query Parameter | `lowerCamelCase` | `minPrice`, `maxPrice`, `careNeeded` |
-| JSON 요청·응답 필드 | `lowerCamelCase` | `productId`, `purchaseDate`, `imageUrls` |
-| Enum 값 | 영문 대문자 `SNAKE_CASE` | `STREET_CASUAL`, `IN_PROGRESS` |
+| Endpoint 경로 | 소문자 `kebab-case` | `/my-items`, `/style-plans`, `/image-assets` |
+| Path Variable | `lowerCamelCase` | `{productId}`, `{myItemId}`, `{stylePlanId}` |
+| Query Parameter | `lowerCamelCase` | `minPrice`, `maxPrice`, `latitude`, `plannedAt` |
+| JSON 필드 | `lowerCamelCase` | `productId`, `purchaseDate`, `primaryImageUrl` |
+| Enum 값 | 영문 대문자 `SNAKE_CASE` | `PURCHASE_UTILITY`, `IN_PROGRESS`, `CARE_REMINDER` |
 | DB 컬럼 | `snake_case` | `product_id`, `purchase_date`, `created_at` |
+| HTTP Header | 표준/계약 이름 유지 | `Authorization`, `Idempotency-Key` |
 
-예:
+### 3.4 ID 필드명과 자료형
 
-```http
-GET /api/my-items/{myItemId}?careNeeded=true
-```
-
-```json
-{
-  "myItemId": "25",
-  "purchaseDate": "2026-08-07",
-  "purchasePrice": 1250000
-}
-```
-
-Endpoint에서 여러 단어가 필요한 경우 다음처럼 작성한다.
-
-```text
-권장
-/my-items
-/style-plans
-/usage-records
-
-비권장
-/myItems
-/style_plans
-/usageRecords
-```
-
-### 3.2 ID 필드명 규칙
-
-API 요청과 응답에서는 가능한 한 `id`처럼 대상이 불분명한 이름보다 리소스 이름을 포함한 ID 필드명을 사용한다.
+필드명은 가능한 한 대상 리소스를 포함한다.
 
 ```json
 {
   "productId": "123",
   "myItemId": "25",
   "stylePlanId": "51",
-  "placeId": "82"
+  "placeId": "82",
+  "jobId": "99"
 }
 ```
 
-ID 목록은 복수형으로 작성한다.
+ID 목록은 복수형을 사용한다.
 
 ```json
 {
@@ -247,28 +307,45 @@ ID 목록은 복수형으로 작성한다.
 }
 ```
 
-Path Variable도 같은 기준을 사용한다.
+#### 현재 구현의 ID 자료형 계약
 
-```http
-GET /api/products/{productId}
-GET /api/my-items/{myItemId}
-GET /api/style-plans/{stylePlanId}
-GET /api/places/{placeId}
+현재 주요 **응답 DTO**는 DB 숫자 ID를 문자열로 직렬화해 반환하는 방식을 사용한다.
+
+예:
+
+```json
+{
+  "productId": "123",
+  "stylePlanId": "51",
+  "jobId": "99"
+}
 ```
 
-ID의 자료형은 이 문서의 ID 자료형 규칙에 따라 문자열로 전달한다.
+다만 현재 **요청 DTO**에는 두 형태가 공존한다.
 
-### 3.3 요청 필드의 필수·선택 규칙
+1. 문자열 ID를 받는 계약
+    - 예: AI Job `context.productId`, `context.imageAssetId`
+2. JSON number를 받는 기존 write DTO
+    - 예: 일부 마이아이템/스타일 플랜 생성·수정의 `productId`, `myItemId`, `aiJobId`
 
-요청 DTO의 필드는 기능명세서에 따라 필수값과 선택값을 구분한다.
+따라서 프론트는 ID라는 이유만으로 임의 형변환하지 않고 **해당 Endpoint의 Swagger/요청 DTO 계약을 따른다.**
 
-- 필수값은 요청에서 반드시 전달한다.
-- 선택값을 입력하지 않은 경우에는 요청 JSON에서 해당 필드를 생략하는 것을 기본으로 한다.
-- 의미 없는 빈 문자열 `""`, 문자열 `"null"`, 문자열 `"undefined"`를 대신 전달하지 않는다.
-- 선택값에도 `null` 전달을 기본적으로 허용하지 않는다. 값을 명시적으로 삭제해야 하는 기능이 필요한 경우에만 해당 API 계약에서 별도로 정의한다.
-- 배열 선택값에 항목이 없다면 API 계약에 따라 필드를 생략하거나 빈 배열 `[]`을 사용한다. 두 방식을 같은 필드에서 혼용하지 않는다.
+기존 Endpoint의 ID 표현을 문자열↔숫자로 변경하는 것은 Breaking Change이다.
 
-예를 들어 마이아이템 직접 등록에서 제품명과 제품 종류만 필수이고 구매일, 구매 가격, 소재, 색상 등이 선택값이라면 다음처럼 요청한다.
+새 API를 설계할 때는 JavaScript 안전 정수 문제를 피하고 응답과의 일관성을 높이기 위해 문자열 ID를 우선 검토한다.
+
+Path Variable은 URL 문자열이지만 DB 숫자 ID를 사용하는 현재 API에서는 일반적으로 `1` 이상의 정수 형식을 검증한다.
+
+### 3.5 요청 필수·선택 필드
+
+- 필수 필드는 요청에서 반드시 전달한다.
+- 선택 필드를 입력하지 않는 경우 필드 자체를 생략하는 것을 기본으로 한다.
+- 문자열 `"null"`, `"undefined"`를 보내지 않는다.
+- 의미 없는 `""`를 미입력 값 대신 사용하지 않는다.
+- 배열의 빈 상태를 `[]`로 표현할지 필드를 생략할지는 각 Endpoint 계약을 따른다.
+- 필드 누락과 명시적 `null`은 동일하다고 가정하지 않는다.
+
+예:
 
 ```json
 {
@@ -277,95 +354,110 @@ ID의 자료형은 이 문서의 ID 자료형 규칙에 따라 문자열로 전�
 }
 ```
 
-입력하지 않은 선택값을 다음처럼 임의의 빈 값으로 채우지 않는다.
+비권장:
 
 ```json
 {
   "name": "토트백",
   "category": "BAG",
   "material": "",
-  "color": "",
-  "purchaseDate": ""
+  "purchaseDate": "undefined"
 }
 ```
 
-필수값 누락이나 형식 오류는 `400 Bad Request`와 `VALIDATION_ERROR`로 처리한다.
+### 3.6 PATCH 부분 수정과 명시적 `null`
 
-### 3.4 `PATCH` 부분 수정 규칙
+PATCH에서 기본 의미는 다음과 같다.
 
-`PATCH`는 리소스 전체를 다시 보내는 것이 아니라 변경할 필드만 전달한다.
-
-기본 규칙은 다음과 같다.
-
-| PATCH 요청 상태 | 의미 |
+| 요청 상태 | 의미 |
 | --- | --- |
-| 필드 자체가 없음 | 기존 값을 유지한다. |
-| 새로운 값 전달 | 해당 값으로 변경한다. |
-| 명시적으로 `null` 전달 | 기본적으로 허용하지 않는다. 값 삭제가 필요한 필드는 해당 API에서 별도로 정의한다. |
+| 필드가 없음 | 기존 값 유지 |
+| 새 값 전달 | 값 변경 |
+| 명시적 `null` | 기본적으로 금지. 해당 Endpoint가 삭제 의미를 명시한 필드에서만 사용 |
 
-예를 들어 기존 마이아이템 정보가 다음과 같다고 가정한다.
+프론트는 JavaScript의 `undefined`로 빠진 필드와 JSON에 실제로 포함된 `null`을 구분해야 한다.
 
-```json
-{
-  "myItemId": "25",
-  "material": "LEATHER",
-  "purchasePrice": 1200000
-}
-```
-
-구매 가격만 수정하려면 변경할 값만 전달한다.
+현재 실제 예외 중 하나는 스타일 플랜의 `plannedAt`이다.
 
 ```json
 {
-  "purchasePrice": 1300000
+  "plannedAt": null,
+  "version": 2
 }
 ```
 
-결과:
+해당 PATCH 계약에서 `plannedAt: null`은 저장된 일정을 제거한다.
+
+이처럼 `null`이 삭제 의미를 가지는지는 반드시 개별 API 계약에 명시한다.
+
+### 3.7 낙관적 락과 `version`
+
+동시 수정 충돌을 막기 위해 낙관적 락을 사용하는 리소스는 수정 요청에 최신 `version`을 포함한다.
+
+현재 대표적인 적용 대상:
+
+```text
+마이아이템 PATCH
+스타일 플랜 PATCH
+```
+
+예:
 
 ```json
 {
-  "myItemId": "25",
-  "material": "LEATHER",
-  "purchasePrice": 1300000
+  "memo": "관리 후 상태 양호",
+  "version": 3
 }
 ```
 
-요청에 포함되지 않은 `material`은 기존 값을 유지한다.
+프론트 규칙:
 
-`PATCH` 요청에서도 `null`은 기본적으로 허용하지 않는다.
+1. 상세 조회에서 반환된 최신 `version`을 저장한다.
+2. PATCH 요청에 해당 `version`을 포함한다.
+3. 수정 성공 후 응답의 새 `version`으로 갱신한다.
+4. 다른 요청이 먼저 수정해 버전이 달라지면 `409 Conflict`를 처리한다.
 
-필수값에는 `null`을 허용하지 않으며, 선택값을 명시적으로 삭제해야 하는 기능이 필요한 경우에는 해당 API에서 삭제 방법과 요청 형식을 별도로 정의한다.
+대표 오류:
 
-### 3.5 검색·필터 Query Parameter 규칙
+```text
+RESOURCE_VERSION_CONFLICT
+PREFERENCE_UPDATE_CONFLICT
+USER_PROFILE_UPDATE_CONFLICT
+```
+
+버전 충돌 응답을 자동으로 마지막 쓰기 우선으로 덮어쓰지 않는다.
+
+### 3.8 검색·필터 Query Parameter
 
 검색, 필터, 정렬, 페이지 정보는 Query Parameter로 전달한다.
 
-Query Parameter 이름은 `lowerCamelCase`를 사용한다.
-
-예:
+제품 예:
 
 ```http
 GET /api/products?category=BAG&color=BLACK&minPrice=500000&maxPrice=1500000
 ```
 
+마이아이템 예:
+
 ```http
 GET /api/my-items?keyword=토트백&category=BAG&page=0&size=20
 ```
 
-```http
-GET /api/places?region=SEOUL&placeType=CAFE
-```
-
-선택하지 않은 검색·필터 조건은 Query Parameter 자체를 보내지 않는 것을 기본으로 한다.
-
-권장:
+현재 장소 검색 예:
 
 ```http
-GET /api/products?category=BAG
+GET /api/places?query=성수카페&category=CAFE&latitude=37.5445&longitude=127.0557&radius=3000
 ```
 
-다음처럼 의미 없는 값을 전달하지 않는다.
+현재 저장 장소 목록 예:
+
+```http
+GET /api/places/saved?page=0&size=20&sort=createdAt,desc
+```
+
+선택하지 않은 조건은 Query Parameter 자체를 생략한다.
+
+비권장:
 
 ```http
 GET /api/products?category=
@@ -373,68 +465,28 @@ GET /api/products?category=null
 GET /api/products?category=undefined
 ```
 
-검색어가 비어 있다면 `keyword=`를 전송하기보다 `keyword` 자체를 생략한다.
+기본 표현:
 
-Query Parameter의 기본 규칙은 다음과 같다.
+| 종류 | 표현 |
+| --- | --- |
+| 검색어 | 문자열 |
+| Enum | 영문 대문자 `SNAKE_CASE` |
+| Boolean | `true` / `false` |
+| 원화 금액 | 0 이상의 정수 |
+| 날짜 | `YYYY-MM-DD` |
+| 좌표 | JSON/Query 숫자 소수값 |
+| 페이지 | 0 이상의 정수 |
+| 페이지 크기 | 1~100 |
 
-| 종류 | 규칙 | 예시 |
-| --- | --- | --- |
-| 검색어 | 문자열 | `keyword=토트백` |
-| Enum 필터 | 영문 대문자 `SNAKE_CASE` | `category=BAG` |
-| Boolean | `true`, `false` | `careNeeded=true` |
-| 금액 | 원 단위 정수 | `minPrice=500000` |
-| 날짜 | `YYYY-MM-DD` | `usedDate=2026-08-07` |
-| 페이지 | 0부터 시작하는 정수 | `page=0` |
-| 페이지 크기 | `1` 이상 `100` 이하의 정수 | `size=20` |
+### 3.9 다중 선택 Query Parameter
 
-필터를 사용하지 않은 경우와 필터 결과가 없는 경우를 구분한다.
-
-필터 조건에 맞는 결과가 없더라도 요청 자체가 정상이라면 `404 Not Found`가 아니라 `200 OK`와 빈 목록을 반환한다.
-
-예:
-
-```json
-{
-  "success": true,
-  "data": []
-}
-```
-
-페이지네이션 API라면 기존 페이지 응답 형식을 유지하면서 `items`를 빈 배열로 반환한다.
-
-### 3.6 다중 선택 Query Parameter 규칙
-
-하나의 필터에서 여러 값을 선택할 수 있는 경우 동일한 Query Parameter 이름을 반복해서 전달한다.
-
-예를 들어 여러 스타일을 선택하는 경우:
+한 필터에서 여러 값을 전달해야 하는 경우 기본적으로 동일한 Query Parameter 이름을 반복한다.
 
 ```http
-GET /api/products?style=CASUAL&style=MINIMAL
+GET /api/example?style=CASUAL&style=MINIMAL
 ```
 
-여러 카테고리를 선택하는 경우:
-
-```http
-GET /api/products?category=BAG&category=SHOES
-```
-
-백엔드는 이를 목록으로 처리한다.
-
-예:
-
-```java
-List<String> style
-```
-
-또는 실제 도메인 Enum이 확정된 경우:
-
-```java
-List<Style> style
-```
-
-프론트에서는 `URLSearchParams.append()` 등을 사용해 같은 키를 반복해서 추가할 수 있다.
-
-예:
+프론트 예:
 
 ```ts
 const params = new URLSearchParams();
@@ -444,180 +496,87 @@ styles.forEach((style) => {
 });
 ```
 
-다음과 같은 여러 표현 방식을 API마다 혼용하지 않는다.
+다음 방식을 API마다 섞어 쓰지 않는다.
 
 ```text
-비권장
-
 ?style=CASUAL,MINIMAL
 ?style[]=CASUAL&style[]=MINIMAL
 ?styles=CASUAL|MINIMAL
 ```
 
-다중 선택값이 하나도 없다면 빈 값이나 빈 문자열을 전달하지 않고 해당 Query Parameter 자체를 생략한다.
-
-```text
-권장
-
-GET /api/products
-
-비권장
-
-GET /api/products?style=
-```
-
-정렬 조건의 경우에도 기존 페이지네이션 규칙과 동일하게 같은 `sort` Parameter를 반복해서 전달한다.
+정렬도 여러 조건을 지원하는 API라면 `sort`를 반복할 수 있다.
 
 ```http
-GET /api/products?sort=status,asc&sort=createdAt,desc
+GET /api/products?sort=price,asc&sort=createdAt,desc
 ```
 
-### 3.7 Boolean 표현 규칙
+### 3.10 Boolean 표현
 
-참·거짓을 의미하는 값은 JSON과 Query Parameter 모두 Boolean을 사용한다.
-
-JSON에서는 실제 Boolean 값인 `true`, `false`를 사용한다.
+Boolean은 JSON의 실제 Boolean을 사용한다.
 
 ```json
 {
-  "isFavorite": true,
-  "careNeeded": false
+  "favorited": true,
+  "inCart": false,
+  "saved": true,
+  "hasNext": false
 }
 ```
-
-다음과 같이 숫자나 문자열로 표현하지 않는다.
-
-```json
-{
-  "isFavorite": 1,
-  "careNeeded": "Y"
-}
-```
-
-다음과 같은 문자열 Boolean도 사용하지 않는다.
-
-```json
-{
-  "isFavorite": "true"
-}
-```
-
-Query Parameter에서도 `true`, `false`를 사용한다.
-
-```http
-GET /api/my-items?careNeeded=true
-```
-
-Boolean 필드명은 의미가 명확하게 드러나도록 작성한다.
-
-예:
-
-```text
-isFavorite
-isSaved
-careNeeded
-hasNext
-hasPrevious
-preferenceCompleted
-```
-
-단, 실제 필드명은 각 기능 API를 설계할 때 도메인 의미에 맞게 최종 확정한다.
-
-Boolean 값 자체가 아직 정해지지 않은 상태를 표현해야 하는 특별한 경우가 아니라면 Boolean 필드에 `null`을 사용하지 않는다.
-
-### 3.8 숫자·점수·횟수 표현 규칙
-
-API에서 숫자 데이터를 표시용 문자열로 가공하지 않고 숫자 자료형으로 전달한다.
-
-기본 규칙은 다음과 같다.
-
-| 의미 | 표현 | 예시 |
-| --- | --- | --- |
-| 횟수 | 0 이상의 정수 | `3` |
-| 개수 | 0 이상의 정수 | `5` |
-| 적합도·백분율 점수 | `0` 이상 `100` 이하의 정수 | `87` |
-| 원화 금액 | 원 단위 정수 | `1250000` |
-| 페이지 번호 | 0 이상의 정수 | `0` |
-| 페이지 크기 | `1` 이상 `100` 이하의 정수 | `20` |
-
-예:
-
-```json
-{
-  "matchScore": 87,
-  "monthlyUsageCount": 3,
-  "totalUsageCount": 12,
-  "purchasePrice": 1250000
-}
-```
-
-프론트에서 표시할 때 필요한 `%`, `회`, `원` 등의 단위는 API 값에 포함하지 않는다.
 
 비권장:
 
 ```json
 {
-  "matchScore": "87%",
-  "monthlyUsageCount": "3회",
-  "purchasePrice": "1,250,000원"
+  "favorited": "true",
+  "inCart": 0,
+  "saved": "Y"
 }
 ```
 
-권장:
+필드명은 실제 도메인 계약을 따른다. 현재 프로젝트에는 `favorited`, `inCart`, `saved`, `enabled`, `hasNext`, `hasPrevious`처럼 서로 다른 의미의 Boolean 필드가 있다.
+
+### 3.11 숫자·점수·횟수
+
+숫자 데이터에 화면용 단위를 붙인 문자열을 반환하지 않는다.
 
 ```json
 {
-  "matchScore": 87,
-  "monthlyUsageCount": 3,
+  "utilityScore": 87.5,
+  "compatibleItemCount": 3,
   "purchasePrice": 1250000
 }
 ```
 
-화면 표시용 문자열은 프론트에서 변환한다.
-
-```ts
-`${matchScore}%`;
-`${monthlyUsageCount}회`;
-`${purchasePrice.toLocaleString("ko-KR")}원`;
-```
-
-활용도처럼 단순한 숫자보다 단계 자체가 의미를 가지는 값은 Enum을 사용할 수 있다.
-
-예:
+비권장:
 
 ```json
 {
-  "utilizationLevel": "LOW"
+  "utilityScore": "87.5%",
+  "compatibleItemCount": "3개",
+  "purchasePrice": "1,250,000원"
 }
 ```
 
-```text
-LOW
-MEDIUM
-HIGH
-```
+점수는 API별 계산 정책에 따라 정수 또는 소수 JSON number가 될 수 있다. 현재 구매 활용성 분석과 제품 추천에는 `BigDecimal` 기반 점수가 존재하므로 공통 규칙에서 점수를 정수로 제한하지 않는다.
 
-단, 실제 활용도 계산 방식과 Enum 값은 해당 기능의 도메인 정책을 확정할 때 정한다.
+퍼센트 기호, `원`, `개`, `회` 같은 표시 단위는 프론트에서 붙인다.
 
-소수점이 필요한 값이 새로 생기는 경우에는 해당 API에서 허용 범위와 소수 자릿수를 별도로 정의한다.
+### 3.12 정상적인 결과 없음과 오류 구분
 
-### 3.9 정상적인 결과 없음·데이터 부족 상태 규칙
+요청 처리는 성공했지만 결과가 없는 경우는 일반적으로 오류가 아니다.
 
-검색, 추천, 분석 결과가 없거나 계산에 필요한 데이터가 부족한 상황은 요청 자체가 정상적으로 처리되었다면 오류로 처리하지 않는다.
-
-다음과 같은 상황은 정상적인 사용자 흐름에 포함될 수 있다.
+예:
 
 ```text
-추천 제품이 없음
-검색·필터 조건에 맞는 항목이 없음
-추천 장소가 없음
-함께 활용할 마이아이템이 없음
-사용 기록이 부족함
-활용도 분석에 필요한 데이터가 부족함
-스마트 착용 추천 대상이 없음
+검색 결과 없음
+추천 제품 없음
+저장 장소 없음
+장바구니 비어 있음
+호환 마이아이템 없음
+분석에 필요한 정보 부족
 ```
 
-목록 조회 결과가 없는 경우에는 `200 OK`와 빈 배열을 반환한다.
+작은 목록:
 
 ```json
 {
@@ -626,7 +585,7 @@ HIGH
 }
 ```
 
-페이지네이션 목록이면 기존 페이지 응답 구조를 유지하고 `items`를 빈 배열로 반환한다.
+페이지 목록:
 
 ```json
 {
@@ -643,9 +602,7 @@ HIGH
 }
 ```
 
-단순한 빈 목록보다 결과 상태 자체를 프론트에서 구분해야 하는 기능은 정상 응답 데이터 안에 상태를 포함할 수 있다.
-
-예:
+기능상 결과 상태를 별도로 구분해야 하면 정상 응답 데이터 안에 Enum 상태를 둘 수 있다.
 
 ```json
 {
@@ -657,178 +614,95 @@ HIGH
 }
 ```
 
-상태값은 영문 대문자 `SNAKE_CASE` Enum으로 표현한다.
+반대로 특정 ID 리소스 자체가 없으면 `404 Not Found`이다.
 
-예:
+### 3.13 찜·장바구니·장소 저장 상태 API
 
-```text
-AVAILABLE
-NO_MATCH
-INSUFFICIENT_DATA
-```
+현재 상태를 단순 반전하는 `toggle`보다 원하는 최종 상태를 명시하는 API를 사용한다.
 
-단, 실제 상태값은 각 추천·분석 기능을 설계할 때 필요한 범위만 정의한다.
-
-다음 상황은 정상적인 결과 없음과 구분한다.
-
-- 특정 ID로 조회한 리소스 자체가 존재하지 않음 → `404 Not Found`
-- 요청 값 또는 형식이 잘못됨 → `400 Bad Request`
-- 인증되지 않은 사용자 → `401 Unauthorized`
-- 처리되지 않은 서버 오류 → `500 Internal Server Error`
-
-즉, "결과가 없음"과 "요청 처리 실패"를 동일한 오류로 취급하지 않는다.
-
-### 3.10 찜·저장 등 상태 변경 API 규칙
-
-찜, 저장처럼 하나의 상태를 설정하거나 해제하는 기능은 `toggle` 동작보다 원하는 최종 상태가 명확하게 드러나는 API를 사용한다.
-
-다음과 같이 현재 상태를 반대로 전환하는 Endpoint는 사용하지 않는다.
-
-```http
-POST /api/products/{productId}/toggle-favorite
-POST /api/places/{placeId}/toggle-save
-```
-
-대신 상태 설정과 해제를 구분한다.
-
-예:
+현재 실제 예:
 
 ```http
 PUT    /api/products/{productId}/favorite
 DELETE /api/products/{productId}/favorite
 
+PUT    /api/products/{productId}/cart
+DELETE /api/products/{productId}/cart
+
 PUT    /api/places/{placeId}/saved
 DELETE /api/places/{placeId}/saved
 ```
 
-구체적인 Endpoint 이름은 각 도메인 API를 설계할 때 최종 확정하되, 같은 요청을 반복해도 최종 상태가 달라지지 않도록 설계하는 것을 기본으로 한다.
+같은 상태 설정 요청을 반복해도 최종 상태가 달라지지 않도록 멱등성을 우선한다.
 
-예를 들어 이미 찜한 제품에 찜 설정 요청을 다시 보내더라도 최종 상태는 계속 찜 상태여야 한다.
-
-```text
-PUT /api/products/{productId}/favorite
-→ 최종 상태: 찜
-
-같은 요청 다시 실행
-→ 최종 상태: 여전히 찜
-```
-
-해제 요청도 같은 기준을 따른다.
+예:
 
 ```text
-DELETE /api/products/{productId}/favorite
-→ 최종 상태: 찜 아님
+PUT favorite를 두 번 호출
+→ 최종 상태는 계속 찜 상태
+
+DELETE cart를 이미 없는 상태에서 다시 호출
+→ 최종 상태는 계속 장바구니에 없음
 ```
 
-응답에 현재 상태를 반환할 필요가 있는 경우 Boolean 규칙에 따라 표현한다.
+응답 데이터가 필요하지 않은 해제 API는 `204 No Content`를 사용할 수 있다.
 
-```json
-{
-  "success": true,
-  "data": {
-    "isFavorite": true
-  }
-}
+### 3.14 하위 리소스 URL
+
+부모 리소스에 종속되는 기능은 부모 ID 아래에 표현할 수 있다.
+
+현재 실제 예:
+
+```http
+PUT    /api/my-items/{myItemId}/images/{imageAssetId}
+DELETE /api/my-items/{myItemId}/images/{imageAssetId}
+
+GET /api/my-items/{myItemId}/passport
+GET /api/my-items/{myItemId}/care-guide
+GET /api/my-items/{myItemId}/storage-guide
+GET /api/my-items/{myItemId}/care-calendar
+GET /api/my-items/{myItemId}/care-reminder-setting
+PUT /api/my-items/{myItemId}/care-reminder-setting
 ```
 
-반환할 데이터가 없는 경우에는 `204 No Content`를 사용할 수 있으며, 이 경우 응답 본문을 보내지 않는 기존 규칙을 따른다.
-
-제품 찜과 장소 저장처럼 의미가 다른 상태의 실제 필드명과 Endpoint는 각 도메인 API에서 별도로 정의한다.
-
-### 3.11 하위 리소스 URL 규칙
-
-특정 리소스에 종속되어 생성·조회되는 데이터는 부모 리소스 아래의 하위 리소스로 표현할 수 있다.
-
-하위 리소스를 조회·수정·삭제할 때는 해당 하위 리소스가 URL에 지정된 부모 리소스에 실제로 속하는지도 함께 확인한다.
-
-현재 프로젝트에서 대표적인 예는 마이아이템의 사용 기록이다.
-
-```text
-마이아이템
-└─ 사용 기록
-```
-
-이 경우 다음과 같이 부모 리소스의 ID를 경로에 포함한다.
+향후 사용 기록처럼 부모 아이템에 종속된 컬렉션을 구현한다면 다음 패턴을 사용할 수 있다.
 
 ```http
 GET  /api/my-items/{myItemId}/usage-records
 POST /api/my-items/{myItemId}/usage-records
 ```
 
-특정 기록 하나를 조회·수정·삭제해야 하는 경우에는 해당 하위 리소스의 ID를 추가한다.
+단, 아직 구현되지 않은 Endpoint를 현재 구현된 API처럼 문서에 표현하지 않는다.
 
-예:
+중첩은 필요한 수준까지만 사용한다.
 
-```http
-GET    /api/my-items/{myItemId}/usage-records/{usageRecordId}
-PATCH  /api/my-items/{myItemId}/usage-records/{usageRecordId}
-DELETE /api/my-items/{myItemId}/usage-records/{usageRecordId}
-```
-
-다음처럼 동작을 URL에 직접 표현하는 방식은 사용하지 않는다.
-
-```http
-POST /api/addUsageRecord
-POST /api/my-items/{myItemId}/add-usage
-```
-
-부모와의 관계가 명확하지 않거나 여러 부모 리소스에서 독립적으로 조회해야 하는 데이터는 반드시 하위 리소스로 만들 필요가 없다.
-
-하위 리소스 구조를 지나치게 깊게 만들지 않는다.
-
-```text
-권장 예시
-
-/api/my-items/{myItemId}/usage-records/{usageRecordId}
-```
-
-다음처럼 불필요하게 여러 단계로 중첩하는 구조는 피한다.
+비권장:
 
 ```text
 /api/users/{userId}/my-items/{myItemId}/usage-records/{usageRecordId}/details
 ```
 
-실제 Endpoint 구조는 각 도메인 API를 설계할 때 데이터 관계와 조회 방식을 기준으로 최종 확정한다.
+현재 로그인 사용자 소유 리소스는 URL에 `userId`를 중복 노출하기보다 인증 주체에서 사용자 ID를 가져오는 방식을 우선한다.
 
-### 3.12 Path Variable·Query Parameter Validation 규칙
+### 3.15 Path·Query Validation
 
-Request Body뿐만 아니라 Path Variable과 Query Parameter도 각 API에서 허용하는 형식과 범위를 검증한다.
+Request Body뿐 아니라 Path Variable과 Query Parameter도 검증한다.
 
-잘못된 요청값은 서버 내부 오류로 처리하지 않고 `400 Bad Request`로 반환한다.
+대표 오류:
 
-대표적인 검증 대상은 다음과 같다.
-
-| 대상 | 잘못된 요청 예시 |
+| 대상 | 잘못된 예 |
 | --- | --- |
-| 페이지 번호 | `page=-1` |
+| 페이지 | `page=-1` |
 | 페이지 크기 | `size=0`, `size=101` |
+| ID | `productId=0` 또는 숫자 ID 자리에 비숫자 문자열 |
 | 금액 | `minPrice=-100` |
-| 금액 범위 | `minPrice`가 `maxPrice`보다 큼 |
-| Enum | 지원하지 않는 `category`, `style`, `placeType` |
-| Boolean | `careNeeded=abc` |
-| 날짜 | `2026-99-99`처럼 잘못된 날짜 |
-| 정렬 | 지원하지 않는 정렬 필드 또는 방향 |
-| Path Variable | 허용하지 않는 형식의 ID |
+| 금액 범위 | `minPrice > maxPrice` |
+| Enum | 지원하지 않는 Enum 문자열 |
+| Boolean | Boolean 파라미터에 잘못된 값 |
+| 날짜/시간 | 파싱할 수 없는 ISO 값 |
+| 정렬 | 허용되지 않은 필드·방향 |
 
-예:
-
-```http
-GET /api/products?page=-1&size=200
-```
-
-```http
-GET /api/products?minPrice=1500000&maxPrice=500000
-```
-
-```http
-GET /api/products?category=UNKNOWN_CATEGORY
-```
-
-위와 같은 요청은 정상 조회 결과가 없는 상황과 다르므로 빈 목록을 반환하지 않고 `400 Bad Request`로 처리한다.
-
-요청 필드를 특정할 수 있는 Validation 오류는 기존 `VALIDATION_ERROR` 형식을 사용한다.
-
-예:
+잘못된 요청값은 `500`이 아니라 `400 Bad Request`로 처리한다.
 
 ```json
 {
@@ -838,178 +712,80 @@ GET /api/products?category=UNKNOWN_CATEGORY
     "message": "입력값을 확인해 주세요.",
     "fields": [
       {
-        "field": "page",
-        "reason": "page는 0 이상이어야 합니다."
-      },
-      {
         "field": "size",
-        "reason": "size는 1 이상 100 이하여야 합니다."
+        "reason": "100 이하여야 합니다."
       }
     ]
   }
 }
 ```
 
-Query Parameter도 `field` 이름을 실제 API Parameter 이름과 동일하게 작성한다.
+형식은 유효하지만 리소스가 실제로 없으면 Validation 오류가 아니라 `404`이다.
 
-예:
+### 3.16 시연용·샘플 데이터
 
-```text
-page
-size
-minPrice
-maxPrice
-category
-usedDate
-careNeeded
-```
+모든 Product/Place 응답에 `isSample`을 강제하지 않는다.
 
-여러 필드의 조합 자체가 잘못된 경우에도 가능한 한 관련 필드를 식별할 수 있도록 처리한다.
+현재 Product API는 `isSample` 필드를 공통 계약으로 반환하지 않으며, 현재 Place 검색은 Kakao Local의 실제 검색 결과를 사용한다.
 
-예를 들어 다음 조건은 허용하지 않는다.
+따라서 프론트는 다음 값으로 샘플 여부를 임의 추측하지 않는다.
 
 ```text
-minPrice > maxPrice
+ID 범위
+제품명
+이미지 URL
+가격 범위
 ```
 
-날짜·Enum·Boolean 등 요청 문자열을 해당 자료형으로 변환할 수 없는 경우에도 `500 Internal Server Error`가 아니라 클라이언트 요청 오류인 `400 Bad Request`로 처리한다.
+향후 실제 데이터와 시연용 데이터를 API에서 구분해야 하는 요구가 생기면 해당 리소스 계약에 `isSample` Boolean 또는 `dataSource` Enum을 명시적으로 추가한다.
 
-지원하지 않는 정렬 필드를 전달한 경우에도 `400 Bad Request`를 반환한다.
+그때까지 `isSample`은 공통 필수 필드가 아니다.
+
+### 3.17 화면 집계 Read Model
+
+여러 도메인의 저장 데이터를 한 화면에 보여주기 위해 화면 전용 집계 조회 Endpoint를 사용할 수 있다.
+
+현재 예:
 
 ```http
-GET /api/products?sort=unknownField,desc
+GET /api/home
 ```
 
-Path Variable의 형식이 올바르지만 해당 ID의 실제 리소스가 존재하지 않는 경우에는 Validation 오류가 아니라 `404 Not Found`로 처리한다.
-
-즉 다음 두 상황을 구분한다.
+`/api/home`은 현재 사용자의 저장 데이터를 읽어 집계하는 Read Model이며, 이 조회 자체가 다음 작업을 새로 실행하지 않는다.
 
 ```text
-요청값의 형식·범위가 잘못됨
-→ 400 Bad Request
-
-올바른 형식의 ID이지만 해당 리소스가 존재하지 않음
-→ 404 Not Found
+Recommendation 생성
+AI Job 생성
+OpenAI 호출
+Kakao Local 검색
+장소 추천 실행
 ```
 
-### 3.13 시연용·샘플 데이터 표시 규칙
+일반적인 조회 Endpoint가 숨은 부작용으로 외부 API 호출이나 비동기 Job 생성을 시작하지 않도록 한다. 생성이 필요한 동작은 별도의 명시적 POST 계약을 사용한다.
 
-해커톤 시연을 위해 사용하는 샘플 제품, 장소 등 실제 상용 데이터가 아닌 정보는 프론트가 이를 구분할 수 있도록 응답에서 샘플 여부를 명확하게 전달한다.
+---
 
-대표적으로 다음과 같은 데이터가 대상이 될 수 있다.
+## 4. 이미지 업로드·ImageAsset 규칙
 
-```text
-추천 제품
-제품의 가격·소재 등 제품 정보
-추천 장소
-장소의 설명·대표 이미지 등 시연용 정보
+### 4.1 업로드
+
+```http
+POST /api/image-assets
+Content-Type: multipart/form-data
 ```
 
-실제 데이터와 샘플 데이터의 구분이 필요한 리소스에서는 `isSample` Boolean 필드를 사용하여 샘플 여부를 명확하게 전달한다.
+현재 계약:
 
-예:
-
-```json
-{
-  "productId": "123",
-  "name": "MCM 토트백",
-  "price": 1250000,
-  "material": "LEATHER",
-  "isSample": true
-}
-```
-
-장소 데이터도 같은 기준을 사용할 수 있다.
-
-```json
-{
-  "placeId": "82",
-  "name": "성수 카페",
-  "placeType": "CAFE",
-  "isSample": true
-}
-```
-
-`isSample`은 Boolean 표현 규칙에 따라 실제 Boolean 값인 `true`, `false`를 사용한다.
-
-```json
-{
-  "isSample": true
-}
-```
-
-다음처럼 문자열이나 숫자로 표현하지 않는다.
-
-```json
-{
-  "isSample": "Y"
-}
-```
-
-```json
-{
-  "isSample": 1
-}
-```
-
-샘플 데이터 여부를 프론트에서 추측하도록 만들지 않는다.
-
-예를 들어 특정 ID 범위, 제품명, 이미지 URL 등을 기준으로 프론트가 샘플 여부를 판단하지 않는다.
-
-```text
-비권장
-
-productId가 1000 미만이면 샘플로 판단
-제품명에 "샘플"이 포함되어 있으면 샘플로 판단
-특정 이미지 URL이면 샘플로 판단
-```
-
-샘플 데이터를 사용하는 화면에서는 프론트가 `isSample` 값을 기준으로 필요한 안내 문구를 표시할 수 있다.
-
-단, 모든 API 응답에 `isSample`을 의무적으로 포함하지 않는다. 실제 데이터와 샘플 데이터의 구분이 필요한 리소스에만 적용한다.
-
-사용자가 직접 등록한 마이아이템이나 사용 기록처럼 사용자 입력으로 생성된 데이터는 일반적으로 샘플 데이터로 취급하지 않는다.
-
-향후 실제 외부 데이터와 여러 종류의 시연 데이터를 세부적으로 구분해야 하는 요구가 생기는 경우에는 `dataSource`와 같은 별도의 Enum 필드를 도입할 수 있다. 해당 구분이 필요해질 때 API 계약에서 별도로 정의한다.
-
-### 3.14 ITEM 이미지 업로드·연결 규칙
-
-마이아이템 이미지 파일 업로드와 `UserItem` 연결은 독립된 단계로 처리한다.
-
-이미지 업로드:
-
-- `POST /api/image-assets`
-- `multipart/form-data`
-- multipart part 이름은 `file`
+- multipart part 이름: `file`
 - 요청 한 번에 이미지 한 장
-- JPEG / PNG만 허용
+- JPEG / PNG 허용
 - 최대 10MB
-- MIME type이나 파일명만 신뢰하지 않고 실제 이미지 binary와 dimensions를 검증
-- FE는 소유자 ID, `myItemId`, `aiJobId`, 상태, Cloudinary URL을 직접 보내지 않는다.
-- 성공 시 `201 Created`
+- 실제 이미지 binary/dimensions 검증
+- 인증된 사용자만 사용
+- 성공: `201 Created`
+- FE는 소유자 ID, `myItemId`, `aiJobId`, 내부 상태, Cloudinary 관리 URL을 임의로 조작해서 보내지 않는다.
 
-마이아이템 연결·교체:
-
-- `PUT /api/my-items/{myItemId}/images/{imageAssetId}`
-- MVP에서는 UserItem 하나에 최대 1개의 `ACTIVE` ITEM 이미지만 유지한다.
-- 처음 연결하면 `TEMPORARY → ACTIVE`
-- 기존 ACTIVE 이미지가 있으면 기존 이미지를 `DELETE_PENDING`으로 바꾸고 새 이미지를 ACTIVE로 연결한다.
-- 같은 이미지를 같은 마이아이템에 다시 PUT하면 idempotent no-op으로 처리한다.
-- 같은 아이템에 대한 동시 연결·교체는 DB row lock으로 직렬화한다.
-- 잠금/상태 충돌은 `409 IMAGE_ASSET_STATE_CONFLICT`
-- 다른 사용자의 이미지 ID는 `404 IMAGE_ASSET_NOT_FOUND`로 숨긴다.
-
-삭제:
-
-- 연결 전 TEMPORARY 폐기: `DELETE /api/image-assets/{imageAssetId}`
-- 연결 이미지 삭제: `DELETE /api/my-items/{myItemId}/images/{imageAssetId}`
-- 성공 시 `204 No Content`
-- 외부 저장소 삭제 전에 DB를 `DELETE_PENDING`으로 전환한다.
-- Cloudinary 삭제 실패 시 `DELETE_PENDING`을 유지하고 background cleanup에서 재시도한다.
-- `PENDING / PROCESSING` AI Job이 사용하는 TEMPORARY 이미지는 직접 삭제할 수 없다.
-- 이 경우 `409 IMAGE_ASSET_IN_USE`를 반환한다.
-
-ImageAsset lifecycle:
+### 4.2 ImageAsset lifecycle
 
 ```text
 TEMPORARY
@@ -1018,16 +794,68 @@ TEMPORARY
 → DELETED
 ```
 
-미연결 TEMPORARY 이미지는 기본 24시간 TTL 이후 cleanup 대상이며,
-실행 중인 AI Job이 사용 중인 이미지는 TTL 정리에서 제외한다.
+현재 MVP에서는 UserItem 하나에 `ACTIVE` ITEM 이미지를 최대 1개 유지한다.
 
-대표 오류 코드:
+### 4.3 마이아이템 연결·교체
+
+```http
+PUT /api/my-items/{myItemId}/images/{imageAssetId}
+```
+
+- 첫 연결: `TEMPORARY → ACTIVE`
+- 기존 ACTIVE가 있으면 기존 이미지를 `DELETE_PENDING`으로 바꾸고 새 이미지를 ACTIVE로 연결한다.
+- 같은 이미지를 같은 마이아이템에 다시 연결하는 요청은 멱등 no-op으로 처리할 수 있다.
+- 동시 연결/교체 충돌은 DB row lock과 상태 검증으로 처리한다.
+- 다른 사용자 소유 ImageAsset은 존재 여부를 숨기기 위해 `IMAGE_ASSET_NOT_FOUND`로 처리한다.
+
+### 4.4 삭제
+
+연결 전 임시 이미지:
+
+```http
+DELETE /api/image-assets/{imageAssetId}
+```
+
+연결 이미지:
+
+```http
+DELETE /api/my-items/{myItemId}/images/{imageAssetId}
+```
+
+성공 시:
+
+```text
+204 No Content
+```
+
+외부 저장소 삭제 전 DB 상태를 `DELETE_PENDING`으로 전환하며 외부 저장소 삭제 실패 시 background cleanup이 재시도할 수 있다.
+
+PENDING/PROCESSING AI Job이 사용하는 TEMPORARY 이미지는 직접 삭제하지 않는다.
+
+```text
+409 IMAGE_ASSET_IN_USE
+```
+
+### 4.5 ITEM_ANALYSIS와 최초 이미지 provenance
+
+`ITEM_ANALYSIS` 결과를 기반으로 생성한 마이아이템은 분석에 사용한 이미지와 최초 연결 이미지의 입력 해시 정합성을 검증한다.
+
+분석 이미지와 연결하려는 이미지가 일치하지 않으면:
+
+```text
+409 IMAGE_ASSET_ANALYSIS_MISMATCH
+```
+
+현재 `IMAGE_SORT_ORDER_CONFLICT` 정책은 사용하지 않는다. 과거 최대 3장/sortOrder 정책이 아니라 **UserItem당 최대 1개의 ACTIVE 이미지**가 현행 정책이다.
+
+### 4.6 대표 이미지 오류 코드
 
 ```text
 400 IMAGE_FILE_INVALID
 404 IMAGE_ASSET_NOT_FOUND
 409 IMAGE_ASSET_STATE_CONFLICT
 409 IMAGE_ASSET_IN_USE
+409 IMAGE_ASSET_ANALYSIS_MISMATCH
 413 IMAGE_FILE_TOO_LARGE
 415 IMAGE_FORMAT_UNSUPPORTED
 502 IMAGE_STORAGE_ERROR
@@ -1035,68 +863,23 @@ TEMPORARY
 
 ---
 
-## 4. 성공 응답 형식
+## 5. 성공 응답 형식
 
-### 4.1 성공·오류 필드 포함 규칙
-
-- 응답 본문이 있는 성공 응답에는 `success`와 `data`를 포함한다.
-- 응답 본문이 있는 성공 응답에는 `error`를 포함하지 않는다.
-- 오류 응답에는 `success`와 `error`를 포함한다.
-- 오류 응답에는 `data`를 포함하지 않는다.
-- `fields`는 Validation 오류가 발생한 경우에만 `error` 내부에 포함한다.
-- 사용하지 않는 최상위 필드를 `null`로 보내지 않고 응답에서 생략한다.
-
-성공 응답:
-
-```json
-{
-  "success": true,
-  "data": {}
-}
-```
-
-다음처럼 `error: null`을 함께 보내지 않는다.
-
-```json
-{
-  "success": true,
-  "data": {},
-  "error": null
-}
-```
-
-### 4.2 단일 객체
+### 5.1 본문이 있는 일반 성공
 
 ```json
 {
   "success": true,
   "data": {
     "productId": "123",
-    "name": "MCM 가방",
-    "price": 1250000
+    "name": "MCM 가방"
   }
 }
 ```
 
-### 4.3 페이지네이션을 사용하지 않는 작은 목록
+성공 응답에는 사용하지 않는 `error: null`을 넣지 않는다.
 
-페이지네이션을 사용하지 않는 작은 목록은 `data`에 배열을 직접 담는다.
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "code": "CASUAL",
-      "label": "캐주얼"
-    }
-  ]
-}
-```
-
-### 4.4 작은 목록의 조회 결과가 없는 경우
-
-조회 결과가 없더라도 오류로 처리하지 않고 빈 배열을 반환한다.
+### 5.2 작은 목록
 
 ```json
 {
@@ -1105,13 +888,11 @@ TEMPORARY
 }
 ```
 
-- `null` 대신 `[]`을 반환한다.
-- 단순히 검색·추천 결과가 없다는 이유로 `404 Not Found`를 반환하지 않는다.
-- 특정 ID로 조회한 하나의 리소스가 존재하지 않는 경우에는 `404 Not Found`를 사용한다.
+배열 결과가 없으면 `null`이 아니라 `[]`을 사용한다.
 
-### 4.5 생성 성공
+### 5.3 생성 성공
 
-새로운 리소스를 생성한 경우 `201 Created`를 사용한다.
+일반적인 동기 리소스 생성은 `201 Created`를 사용한다.
 
 ```http
 HTTP/1.1 201 Created
@@ -1126,53 +907,113 @@ HTTP/1.1 201 Created
 }
 ```
 
-### 4.6 응답 본문이 없는 성공
+현재 예:
 
-삭제나 찜 해제처럼 반환할 데이터가 없다면 `204 No Content`를 사용하고 응답 본문을 보내지 않는다. `204` 응답에는 `success`, `data`를 포함한 JSON 본문도 함께 보내지 않는다.
+```text
+회원가입
+소셜 회원가입
+ImageAsset 생성
+마이아이템 생성
+스타일 플랜 저장
+```
 
-### 4.7 HTTP 상태 코드
+### 5.4 비동기 접수 성공
 
-| 상황                             |                   상태 코드 |
-| -------------------------------- | --------------------------: |
-| 조회·수정 성공                   |                    `200 OK` |
-| 정상적인 빈 목록·추천 결과       |                    `200 OK` |
-| 생성 성공                        |               `201 Created` |
-| 성공했지만 반환할 본문 없음      |            `204 No Content` |
-| 잘못된 요청·Validation 실패      |           `400 Bad Request` |
-| 인증 필요                        |          `401 Unauthorized` |
-| 권한 없음                        |             `403 Forbidden` |
-| 특정 ID의 리소스 없음            |             `404 Not Found` |
-| 중복 또는 현재 상태와 충돌       |              `409 Conflict` |
-| 서버 내부 오류                   | `500 Internal Server Error` |
+실제 처리가 비동기로 이어지는 요청은 `202 Accepted`를 사용할 수 있다.
+
+현재 예:
+
+```text
+이메일 인증번호 발송
+신규 AI Job 생성
+```
+
+AI Job은 멱등 재요청으로 기존 완료 Job을 반환할 때 `200 OK`가 될 수 있다.
+
+### 5.5 응답 본문 없음
+
+```http
+204 No Content
+```
+
+`204`에는 다음 JSON을 보내지 않는다.
+
+```json
+{
+  "success": true,
+  "data": null
+}
+```
+
+### 5.6 Redirect
+
+OAuth 시작/Callback처럼 브라우저 Redirect가 목적이면:
+
+```http
+302 Found
+Location: https://...
+```
+
+을 사용한다.
+
+이 경우 `ApiResponse` JSON Wrapper를 요구하지 않는다.
+
+### 5.7 HTTP 상태 코드 표
+
+| 상황 | 상태 코드 |
+| --- | ---: |
+| 조회·수정 성공 | `200 OK` |
+| 정상 빈 목록·정상 결과 없음 | `200 OK` |
+| 동기 리소스 생성 | `201 Created` |
+| 비동기 작업 접수 | `202 Accepted` |
+| 본문 없는 성공 | `204 No Content` |
+| OAuth 등 Redirect | `302 Found` |
+| 잘못된 요청·Validation 실패 | `400 Bad Request` |
+| 인증 실패·토큰 문제 | `401 Unauthorized` |
+| 권한·Trusted Origin 거부 | `403 Forbidden` |
+| 리소스 없음 | `404 Not Found` |
+| 상태·중복·버전 충돌 | `409 Conflict` |
+| 이미지 크기 초과 | `413 Content Too Large` |
+| 지원하지 않는 미디어 형식 | `415 Unsupported Media Type` |
+| 요청/사용 한도 초과 | `429 Too Many Requests` |
+| 서버 내부 오류 | `500 Internal Server Error` |
+| 외부 Provider/Storage 오류 | `502 Bad Gateway` |
+| 외부 서비스 일시 사용 불가 | `503 Service Unavailable` |
+| 외부 Provider timeout | `504 Gateway Timeout` |
 
 ---
 
-## 5. 페이지네이션 규칙
+## 6. 페이지네이션 규칙
 
-### 5.1 요청 형식
+### 6.1 요청
 
-목록이 계속 늘어날 수 있는 API는 기본적으로 페이지네이션을 적용한다.
-
-```http
-GET /api/products?page=0&size=20&sort=createdAt,desc
-```
-
-| 파라미터 | 규칙                                   |           기본값 |
-| -------- | -------------------------------------- | ---------------: |
-| `page`   | `0`부터 시작한다. 첫 페이지는 `0`이다. |              `0` |
-| `size`   | `1` 이상 `100` 이하의 한 페이지 항목 수이다. | `20` |
-| `sort`   | `필드명,정렬방향` 형식이며 기본 정렬은 API별로 정의한다. | API별 정의 |
-
-- 기본 정렬 필드와 방향은 각 목록 API의 성격에 맞게 별도로 정의한다.
-- 정렬 방향은 `asc` 또는 `desc`만 사용한다.
-- 여러 정렬 조건이 필요하면 `sort`를 반복해서 보낼 수 있다.
-- 지원하지 않는 정렬 필드는 `400 Bad Request`로 처리한다.
+계속 증가할 수 있는 목록은 기본적으로:
 
 ```http
-GET /api/products?page=0&size=20&sort=status,asc&sort=createdAt,desc
+?page=0&size=20&sort=createdAt,desc
 ```
 
-### 5.2 페이지 응답 형식
+형식을 사용한다.
+
+| Parameter | 규칙 | 기본 |
+| --- | --- | ---: |
+| `page` | 0부터 시작 | `0` |
+| `size` | 1~100 | `20` |
+| `sort` | `필드,asc|desc` | API별 기본 정렬 |
+
+허용되는 sort 필드는 API마다 whitelist로 정의한다.
+
+예:
+
+```http
+GET /api/products?sort=price,asc&sort=createdAt,desc
+```
+
+지원하지 않는 필드 또는 방향은 `400 VALIDATION_ERROR`로 처리한다.
+
+### 6.2 공통 페이지 응답
+
+현재 공통 `PageResponse<T>` 형식:
 
 ```json
 {
@@ -1194,7 +1035,7 @@ GET /api/products?page=0&size=20&sort=status,asc&sort=createdAt,desc
 }
 ```
 
-조회 결과가 없을 때도 `items`는 `null`이 아니라 빈 배열을 반환한다.
+빈 결과:
 
 ```json
 {
@@ -1211,74 +1052,27 @@ GET /api/products?page=0&size=20&sort=status,asc&sort=createdAt,desc
 }
 ```
 
-프론트 화면에서 사용자에게 보이는 페이지 번호는 필요하면 `page + 1`로 표시한다. API 요청과 응답의 `page` 값은 항상 0부터 시작한다.
+화면에서 1부터 시작하는 페이지 번호가 필요하면 프론트가 `page + 1`로 표시한다.
 
-### 5.3 페이지네이션 적용·비적용 기준
+### 6.3 현재 대표 페이지네이션 목록
 
-모든 배열 응답에 페이지네이션을 적용하지 않는다.
-
-데이터가 사용자 활동에 따라 계속 누적되거나 개수가 커질 가능성이 있는 목록에는 페이지네이션을 적용하는 것을 기본으로 한다.
-
-대표적인 적용 후보는 다음과 같다.
+현재 구현에서 대표적인 페이지 목록:
 
 ```text
+MCM 제품 목록
+찜 목록
 마이아이템 목록
-사용 기록 목록
-찜한 제품 목록
-저장한 스타일 플랜 목록
-저장한 장소 목록
+스타일 플랜 목록
+저장 장소 목록
+알림 목록
+장바구니 목록
 ```
 
-실제 페이지네이션 적용 여부는 각 기능 API를 설계할 때 데이터 증가 가능성과 화면 사용 방식을 기준으로 최종 결정한다.
-
-반대로 결과 개수가 작고 기능상 일정한 범위 안에서만 반환되는 목록에는 페이지네이션을 강제하지 않는다.
-
-대표적인 비적용 후보는 다음과 같다.
-
-```text
-소수의 추천 결과
-스타일 조합 후보
-선택 옵션 목록
-추천 이유 목록
-Enum 기반 옵션 목록
-```
-
-페이지네이션을 사용하지 않는 작은 목록은 기존 성공 응답 규칙에 따라 `data`에 배열을 직접 반환한다.
-
-예:
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "code": "CASUAL",
-      "label": "캐주얼"
-    },
-    {
-      "code": "MINIMAL",
-      "label": "미니멀"
-    }
-  ]
-}
-```
-
-결과가 없으면 `null`이 아니라 빈 배열을 반환한다.
-
-```json
-{
-  "success": true,
-  "data": []
-}
-```
-
-단순히 구현을 통일하기 위한 목적으로 작은 고정 목록에 불필요한 페이지네이션 구조를 적용하지 않는다.
-
-반대로 데이터가 지속적으로 증가할 수 있는 목록을 한 번에 모두 반환하지 않는다.
+기능상 결과 수가 작고 제한적인 추천 preview 등에는 페이지네이션을 강제하지 않는다.
 
 ---
 
-## 6. 일반 오류 응답 형식
+## 7. 일반 오류 응답
 
 ```json
 {
@@ -1290,31 +1084,71 @@ Enum 기반 옵션 목록
 }
 ```
 
-- 오류 응답에는 `success`와 `error`를 포함하고 `data`는 포함하지 않는다.
-- 사용하지 않는 `data`를 `null`로 보내지 않고 응답에서 생략한다.
-- `code`는 프론트엔드가 오류 종류를 구분할 때 사용하는 고정된 영문 코드이다.
-- `message`는 사용자 안내 또는 개발 중 확인을 위한 안전한 설명이다.
-- 프론트엔드는 `message` 문자열을 비교하지 않고 `code`를 기준으로 분기한다.
-- 서버의 예외 메시지, SQL, 파일 경로, 스택 트레이스 등 내부 정보는 응답에 노출하지 않는다.
+규칙:
+
+- 오류 응답에는 최상위 `success`, `error`를 포함한다.
+- 오류 응답에 사용하지 않는 `data: null`을 넣지 않는다.
+- `code`는 프론트 분기용 고정 코드이다.
+- `message`는 사용자 안내 또는 안전한 개발 확인용 설명이다.
+- 프론트는 `message` 문자열이 아니라 `code`를 기준으로 분기한다.
+- SQL, stack trace, 파일 경로, 외부 Provider 원문 오류 등 내부 정보를 응답에 노출하지 않는다.
+
+예:
 
 ```ts
 if (error.code === "PRODUCT_NOT_FOUND") {
-  // 제품 없음 화면 표시
+  // 제품 없음 UI
 }
 ```
 
-오류 코드는 대문자 `SNAKE_CASE`를 사용하며, 가능한 한 `대상_원인` 형태로 작성한다.
+### 7.1 오류 코드 표기
+
+오류 코드는 대문자 `SNAKE_CASE`를 사용한다.
+
+대표 예:
 
 ```text
+VALIDATION_ERROR
+REQUEST_BODY_INVALID
 PRODUCT_NOT_FOUND
 MY_ITEM_NOT_FOUND
-VERIFICATION_CODE_INVALID
-VERIFICATION_CODE_EXPIRED
-FILE_SIZE_EXCEEDED
+STYLE_PLAN_NOT_FOUND
+PLACE_NOT_FOUND
+NOTIFICATION_NOT_FOUND
+AI_JOB_NOT_FOUND
+RESOURCE_VERSION_CONFLICT
+ORIGIN_NOT_ALLOWED
 INTERNAL_SERVER_ERROR
 ```
 
-요청 본문 자체가 없거나 JSON 문법이 잘못된 경우에는 `fields` 없이 일반 오류 형식을 사용한다.
+### 7.2 현재 중요 오류 코드
+
+| HTTP | ErrorCode | 의미 |
+| ---: | --- | --- |
+| 401 | `INVALID_CREDENTIALS` | 로그인 자격 증명 오류 |
+| 401 | `ACCESS_TOKEN_INVALID` | Access Token 유효하지 않음 |
+| 401 | `ACCESS_TOKEN_EXPIRED` | Access Token 만료 |
+| 401 | `REFRESH_TOKEN_INVALID` | Refresh Token 유효하지 않음 |
+| 403 | `ACCOUNT_NOT_ACTIVE` | 활성 계정이 아님 |
+| 403 | `ORIGIN_NOT_ALLOWED` | Trusted Origin 검증 실패 |
+| 409 | `RESOURCE_VERSION_CONFLICT` | 낙관적 락 버전 충돌 |
+| 409 | `PREFERENCE_REQUIRED` | 추천 전 취향 정보 필요 |
+| 409 | `IDEMPOTENCY_KEY_CONFLICT` | 같은 Idempotency-Key에 다른 요청 사용 |
+| 409 | `AI_JOB_ALREADY_RUNNING` | 다른 AI Job이 이미 실행 중 |
+| 429 | `AI_DAILY_LIMIT_EXCEEDED` | 최근 24시간 AI Job 생성 한도 초과 |
+| 409 | `IMAGE_ASSET_STATE_CONFLICT` | ImageAsset 현재 상태와 요청 충돌 |
+| 409 | `IMAGE_ASSET_IN_USE` | 실행 중 AI Job이 이미지 사용 중 |
+| 409 | `IMAGE_ASSET_ANALYSIS_MISMATCH` | ITEM_ANALYSIS 입력 이미지와 최초 연결 이미지 불일치 |
+| 413 | `IMAGE_FILE_TOO_LARGE` | 이미지 크기 초과 |
+| 415 | `IMAGE_FORMAT_UNSUPPORTED` | 지원하지 않는 이미지 형식 |
+| 502 | `IMAGE_STORAGE_ERROR` | 이미지 저장소 연동 실패 |
+| 502 | `PLACE_PROVIDER_UNAVAILABLE` | 장소 Provider 호출 실패/사용 불가 |
+| 504 | `PLACE_PROVIDER_TIMEOUT` | 장소 Provider timeout |
+| 503 | `EMAIL_PROVIDER_UNAVAILABLE` | 이메일 Provider 일시 사용 불가 |
+
+오류 코드의 최종 Source of Truth는 백엔드 `ErrorCode.java`이다.
+
+### 7.3 잘못된 JSON
 
 ```json
 {
@@ -1326,7 +1160,9 @@ INTERNAL_SERVER_ERROR
 }
 ```
 
-처리되지 않은 서버 내부 오류도 내부 예외 내용을 노출하지 않고 공통 형식으로 반환한다.
+요청 본문 자체가 없거나 JSON 문법/역직렬화가 깨진 경우 필드별 Validation이 불가능할 수 있으므로 `fields` 없이 반환할 수 있다.
+
+### 7.4 처리되지 않은 서버 오류
 
 ```json
 {
@@ -1338,22 +1174,9 @@ INTERNAL_SERVER_ERROR
 }
 ```
 
-### 6.1 확정된 인증·이미지 오류 코드
-
-| HTTP | ErrorCode | 의미 |
-| ---: | --- | --- |
-| 403 | `ORIGIN_NOT_ALLOWED` | 인증 POST 요청의 Origin이 허용되지 않음 |
-| 409 | `IMAGE_SORT_ORDER_CONFLICT` | 동일 아이템 이미지 표시 순서 충돌 |
-
-`ORIGIN_NOT_ALLOWED`는 브라우저의 CORS 차단 자체가 아니라 서버의 인증 POST 신뢰 Origin 검증 실패를 의미한다.
-
-`IMAGE_SORT_ORDER_CONFLICT`는 같은 `UserItem`의 이미지 완료 Transaction에서 동일한 `sortOrder`가 이미 사용 중일 때 반환한다.
-
 ---
 
-## 7. Validation 오류 형식
-
-입력값 검증이 실패하면 `400 Bad Request`와 함께 잘못된 필드를 배열로 반환한다.
+## 8. Validation 오류
 
 ```json
 {
@@ -1367,172 +1190,184 @@ INTERNAL_SERVER_ERROR
         "reason": "올바른 이메일 형식이 아닙니다."
       },
       {
-        "field": "verificationCode",
-        "reason": "인증번호는 6자리여야 합니다."
+        "field": "size",
+        "reason": "100 이하여야 합니다."
       }
     ]
   }
 }
 ```
 
-- `fields`는 Validation 오류가 발생한 경우에만 `error` 내부에 포함한다.
-- `field`는 실제 요청에서 사용하는 필드명, Query Parameter명 또는 Path Variable명과 일치시킨다.
-- 이메일 인증 요청이면 `email`, 인증번호 확인 요청이면 `verificationCode`처럼 실제 요청 필드명을 사용한다.
-- 한 필드에 오류가 여러 개여도 우선순위가 가장 높은 오류 하나만 반환한다.
-- 여러 필드가 잘못되었다면 가능한 한 한 번에 모두 반환한다.
-- Validation 오류가 아닌 일반 오류에는 `fields`를 빈 배열로 넣지 않고 필드 자체를 생략한다.
-- 요청 본문 자체가 없거나 JSON 문법이 잘못된 경우에는 `fields` 없이 일반 오류 형식을 사용한다.
+규칙:
+
+- `fields`는 Validation 오류에만 포함한다.
+- `field`는 실제 JSON 필드, Query Parameter, Path Variable, Header 계약 이름과 최대한 일치시킨다.
+- 한 필드에 여러 오류가 있더라도 사용자에게 필요한 우선 오류 하나를 반환할 수 있다.
+- 여러 필드가 잘못되었다면 가능한 범위에서 한 번에 반환한다.
+- 일반 Business Error에는 `fields: []`를 넣지 않는다.
+
+Header Validation도 공통 Validation 규칙에 포함된다.
+
+현재 대표 예:
+
+```text
+Idempotency-Key 누락/blank/길이 초과
+```
 
 ---
 
-## 8. 날짜·시간과 기준 시간대
+## 9. 날짜·시간과 기준 시간대
 
-### 8.1 형식
+### 9.1 형식
 
-ISO 8601 형식으로 통일한다.
-
-| 데이터 종류        | 형식          | 예시                   |
-| ------------------ | ------------- | ---------------------- |
-| 특정 시각          | UTC 날짜·시간 | `2026-08-05T07:30:00Z` |
-| 날짜만 의미하는 값 | `YYYY-MM-DD`  | `2026-08-05`           |
-| 시간만 의미하는 값 | `HH:mm:ss`    | `16:30:00`             |
-
-`2026/08/05`, `08-05-2026`, `2026년 8월 5일`처럼 화면 표시용으로 가공한 값을 API에서 보내지 않는다.
-
-### 8.2 시간대
-
-- 서버와 DB 저장: UTC
-- API 요청·응답: UTC
-- 프론트 화면 표시: `Asia/Seoul`
-- 생일, 행사일 등 날짜 자체만 의미하는 값: 시간대 변환 없이 `YYYY-MM-DD`
-
-예를 들어 API가 `2026-08-05T07:30:00Z`를 반환하면 프론트는 한국 시간 `2026-08-05 16:30`으로 표시한다.
-
-### 8.3 백엔드 Java 타입
-
-| 의미 | Java 타입 | API 형식 |
+| 의미 | API 형식 | Java 타입 |
 | --- | --- | --- |
-| 날짜만 의미하는 값 | `LocalDate` | `YYYY-MM-DD` |
-| 시간만 의미하는 값 | `LocalTime` | `HH:mm:ss` |
-| 정확한 시각 | `Instant` | UTC ISO 8601 |
+| 날짜만 의미 | `YYYY-MM-DD` | `LocalDate` |
+| 시간만 의미 | `HH:mm:ss` | `LocalTime` |
+| 정확한 시각 | UTC ISO 8601 (`...Z`) | `Instant` |
 
 예:
 
-- 스타일 플랜 날짜 → `LocalDate`
-- 구매일 → `LocalDate`
-- 사용 기록 날짜 → `LocalDate`
-- 다음 관리 예정일 → `LocalDate`
-- 스타일 플랜 시간 → `LocalTime`
-- 생성 시각 → `Instant`
-- 수정 시각 → `Instant`
+```text
+purchaseDate: 2026-08-18
+createdAt: 2026-08-18T12:30:00Z
+plannedAt: 2026-08-20T09:00:00Z
+```
 
-정확한 시각을 저장하기 위해 `LocalDateTime`을 사용하지 않는다.
-`java.util.Date`, `Calendar`, `Timestamp`도 신규 도메인 코드에서는 사용하지 않는다.
+### 9.2 현재 실제 예
 
-날짜와 시간을 화면 표시용 `String`으로 백엔드에서 가공하지 않는다.
+`LocalDate` 계열:
 
-### 8.4 생성·수정 시각
+```text
+purchaseDate
+nextCareDate
+```
 
-Entity의 생성·수정 시각은 다음 기준을 사용한다.
+`Instant` 계열:
 
-- Java 타입: `Instant`
-- DB 저장 기준: UTC
-- 필드명: `createdAt`, `updatedAt`
-- DB 컬럼명: `created_at`, `updated_at`
-- 생성 시각은 최초 저장 시 자동 기록한다.
-- 수정 시각은 Entity 변경 시 자동 갱신한다.
-- API에 노출하는 경우 UTC ISO 8601 형식으로 전달한다.
-- 모든 응답 DTO에 생성·수정 시각을 의무적으로 포함하지 않는다.
+```text
+createdAt
+updatedAt
+plannedAt
+analyzedAt
+addedAt
+completedAt
+```
+
+현재 스타일 플랜의 일정 시각은 `plannedAt: Instant`이다. 과거의 `스타일 플랜 날짜 LocalDate + 시간 LocalTime` 예시를 현행 계약으로 사용하지 않는다.
+
+### 9.3 시간대
+
+- 서버/Jackson/Hibernate 정확한 시각 기준: UTC
+- DB 연결 timezone: UTC
+- API의 `Instant`: UTC ISO 8601
+- 프론트 표시: 필요 시 `Asia/Seoul`
+- 날짜 자체만 의미하는 `LocalDate`: 시간대 변환하지 않음
+
+`2026년 8월 18일`, `08/18/2026` 같은 화면용 문자열을 백엔드가 만들어 보내지 않는다.
+
+### 9.4 Entity 생성·수정 시각
+
+공통 원칙:
+
+```text
+createdAt → 최초 생성 시각
+updatedAt → 마지막 수정 시각
+```
+
+정확한 시각은 `Instant`를 사용한다.
+
+신규 정확한 시각 도메인 값에 `LocalDateTime`, `java.util.Date`, `Calendar`, `Timestamp` 사용을 피한다.
 
 ---
 
-## 9. Enum 표현
+## 10. Enum 표현
 
 Enum은 영문 대문자 `SNAKE_CASE`로 전달한다.
 
+현재 예:
+
 ```json
 {
-  "status": "IN_PROGRESS",
-  "style": "STREET_CASUAL",
-  "season": "SPRING"
+  "type": "STYLE_PLAN",
+  "status": "PROCESSING",
+  "occasion": "DATE",
+  "weatherCondition": "RAINY"
 }
 ```
 
-사용자에게 보일 한글 문구는 프론트에서 변환한다.
+사용자 표시용 한글 문구는 프론트에서 변환한다.
 
-```ts
-const statusLabel = {
-  IN_PROGRESS: "진행 중",
-  COMPLETED: "완료",
-} as const;
-```
+프론트가 백엔드에 정의되지 않은 Enum 문자열을 임의 생성하지 않는다.
+
+Enum 값 추가는 일반적으로 호환 가능한 확장일 수 있지만, 기존 Enum 값 삭제/이름 변경은 Breaking Change이다.
 
 ---
 
-## 10. 응답의 `null`, 빈 배열, 빈 문자열
+## 11. 응답의 `null`, 빈 배열, 빈 문자열
 
-이 절은 백엔드가 프론트에 반환하는 **응답 필드**의 규칙이다. 요청 필드의 생략·`null` 규칙은 3.3과 3.4를 따른다.
+| 상황 | 표현 |
+| --- | --- |
+| 선택 단일 값이 아직 없음 | `null` |
+| 목록 결과 없음 | `[]` |
+| 빈 문자열 자체가 의미 있음 | `""` 가능 |
+| 공통 성공 응답의 사용하지 않는 `error` | 필드 생략 |
+| 공통 오류 응답의 사용하지 않는 `data` | 필드 생략 |
 
-| 상황                               | 반환값                                         |
-| ---------------------------------- | ---------------------------------------------- |
-| 선택값이 아직 없거나 설정되지 않음 | `null`                                         |
-| 목록에 항목이 없음                 | `[]`                                           |
-| 문자열 입력이 비어 있음            | 빈 문자열 자체가 의미 있을 때만 `""`           |
-| 필드가 API 계약에 있지만 값이 없음 | 필드를 생략하지 않고 `null` 또는 정해진 기본값 |
+예:
 
 ```json
 {
-  "nickname": null,
   "profileImageUrl": null,
   "items": []
 }
 ```
 
-- 배열은 항상 배열로 반환하여 프론트에서 바로 `map`, `filter` 등을 사용할 수 있게 한다.
-- 선택 필드가 응답마다 사라지지 않게 하여 프론트 타입을 안정적으로 유지한다.
-- 공백 문자열을 `null` 대신 사용하지 않는다.
-- 단, 성공·오류 공통 응답에서 사용하지 않는 최상위 `data` 또는 `error`는 `null`로 보내지 않고 생략한다.
+응답 계약에 포함된 선택 필드는 가능한 한 응답마다 존재하도록 하여 프론트 타입을 안정적으로 유지한다.
+
+단, 공통 Wrapper에서 성공 시 `error`, 오류 시 `data`처럼 서로 배타적인 최상위 필드는 생략한다.
+
+AI Job의 `result`, `fallback`, `error`, `completedAt`은 상태에 따라 `null`일 수 있다.
 
 ---
 
-## 11. ID와 금액 자료형
+## 12. ID와 금액
 
-### 11.1 ID
+### 12.1 ID
 
-DB에서 숫자로 저장하더라도 API 요청과 응답에서는 문자열로 전달한다.
-
-```json
-{
-  "productId": "1234567890123456789",
-  "myItemId": "987654321"
-}
-```
-
-API 필드명은 `id` 단독 사용보다 `productId`, `myItemId`, `placeId`처럼 대상 리소스가 드러나는 이름을 우선 사용한다.
-
-JavaScript의 안전한 정수 범위를 넘는 ID가 숫자로 전달될 때 값이 달라질 수 있으므로, 모든 ID를 문자열로 통일한다.
-
-### 11.2 금액
-
-현재 MVP의 금액은 `KRW`를 기준으로 하며, 원화 금액은 원 단위 정수로 전달한다.
+현재 응답 ID의 기본 예:
 
 ```json
 {
-  "price": 1250000
+  "productId": "123",
+  "myItemId": "25",
+  "jobId": "41"
 }
 ```
 
-구매 가격도 같은 기준을 사용한다.
+응답 ID는 문자열을 우선한다.
+
+다만 기존 요청 DTO에 숫자 ID가 존재하므로 프론트는 요청/응답을 같은 타입이라고 가정하지 않고 Endpoint 계약을 확인한다.
+
+타입을 바꾸려면 별도 Breaking API 변경으로 공유한다.
+
+### 12.2 금액
+
+현재 MVP 통화 기준은 KRW이다.
 
 ```json
 {
-  "purchasePrice": 1250000
+  "price": 1250000,
+  "purchasePrice": 990000
 }
 ```
 
-현재 MVP에서는 `currency` 필드를 매 요청·응답마다 포함하지 않는다. 향후 다중 통화를 지원하게 되는 경우에만 `currency` 필드를 추가한다.
+- 원 단위 정수
+- 쉼표 없음
+- `원` 문자열 없음
+- 현재 모든 금액에 `currency` 필드를 의무적으로 붙이지 않음
 
-API에서 `"1,250,000원"`처럼 표시용 문자열을 보내지 않는다. 쉼표와 통화 표시는 프론트에서 처리한다.
+프론트 표시 예:
 
 ```ts
 `${price.toLocaleString("ko-KR")}원`;
@@ -1540,70 +1375,462 @@ API에서 `"1,250,000원"`처럼 표시용 문자열을 보내지 않는다. 쉼
 
 ---
 
-## 12. API 변경의 분류
+## 13. 인증·토큰·OAuth 공통 계약
 
-변경 전에 프론트 영향도를 기준으로 다음과 같이 분류한다.
+### 13.1 구조
 
-### 12.1 호환 가능한 변경
+현재 인증 구조:
 
-- 응답에 새로운 선택 필드 추가
-- 새로운 API Endpoint 추가
-- 새로운 선택 Query Parameter 추가
-- 기존 동작을 바꾸지 않는 문서·설명 수정
+```text
+Spring Security
++ OAuth2 Resource Server
++ JWT Access Token
++ Refresh Token Cookie
++ Stateless Session Policy
+```
 
-### 12.2 호환성이 깨지는 변경
+서버 Session에 로그인 상태를 저장하지 않는다.
 
-- Endpoint 또는 HTTP Method 변경
-- 기존 요청·응답 필드의 삭제 또는 이름 변경
-- 필드 자료형 변경
-- 필수 요청 필드 추가
-- Enum 값의 삭제 또는 이름 변경
-- `null` 가능 여부 변경
-- 페이지네이션 구조 또는 시작 번호 변경
-- 기존 상태 코드나 오류 코드의 의미 변경
+### 13.2 일반 보호 API
+
+```http
+Authorization: Bearer <accessToken>
+```
+
+Access Token이 없거나 유효하지 않으면 `401`이다.
+
+현재 보안 계층의 대표 오류:
+
+```text
+ACCESS_TOKEN_INVALID
+ACCESS_TOKEN_EXPIRED
+ACCOUNT_NOT_ACTIVE
+RESOURCE_ACCESS_DENIED
+```
+
+### 13.3 회원가입·로그인
+
+일반 회원가입:
+
+```http
+POST /api/auth/signup
+→ 201 Created
+→ Access Token 응답 데이터
+→ Refresh Token Set-Cookie
+```
+
+로그인:
+
+```http
+POST /api/auth/login
+→ 200 OK
+→ Access Token 응답 데이터
+→ Refresh Token Set-Cookie
+```
+
+### 13.4 Refresh
+
+```http
+POST /api/auth/refresh
+```
+
+Refresh Token은 Cookie에서 읽는다.
+
+성공 시:
+
+```text
+200 OK
+새 Access Token 데이터 반환
+Refresh Cookie 재설정 가능
+```
+
+### 13.5 Logout
+
+```http
+POST /api/auth/logout
+Authorization: Bearer <accessToken>
+Cookie: refresh_token=...
+```
+
+현재 logout은 인증된 사용자 JWT와 Refresh Cookie를 사용한다.
+
+성공 시:
+
+```text
+204 No Content
+Refresh/Reauthentication Cookie clear
+```
+
+### 13.6 OAuth Redirect
+
+OAuth 시작과 Callback은 JSON API가 아니라 Redirect 계약이다.
+
+```http
+GET /api/auth/oauth/{provider}
+→ 302 Found
+
+GET /api/auth/oauth/{provider}/callback
+→ 302 Found
+```
+
+신규 소셜 사용자의 onboarding이 필요한 경우 Callback 결과에 따라 프론트 onboarding URL로 Redirect하고 서버 관리 onboarding Cookie를 사용할 수 있다.
+
+### 13.7 재인증
+
+비밀번호 재인증:
+
+```http
+POST /api/auth/reauthentications
+Authorization: Bearer <accessToken>
+```
+
+성공 시 본문 없이 `204`와 재인증 Cookie를 설정한다.
+
+소셜 계정 재인증은 OAuth Redirect 흐름을 사용한다.
 
 ---
 
-## 13. 분리된 프론트·백엔드 저장소에서 API 변경 공유 방법
+## 14. 공통 AI Job 계약
 
+AI 기능마다 별도 Job 시스템을 만들지 않고 공통 AI Job API를 사용한다.
 
-프론트가 원하는 응답 구조가 있다고 해서 프론트 저장소에서 API 계약을 먼저 확정하지 않는다.
-
-1. 프론트에서 백엔드 저장소에 API 변경 요청 Issue를 생성한다.
-2. 현재 불편한 점과 원하는 요청·응답 예시를 작성한다.
-3. 백엔드 담당자와 변경 가능 여부 및 형식을 합의한다.
-4. 백엔드 담당자는 해당 협의안을 코드에 적용하고 PR을 생성한다.
-5. 프론트는 확정된 백엔드 PR을 기준으로 구현한다.
-
-Issue 제목 예시:
+### 14.1 현재 지원 타입
 
 ```text
-[API 요청] 제품 목록 응답에 대표 이미지 URL 추가
+PURCHASE_UTILITY
+ITEM_ANALYSIS
+STYLE_PLAN
 ```
 
-기존 프론트가 바로 깨지는 변경이라면 백엔드가 잠시 이전 필드와 새 필드를 함께 제공하는 방식이 가장 안전하다.(배포 후 참고)
+### 14.2 생성
+
+```http
+POST /api/ai-jobs
+Authorization: Bearer <accessToken>
+Idempotency-Key: <required>
+Content-Type: application/json
+```
+
+`Idempotency-Key`는 현재 최대 255자이다.
+
+기본 요청:
 
 ```json
 {
-  "image": "https://example.com/old.jpg",
-  "imageUrl": "https://example.com/new.jpg"
+  "type": "PURCHASE_UTILITY",
+  "context": {
+    "productId": "123"
+  }
 }
 ```
 
-프론트 전환과 배포가 끝난 뒤 별도 백엔드 PR에서 이전 필드를 제거한다.
+ITEM_ANALYSIS:
+
+```json
+{
+  "type": "ITEM_ANALYSIS",
+  "context": {
+    "imageAssetId": "31"
+  }
+}
+```
+
+STYLE_PLAN context는 현재 다음 필드를 사용한다.
+
+```json
+{
+  "type": "STYLE_PLAN",
+  "context": {
+    "occasion": "DATE",
+    "styleTags": ["MINIMAL", "CASUAL"],
+    "weatherCondition": "CLOUDY",
+    "prioritizeOwnedItems": true,
+    "language": "ko"
+  }
+}
+```
+
+현재 STYLE_PLAN 주요 조건:
+
+```text
+styleTags: 1~4개
+weatherCondition: nullable
+language: ko
+```
+
+타입별 context 필드를 섞어 보내지 않는다.
+
+### 14.3 멱등성
+
+같은 사용자가 같은 `Idempotency-Key`와 동일한 요청을 다시 보내면 기존 Job을 재사용한다.
+
+같은 Key에 다른 요청 본문을 사용하면:
+
+```text
+409 IDEMPOTENCY_KEY_CONFLICT
+```
+
+신규 Job:
+
+```text
+202 Accepted
+```
+
+기존 완료 Job의 멱등 재조회:
+
+```text
+200 OK
+```
+
+### 14.4 생성 정책
+
+현재 서버 정책:
+
+- 사용자당 `PENDING`/`PROCESSING` AI Job은 동시에 1개 허용
+- 최근 24시간 기준 AI Job 생성 한도 적용
+- 현재 기본/공개 계약상 최대 10개
+- 오래 멈춘 실행 중 Job은 stale timeout 처리 가능
+
+대표 오류:
+
+```text
+409 AI_JOB_ALREADY_RUNNING
+429 AI_DAILY_LIMIT_EXCEEDED
+```
+
+현재 stale PENDING/PROCESSING Job은 서버에서 timeout 실패 상태로 정리될 수 있으며 오류 코드는 `AI_JOB_TIMEOUT`이다.
+
+### 14.5 생성 응답
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobId": "41",
+    "type": "ITEM_ANALYSIS",
+    "status": "PENDING",
+    "createdAt": "2026-08-18T12:30:00Z"
+  }
+}
+```
+
+### 14.6 조회와 Polling
+
+```http
+GET /api/ai-jobs/{jobId}
+Authorization: Bearer <accessToken>
+```
+
+상태:
+
+```text
+PENDING
+PROCESSING
+SUCCEEDED
+FAILED
+```
+
+프론트 기본 흐름:
+
+```text
+POST /api/ai-jobs
+→ jobId 확보
+→ GET /api/ai-jobs/{jobId} polling
+→ PENDING/PROCESSING이면 대기
+→ SUCCEEDED 또는 FAILED이면 polling 종료
+```
+
+정확한 polling 간격은 프론트 구현에서 서버 부하를 고려해 정한다. 짧은 간격의 무한 polling을 하지 않는다.
+
+### 14.7 조회 응답의 `result`, `fallback`, `error`
+
+현재 AI Job 조회 데이터 구조:
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobId": "41",
+    "type": "STYLE_PLAN",
+    "status": "SUCCEEDED",
+    "result": {},
+    "fallback": null,
+    "error": null,
+    "createdAt": "2026-08-18T12:30:00Z",
+    "completedAt": "2026-08-18T12:30:06Z"
+  }
+}
+```
+
+중요한 구분:
+
+**AI 처리 자체가 FAILED인 것과 HTTP 요청 실패는 다르다.**
+
+Job 조회 요청이 정상적으로 처리되어 FAILED Job을 읽은 경우:
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobId": "41",
+    "status": "FAILED",
+    "result": null,
+    "fallback": {},
+    "error": {
+      "code": "AI_STYLE_PLAN_FAILED",
+      "message": "스마트 착용 추천 생성에 실패했습니다."
+    }
+  }
+}
+```
+
+이때 최상위 `success`는 HTTP 조회 성공을 뜻한다.
+
+반대로 존재하지 않는 Job을 조회한 경우는 HTTP 오류이다.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "AI_JOB_NOT_FOUND",
+    "message": "AI 작업을 찾을 수 없습니다."
+  }
+}
+```
+
+### 14.8 AI fallback
+
+AI 생성이 실패해도 규칙 기반 결과를 유지할 수 있는 기능에서는 `fallback`을 반환할 수 있다.
+
+프론트는 `status == FAILED`라는 이유만으로 `fallback`을 무시하지 않고 기능별 계약을 확인한다.
 
 ---
 
-## 14. API 변경 PR 템플릿
+## 15. 외부 Provider 연동 규칙
 
-백엔드 저장소의 `.github/pull_request_template.md` 또는 API 변경 PR 본문에 다음 양식을 사용한다.
+### 15.1 외부 호출은 서버에서 수행
+
+다음 Provider Secret은 프론트로 노출하지 않는다.
+
+```text
+OpenAI API Key
+Kakao Local REST API Key
+Cloudinary API Secret
+OAuth Client Secret
+이메일 Provider Secret
+```
+
+### 15.2 장소 검색
+
+현재 장소 검색은 Kakao Local 기반이다.
+
+```http
+GET /api/places
+```
+
+현재 주요 Query:
+
+```text
+query
+category
+latitude
+longitude
+radius
+```
+
+서버는 외부 검색 결과를 내부 Place 데이터와 연결/캐시할 수 있다. 프론트가 Kakao Provider 내부 응답 구조에 직접 의존하지 않는다.
+
+외부 Provider 오류는 내부 500과 구분한다.
+
+```text
+502 PLACE_PROVIDER_UNAVAILABLE
+504 PLACE_PROVIDER_TIMEOUT
+```
+
+### 15.3 이미지 저장소
+
+Cloudinary 저장/삭제 상세 구현을 프론트 API 계약으로 노출하지 않는다.
+
+프론트는 서버가 반환한 이미지 URL을 사용하되 Cloudinary `public_id`, 삭제 credential 등 내부 관리 정보로 삭제를 직접 시도하지 않는다.
+
+---
+
+## 16. API 변경의 분류
+
+### 16.1 호환 가능한 변경 후보
+
+- 새로운 Endpoint 추가
+- 기존 동작을 바꾸지 않는 설명 보완
+- 기존 클라이언트가 무시할 수 있는 선택 응답 필드 추가
+- 선택 Query Parameter 추가
+
+단, 새 필드가 프론트 TypeScript의 exhaustive type 처리에 영향을 줄 수 있으므로 실제 영향은 확인한다.
+
+### 16.2 Breaking Change
+
+다음은 기본적으로 Breaking Change이다.
+
+```text
+Endpoint 변경
+HTTP Method 변경
+요청/응답 필드 삭제
+필드명 변경
+자료형 변경
+ID 문자열↔숫자 변경
+필수 요청 필드 추가
+Enum 기존 값 삭제/이름 변경
+null 가능 여부 변경
+PATCH null 의미 변경
+페이지 시작 번호 변경
+페이지 응답 구조 변경
+기존 상태 코드 의미 변경
+오류 코드 의미 변경
+인증 방식 변경
+Cookie path/SameSite 정책 변경으로 FE 요청 방식이 달라지는 경우
+Idempotency-Key 요구 여부 변경
+```
+
+Breaking Change는 프론트와 백엔드가 적용 순서를 합의한다.
+
+---
+
+## 17. 프론트·백엔드 저장소 간 API 변경 공유
+
+프론트 요구만으로 백엔드 API 계약을 프론트 저장소에서 먼저 확정하지 않는다.
+
+권장 흐름:
+
+1. 변경 필요성을 Issue 또는 팀 채널에서 공유한다.
+2. 현재 요청/응답과 문제점을 적는다.
+3. 변경 후 원하는 계약 예시를 적는다.
+4. FE/BE가 호환성과 적용 순서를 확인한다.
+5. Backend 코드·Swagger·테스트를 수정한다.
+6. Backend PR을 생성한다.
+7. 확정된 Backend PR/merge 기준으로 FE를 연동한다.
+8. `API_CONVENTIONS.md`에 영향을 주는 공통 정책이면 같은 PR 또는 후속 문서 PR에서 동기화한다.
+
+API 계약의 최종 확인 순서:
+
+```text
+현재 main Controller / Request·Response DTO
+→ 공통 response / ErrorCode / Security 설정
+→ 관련 테스트
+→ API_CONVENTIONS.md
+→ README 요약
+```
+
+문서와 코드가 다르면 오래된 문서를 그대로 믿지 않고 차이를 해결한다.
+
+---
+
+## 18. API 변경 PR 템플릿
 
 ````md
 ## 변경 유형
 
 - [ ] 새로운 API 추가
 - [ ] 호환 가능한 변경
-- [ ] 호환성이 깨지는 변경
+- [ ] Breaking Change
 - [ ] 문서만 변경
 
 ## 대상 API
@@ -1613,128 +1840,156 @@ Issue 제목 예시:
 
 ## 변경 이유
 
-제품 목록 데이터가 많아질 때 전체 데이터를 한 번에 불러오는 문제를 막기 위해 페이지네이션을 적용합니다.
+변경이 필요한 이유를 작성합니다.
 
 ## 변경 전
 
 ```json
-{
-  "success": true,
-  "data": []
-}
+{}
 ```
 
 ## 변경 후
 
 ```json
-{
-  "success": true,
-  "data": {
-    "items": [],
-    "page": 0,
-    "size": 20,
-    "totalElements": 0,
-    "totalPages": 0,
-    "hasNext": false,
-    "hasPrevious": false
-  }
-}
+{}
 ```
 
 ## 요청 규칙
 
-- `page`: 0부터 시작, 기본값 0
-- `size`: 기본값 20, 최댓값 100
-- `sort`: `필드명,asc|desc`
+- Path:
+- Query:
+- Header:
+- Body:
+- 인증:
+
+## 응답
+
+- 성공 상태 코드:
+- 성공 데이터:
+- 빈 결과:
+
+## 오류
+
+- `400`:
+- `401`:
+- `404`:
+- `409`:
+- 기타 Provider/Rate Limit 오류:
 
 ## 프론트 영향
 
-- 목록 타입을 배열에서 페이지 객체로 변경해야 합니다.
-- `data.items`를 기준으로 렌더링해야 합니다.
-- 페이지 이동 시 `page`, `size`를 Query Parameter로 전달해야 합니다.
-
-## 오류 및 상태 코드
-
-- `200`: 조회 성공
-- `400`: 잘못된 페이지·정렬 조건
+- 타입 변경 여부:
+- 화면 분기 변경 여부:
+- 인증/Cookie 영향:
+- 적용 순서:
 
 ## 관련 작업
 
-- Backend Issue: #번호
-- Frontend Issue/PR: 상대 저장소 URL 또는 `없음`
-
-## 적용 및 배포 순서
-
-1. 백엔드 개발 서버 배포
-2. 프론트 연동 확인
-3. 프론트 병합 및 배포
+- Backend Issue:
+- Backend PR:
+- Frontend Issue/PR:
 
 ## 확인 체크리스트
 
-- [ ] 프론트 담당자가 변경 내용을 확인했습니다.
-- [ ] 기존 API 사용자에게 미치는 영향을 확인했습니다.
-- [ ] 테스트와 CI가 통과했습니다.
-- [ ] 팀 채널에 PR 링크와 적용 환경을 공유했습니다.
-
+- [ ] Swagger가 실제 코드와 일치합니다.
+- [ ] 성공/오류 공통 응답 규칙을 지킵니다.
+- [ ] Validation 오류 필드명을 확인했습니다.
+- [ ] ID 자료형을 확인했습니다.
+- [ ] null/빈 배열 계약을 확인했습니다.
+- [ ] 페이지네이션/정렬 계약을 확인했습니다.
+- [ ] 인증/Origin/Cookie 영향을 확인했습니다.
+- [ ] 필요한 테스트가 추가되었습니다.
+- [ ] `./gradlew clean check`가 통과했습니다.
+- [ ] FE 담당자가 Breaking 영향 여부를 확인했습니다.
 ````
 
-### PR 제목 규칙
+PR 제목 예:
 
 ```text
-[API] 제품 목록 페이지네이션 적용
-[API] 추천 결과에 reason 필드 추가
-[API][Breaking] image 필드를 imageUrl로 변경
+[API] 제품 목록 응답 보완
+[API] AI Job 오류 계약 문서화
+[API][Breaking] 요청 ID 자료형 변경
+[DOCS] API_CONVENTIONS 현행 코드 기준 동기화
 ```
-
-호환성이 깨지는 변경은 제목에 `[Breaking]`을 추가한다.
 
 ---
 
-## 15. 프론트 대응 PR 템플릿
+## 19. 프론트 대응 PR 체크리스트
 
 ```md
-## 관련 API 변경
+## 관련 Backend 변경
 
-- Backend PR: 상대 백엔드 저장소 PR URL
-- 대상 API: `GET /api/products`
+- Backend PR:
+- 대상 API:
 
-## 프론트 변경 내용
+## 프론트 변경
 
-- 페이지 응답 타입을 추가했습니다.
-- 제품 목록을 `data.items`로 렌더링하도록 수정했습니다.
-- 페이지 이동 시 `page`, `size`를 전달하도록 수정했습니다.
+- 요청 DTO 변경:
+- 응답 타입 변경:
+- 오류 분기 변경:
+- 인증/Cookie 변경:
 
-## 연동 환경
+## 연동 확인
 
-- [ ] Mock 데이터
-- [ ] 로컬 백엔드
-- [ ] 개발 서버
-
-## 확인 항목
-
-- [ ] 첫 페이지 조회
-- [ ] 다음·이전 페이지 이동
-- [ ] 빈 목록 처리
-- [ ] 로딩 처리
-- [ ] 일반 오류 처리
-- [ ] Validation 오류 처리
+- [ ] 정상 성공
+- [ ] 빈 결과
+- [ ] Validation 오류
+- [ ] 401 인증 오류
+- [ ] 403 권한/Origin 오류
+- [ ] 404 리소스 없음
+- [ ] 409 충돌
+- [ ] 429 한도 초과(해당 기능)
+- [ ] 5xx Provider 오류(해당 기능)
+- [ ] 모바일/새로고침 후 인증 흐름
+- [ ] multipart 이미지 업로드(해당 기능)
+- [ ] AI Job polling 종료 처리(해당 기능)
 ```
 
 ---
 
-## 16. API 변경 완료 조건
+## 20. API 구현 완료 조건
 
-다음 조건을 모두 만족해야 API 변경이 완료된 것으로 본다.
+공통 API 작업은 다음을 확인한다.
 
-- [ ] 구현 코드가 완료되었다.
-- [ ] 성공, 일반 오류, Validation 오류가 공통 형식을 따른다.
-- [ ] 성공 응답에는 `error`가, 오류 응답에는 `data`가 포함되지 않는다.
-- [ ] Validation 오류가 아닌 경우 `fields`가 포함되지 않는다.
-- [ ] 페이지네이션이 필요한 목록에 공통 페이지 형식을 적용했다.
-- [ ] 백엔드 테스트와 CI가 통과했다.
-- [ ] 프론트 영향도를 PR에 작성했다.
-- [ ] 필요한 프론트 Issue/PR과 상호 링크했다.
-- [ ] 프론트 담당자가 개발 환경에서 연동을 확인했다.
-- [ ] 병합·배포 순서가 필요한 경우 양쪽 담당자가 확인했다.
+- [ ] 실제 Controller/DTO가 확정되었다.
+- [ ] Swagger 설명이 실제 계약과 일치한다.
+- [ ] 인증 필요 여부가 명확하다.
+- [ ] Bearer/Cookie/Trusted Origin 요구사항을 확인했다.
+- [ ] 성공 응답은 공통 Wrapper 또는 명시된 예외(204/302)를 따른다.
+- [ ] 오류 응답은 공통 ErrorCode 계약을 따른다.
+- [ ] Validation 오류는 `error.fields` 규칙을 따른다.
+- [ ] ID 필드명과 실제 자료형을 확인했다.
+- [ ] PATCH의 생략/null/version 의미를 확인했다.
+- [ ] 날짜·시간은 `LocalDate`/`Instant` 의미에 맞게 사용했다.
+- [ ] Enum은 대문자 `SNAKE_CASE`이다.
+- [ ] 빈 목록은 `[]` 또는 `items: []`이다.
+- [ ] 페이지네이션이 필요한 목록은 공통 `PageResponse`를 사용한다.
+- [ ] 허용 sort 필드를 검증한다.
+- [ ] 멱등성이 필요한 상태 API를 검증한다.
+- [ ] AI 기능은 기존 공통 AI Job 시스템을 재사용한다.
+- [ ] 외부 Provider 실패를 내부 500과 구분한다.
+- [ ] 단위 테스트/통합 테스트가 필요한 범위에서 추가되었다.
+- [ ] `./gradlew clean check`가 통과한다.
+- [ ] Breaking Change라면 FE와 적용 순서를 합의했다.
+- [ ] 공통 정책 변화가 있으면 `API_CONVENTIONS.md`를 함께 갱신한다.
 
 ---
+
+## 21. 현재 문서에서 폐기된 과거 규칙
+
+다음은 과거 설계에서 사용되었거나 문서에 남아 있었지만 현재 `main` 기준으로 사용하지 않는 규칙이다.
+
+```text
+Railway Backend를 고정 전제로 한 운영 설명
+모든 Axios 요청에 Content-Type: application/json 강제
+서버 Session 기반 로그인 상태 유지
+ITEM 이미지 최대 3장 + sortOrder 충돌 정책
+IMAGE_SORT_ORDER_CONFLICT
+모든 시연 데이터에 isSample 필수
+모든 점수를 0~100 정수로 제한
+스타일 플랜을 LocalDate + LocalTime으로 표현한다는 예시
+region/placeType 기반의 과거 장소 검색 예시
+usage-records를 현재 구현 완료 API로 표현하는 설명
+```
+
+과거 문서나 채팅의 예시보다 현재 `main`의 실제 계약을 우선한다.
