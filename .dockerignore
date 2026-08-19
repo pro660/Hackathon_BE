@@ -1,0 +1,11 @@
+.git
+.github
+.gradle
+build
+out
+.idea
+.env
+.env.prod
+*.iml
+.DS_Store
+Thumbs.db
