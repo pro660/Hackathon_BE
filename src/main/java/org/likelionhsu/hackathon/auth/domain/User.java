@@ -49,6 +49,18 @@ public class User extends BaseTimeEntity {
     )
     private boolean notificationEmailVerified;
 
+    @Column(
+            name = "care_reminder_enabled",
+            nullable = false
+    )
+    private boolean careReminderEnabled;
+
+    @Column(
+            name = "recommendation_update_enabled",
+            nullable = false
+    )
+    private boolean recommendationUpdateEnabled;
+
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
@@ -71,6 +83,8 @@ public class User extends BaseTimeEntity {
         user.role = UserRole.USER;
         user.status = UserStatus.ACTIVE;
         user.notificationEmailVerified = false;
+        user.careReminderEnabled = true;
+        user.recommendationUpdateEnabled = true;
         return user;
     }
 
@@ -87,6 +101,8 @@ public class User extends BaseTimeEntity {
         user.status = UserStatus.ACTIVE;
         user.notificationEmail = normalizeEmail(notificationEmail);
         user.notificationEmailVerified = false;
+        user.careReminderEnabled = true;
+        user.recommendationUpdateEnabled = true;
         return user;
     }
 
@@ -112,6 +128,23 @@ public class User extends BaseTimeEntity {
 
     public UserStatus getStatus() {
         return status;
+    }
+
+    public boolean isCareReminderEnabled() {
+        return careReminderEnabled;
+    }
+
+    public boolean isRecommendationUpdateEnabled() {
+        return recommendationUpdateEnabled;
+    }
+
+    public void updateNotificationSettings(
+            boolean careReminderEnabled,
+            boolean recommendationUpdateEnabled
+    ) {
+        this.careReminderEnabled = careReminderEnabled;
+        this.recommendationUpdateEnabled =
+                recommendationUpdateEnabled;
     }
 
     public void updateProfile(

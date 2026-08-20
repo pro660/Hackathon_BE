@@ -78,4 +78,19 @@ public class TermsAgreement {
     public boolean isAgreed() {
         return agreed;
     }
+
+    public void updateAgreement(
+            boolean agreed,
+            Instant decidedAt
+    ) {
+        this.agreed = agreed;
+
+        if (agreed) {
+            this.agreedAt = decidedAt;
+            this.withdrawnAt = null;
+            return;
+        }
+
+        this.withdrawnAt = decidedAt;
+    }
 }
