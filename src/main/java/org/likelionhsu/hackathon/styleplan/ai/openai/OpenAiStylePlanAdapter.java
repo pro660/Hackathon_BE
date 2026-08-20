@@ -44,6 +44,9 @@ public class OpenAiStylePlanAdapter
             새로운 상품, 보유 아이템, 가격, 재고, 소재 사실을 만들거나 추측하지 마세요.
             title, description, reason만 자연스러운 한국어로 작성하세요.
             role은 MAIN, TOP, BOTTOM, SHOES, BAG, ACCESSORY 중 하나만 사용하세요.
+            casualFormalLevel은 1=캐주얼, 10=포멀인 10단계 값입니다.
+            neatGlamorousLevel은 1=깔끔, 10=화려인 10단계 값입니다.
+            두 스타일 강도 값을 추천 분위기에 직접 반영하세요.
             보유 아이템은 최대 10개, 추천 MCM 상품은 최대 3개만 선택하세요.
             """;
 

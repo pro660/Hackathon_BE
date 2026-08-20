@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.likelionhsu.hackathon.place.client.ExternalPlace;
@@ -100,6 +101,32 @@ public class PlaceRepository {
                 placeId
         );
         return count != null && count > 0;
+    }
+
+    public Optional<StoredPlace> findById(Long placeId) {
+        return jdbcTemplate.query(
+                """
+                SELECT id, name, category_name, address, road_address,
+                       latitude, longitude, place_url
+                FROM places
+                WHERE id = ?
+                LIMIT 1
+                """,
+                (resultSet, rowNumber) -> new StoredPlace(
+                        resultSet.getLong("id"),
+                        resultSet.getString("name"),
+                        PlaceCategory.fromCategoryName(
+                                resultSet.getString("category_name")
+                        ),
+                        resultSet.getString("category_name"),
+                        resultSet.getString("address"),
+                        resultSet.getString("road_address"),
+                        resultSet.getBigDecimal("latitude"),
+                        resultSet.getBigDecimal("longitude"),
+                        resultSet.getString("place_url")
+                ),
+                placeId
+        ).stream().findFirst();
     }
 
     public void savePlace(Long userId, Long placeId) {

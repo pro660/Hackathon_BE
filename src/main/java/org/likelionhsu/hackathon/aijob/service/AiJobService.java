@@ -314,6 +314,8 @@ public class AiJobService {
 
         String requestHash = requestHasher.hashStylePlan(
                 stylePlanRequest.occasion(),
+                stylePlanRequest.casualFormalLevel(),
+                stylePlanRequest.neatGlamorousLevel(),
                 stylePlanRequest.styleTags(),
                 stylePlanRequest.weatherCondition(),
                 stylePlanRequest.prioritizeOwnedItems(),

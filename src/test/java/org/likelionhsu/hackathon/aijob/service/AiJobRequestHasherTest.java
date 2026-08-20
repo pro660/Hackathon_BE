@@ -55,9 +55,36 @@ class AiJobRequestHasherTest {
         );
 
         assertThat(first).isEqualTo(
-                "149b287bf4f9ef3d8a7c1c46a9edf3355b72a26211151c7c7de94c90570f756a"
+                "743e7155d0ecd90f0b8ce3814a47db82e9d4144ef8ed1e2dc01a38717e4f92f2"
         );
         assertThat(second).isEqualTo(first);
         assertThat(first).hasSize(64);
+    }
+
+    @Test
+    void stylePlanHashChangesWhenSliderLevelChanges() {
+        String casualNeat = hasher.hashStylePlan(
+                "DATE",
+                1,
+                1,
+                List.of("CASUAL", "NEAT"),
+                null,
+                true,
+                "ko"
+        );
+        String formalGlamorous = hasher.hashStylePlan(
+                "DATE",
+                10,
+                10,
+                List.of("FORMAL", "GLAMOROUS"),
+                null,
+                true,
+                "ko"
+        );
+
+        assertThat(casualNeat)
+                .isNotEqualTo(formalGlamorous);
+        assertThat(casualNeat).hasSize(64);
+        assertThat(formalGlamorous).hasSize(64);
     }
 }

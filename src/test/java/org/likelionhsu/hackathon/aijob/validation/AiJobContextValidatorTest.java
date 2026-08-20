@@ -100,6 +100,81 @@ class AiJobContextValidatorTest {
     }
 
     @Test
+    void stylePlanAcceptsTenStepSliderLevelsWithoutStyleTags() {
+        AiJobCreateRequest request =
+                new AiJobCreateRequest(
+                        AiJobType.STYLE_PLAN,
+                        new AiJobCreateRequest.Context(
+                                null,
+                                null,
+                                "DATE",
+                                7,
+                                4,
+                                null,
+                                null,
+                                true,
+                                "ko"
+                        )
+                );
+
+        assertThat(validator.validate(request)).isEmpty();
+    }
+
+    @Test
+    void stylePlanRejectsCasualFormalLevelOutsideRange() {
+        Set<ConstraintViolation<AiJobCreateRequest>> violations =
+                validator.validate(
+                        new AiJobCreateRequest(
+                                AiJobType.STYLE_PLAN,
+                                new AiJobCreateRequest.Context(
+                                        null,
+                                        null,
+                                        "DATE",
+                                        0,
+                                        5,
+                                        null,
+                                        null,
+                                        true,
+                                        "ko"
+                                )
+                        )
+                );
+
+        assertViolation(
+                violations,
+                "context.casualFormalLevel",
+                "허용되지 않는 값입니다."
+        );
+    }
+
+    @Test
+    void stylePlanRejectsNeatGlamorousLevelOutsideRange() {
+        Set<ConstraintViolation<AiJobCreateRequest>> violations =
+                validator.validate(
+                        new AiJobCreateRequest(
+                                AiJobType.STYLE_PLAN,
+                                new AiJobCreateRequest.Context(
+                                        null,
+                                        null,
+                                        "DATE",
+                                        5,
+                                        11,
+                                        null,
+                                        null,
+                                        true,
+                                        "ko"
+                                )
+                        )
+                );
+
+        assertViolation(
+                violations,
+                "context.neatGlamorousLevel",
+                "허용되지 않는 값입니다."
+        );
+    }
+
+    @Test
     void stylePlanRejectsInvalidOccasion() {
         Set<ConstraintViolation<AiJobCreateRequest>> violations =
                 validator.validate(

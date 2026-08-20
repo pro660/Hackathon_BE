@@ -22,6 +22,8 @@ public record AiJobCreateRequest(
             String productId,
             String imageAssetId,
             String occasion,
+            Integer casualFormalLevel,
+            Integer neatGlamorousLevel,
             List<String> styleTags,
             String weatherCondition,
             Boolean prioritizeOwnedItems,
@@ -31,6 +33,8 @@ public record AiJobCreateRequest(
         public Context(String productId) {
             this(
                     productId,
+                    null,
+                    null,
                     null,
                     null,
                     null,
@@ -51,7 +55,31 @@ public record AiJobCreateRequest(
                     null,
                     null,
                     null,
+                    null,
+                    null,
                     null
+            );
+        }
+
+        public Context(
+                String productId,
+                String imageAssetId,
+                String occasion,
+                List<String> styleTags,
+                String weatherCondition,
+                Boolean prioritizeOwnedItems,
+                String language
+        ) {
+            this(
+                    productId,
+                    imageAssetId,
+                    occasion,
+                    null,
+                    null,
+                    styleTags,
+                    weatherCondition,
+                    prioritizeOwnedItems,
+                    language
             );
         }
     }

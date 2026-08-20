@@ -45,6 +45,26 @@ public class AiJobRequestHasher {
             boolean prioritizeOwnedItems,
             String language
     ) {
+        return hashStylePlan(
+                occasion,
+                deriveAxisLevel(styleTags, "CASUAL", "FORMAL"),
+                deriveAxisLevel(styleTags, "NEAT", "GLAMOROUS"),
+                styleTags,
+                weatherCondition,
+                prioritizeOwnedItems,
+                language
+        );
+    }
+
+    public String hashStylePlan(
+            String occasion,
+            int casualFormalLevel,
+            int neatGlamorousLevel,
+            List<String> styleTags,
+            String weatherCondition,
+            boolean prioritizeOwnedItems,
+            String language
+    ) {
         Objects.requireNonNull(occasion, "occasion");
         Objects.requireNonNull(styleTags, "styleTags");
         Objects.requireNonNull(language, "language");
@@ -65,12 +85,37 @@ public class AiJobRequestHasher {
         String canonicalRequest =
                 "{\"type\":\"STYLE_PLAN\",\"context\":{"
                         + "\"occasion\":\"" + occasion.trim() + "\","
+                        + "\"casualFormalLevel\":" + casualFormalLevel + ","
+                        + "\"neatGlamorousLevel\":" + neatGlamorousLevel + ","
                         + "\"styleTags\":" + styleTagsJson + ","
                         + "\"weatherCondition\":" + weatherJson + ","
                         + "\"prioritizeOwnedItems\":" + prioritizeOwnedItems + ","
                         + "\"language\":\"" + language.trim() + "\"}}";
 
         return hashCanonical(canonicalRequest);
+    }
+
+    private int deriveAxisLevel(
+            List<String> styleTags,
+            String lowTag,
+            String highTag
+    ) {
+        if (styleTags == null || styleTags.isEmpty()) {
+            return 5;
+        }
+
+        boolean low = styleTags.stream()
+                .map(String::trim)
+                .anyMatch(lowTag::equals);
+        boolean high = styleTags.stream()
+                .map(String::trim)
+                .anyMatch(highTag::equals);
+
+        if (low == high) {
+            return 5;
+        }
+
+        return high ? 8 : 3;
     }
 
     private String hashCanonical(

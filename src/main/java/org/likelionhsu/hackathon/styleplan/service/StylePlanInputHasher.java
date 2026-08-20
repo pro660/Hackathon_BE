@@ -21,6 +21,10 @@ public class StylePlanInputHasher {
 
         canonical.append(request.occasion())
                 .append('|')
+                .append(request.casualFormalLevel())
+                .append('|')
+                .append(request.neatGlamorousLevel())
+                .append('|')
                 .append(String.join(
                         ",",
                         request.styleTags()
