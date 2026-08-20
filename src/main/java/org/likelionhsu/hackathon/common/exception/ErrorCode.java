@@ -94,6 +94,24 @@ public enum ErrorCode {
             "비밀번호 확인이 일치하지 않습니다."
     ),
 
+    CURRENT_PASSWORD_MISMATCH(
+            HttpStatus.BAD_REQUEST,
+            "CURRENT_PASSWORD_MISMATCH",
+            "현재 비밀번호가 올바르지 않습니다."
+    ),
+
+    PASSWORD_CHANGE_NOT_AVAILABLE(
+            HttpStatus.CONFLICT,
+            "PASSWORD_CHANGE_NOT_AVAILABLE",
+            "로컬 비밀번호 변경을 사용할 수 없는 계정입니다."
+    ),
+
+    NEW_PASSWORD_SAME_AS_CURRENT(
+            HttpStatus.BAD_REQUEST,
+            "NEW_PASSWORD_SAME_AS_CURRENT",
+            "새 비밀번호는 현재 비밀번호와 다르게 설정해 주세요."
+    ),
+
     REQUIRED_TERMS_NOT_AGREED(
             HttpStatus.BAD_REQUEST,
             "REQUIRED_TERMS_NOT_AGREED",
