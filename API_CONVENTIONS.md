@@ -273,6 +273,33 @@ ErrorCode: ORIGIN_NOT_ALLOWED
 
 OAuth Provider Callback은 외부 공급자에서 돌아오는 요청이므로 위 POST Trusted Origin 검사 대상이 아니며 OAuth `state` 검증을 사용한다.
 
+현재 사용자 비밀번호 변경은 인증 흐름 자체가 아니라 현재 사용자의 자격 증명을 변경하는 작업이므로 사용자 리소스 하위 Endpoint를 사용한다.
+
+```http
+PATCH /api/users/me/password
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+```
+
+요청 본문:
+
+```json
+{
+  "currentPassword": "현재 비밀번호",
+  "newPassword": "새 비밀번호",
+  "newPasswordConfirm": "새 비밀번호 확인"
+}
+```
+
+- `LocalCredential`을 보유한 사용자만 변경할 수 있다. LOCAL + 소셜 인증을 함께 가진 사용자는 가능하고, 소셜 전용 사용자는 `409 PASSWORD_CHANGE_NOT_AVAILABLE`을 반환한다.
+- 새 비밀번호는 회원가입과 동일하게 영문과 숫자를 포함한 8~64자 규칙을 사용한다.
+- 현재 비밀번호가 올바르지 않으면 `400 CURRENT_PASSWORD_MISMATCH`를 반환한다.
+- `newPassword`와 `newPasswordConfirm`이 다르면 `400 PASSWORD_CONFIRM_MISMATCH`를 반환한다.
+- 새 비밀번호가 현재 비밀번호와 같으면 `400 NEW_PASSWORD_SAME_AS_CURRENT`를 반환한다.
+- 성공 시 `204 No Content`이며 응답 본문을 보내지 않는다.
+- 변경 성공 후 기존 Access Token과 Refresh Token은 유지되며 사용자를 강제 로그아웃시키지 않는다. 다음 로그인부터 새 비밀번호를 사용한다.
+- 이 PATCH Endpoint는 현재 `TrustedOriginFilter`의 추가 검사 대상에 포함하지 않는다. 일반 보호 API와 동일하게 Bearer Access Token 인증을 사용한다.
+
 ### 3.3 이름 표기 규칙
 
 | 대상 | 규칙 | 예시 |

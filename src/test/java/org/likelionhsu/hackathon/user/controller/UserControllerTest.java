@@ -13,6 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import org.likelionhsu.hackathon.auth.dto.request.PasswordChangeRequest;
+import org.likelionhsu.hackathon.auth.service.PasswordChangeService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.likelionhsu.hackathon.auth.domain.Gender;
@@ -66,6 +68,9 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private PasswordChangeService passwordChangeService;
 
     @MockitoBean
     private AccountDeletionService accountDeletionService;
@@ -215,6 +220,31 @@ class UserControllerTest {
                         jsonPath("$.error.code")
                                 .value("ACCOUNT_NOT_ACTIVE")
                 );
+    }
+
+    @Test
+    void validPasswordChangeReturns204() throws Exception {
+        authenticate(USER_ID);
+
+        mockMvc.perform(
+                        patch("/api/users/me/password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                          "currentPassword": "password123",
+                                          "newPassword": "newPassword123",
+                                          "newPasswordConfirm": "newPassword123"
+                                        }
+                                        """
+                                )
+                )
+                .andExpect(status().isNoContent());
+
+        verify(passwordChangeService).changePassword(
+                eq(USER_ID),
+                any(PasswordChangeRequest.class)
+        );
     }
 
     @Test

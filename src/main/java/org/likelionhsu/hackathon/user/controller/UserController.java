@@ -1,5 +1,7 @@
 package org.likelionhsu.hackathon.user.controller;
 
+import org.likelionhsu.hackathon.auth.dto.request.PasswordChangeRequest;
+import org.likelionhsu.hackathon.auth.service.PasswordChangeService;
 import org.likelionhsu.hackathon.common.response.ApiResponse;
 import org.likelionhsu.hackathon.user.dto.request.UserProfileUpdateRequest;
 import org.likelionhsu.hackathon.user.dto.response.UserProfileResponse;
@@ -32,6 +34,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class UserController {
 
     private final UserService userService;
+    private final PasswordChangeService passwordChangeService;
     private final AccountDeletionService accountDeletionService;
     private final ReauthenticationCookieService
             reauthenticationCookieService;
@@ -39,12 +42,14 @@ public class UserController {
 
     public UserController(
             UserService userService,
+            PasswordChangeService passwordChangeService,
             AccountDeletionService accountDeletionService,
             ReauthenticationCookieService
                     reauthenticationCookieService,
             RefreshCookieService refreshCookieService
     ) {
         this.userService = userService;
+        this.passwordChangeService = passwordChangeService;
         this.accountDeletionService = accountDeletionService;
         this.reauthenticationCookieService =
                 reauthenticationCookieService;
@@ -81,6 +86,25 @@ public class UserController {
                         request
                 )
         );
+    }
+
+    @Operation(
+            summary = "비밀번호 변경",
+            description = "현재 비밀번호를 확인한 뒤 LOCAL 인증 수단이 있는 사용자의 비밀번호를 변경합니다."
+    )
+    @PatchMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @Valid @RequestBody PasswordChangeRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        passwordChangeService.changePassword(
+                Long.valueOf(jwt.getSubject()),
+                request
+        );
+
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
     @Operation(
