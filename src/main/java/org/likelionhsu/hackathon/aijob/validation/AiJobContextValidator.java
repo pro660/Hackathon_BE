@@ -190,15 +190,64 @@ public class AiJobContextValidator
             valid = false;
         }
 
+        Integer casualFormalLevel =
+                requestContext.casualFormalLevel();
+        Integer neatGlamorousLevel =
+                requestContext.neatGlamorousLevel();
+        boolean hasSliderLevels =
+                casualFormalLevel != null
+                        || neatGlamorousLevel != null;
+
+        if (hasSliderLevels) {
+            if (casualFormalLevel == null) {
+                addViolation(
+                        context,
+                        "casualFormalLevel",
+                        REQUIRED_MESSAGE
+                );
+                valid = false;
+            } else if (!isSliderLevel(casualFormalLevel)) {
+                addViolation(
+                        context,
+                        "casualFormalLevel",
+                        INVALID_VALUE_MESSAGE
+                );
+                valid = false;
+            }
+
+            if (neatGlamorousLevel == null) {
+                addViolation(
+                        context,
+                        "neatGlamorousLevel",
+                        REQUIRED_MESSAGE
+                );
+                valid = false;
+            } else if (!isSliderLevel(neatGlamorousLevel)) {
+                addViolation(
+                        context,
+                        "neatGlamorousLevel",
+                        INVALID_VALUE_MESSAGE
+                );
+                valid = false;
+            }
+        }
+
         List<String> styleTags = requestContext.styleTags();
 
         if (styleTags == null) {
-            addViolation(
-                    context,
-                    "styleTags",
-                    REQUIRED_MESSAGE
-            );
-            valid = false;
+            if (!hasSliderLevels) {
+                addViolation(
+                        context,
+                        "casualFormalLevel",
+                        REQUIRED_MESSAGE
+                );
+                addViolation(
+                        context,
+                        "neatGlamorousLevel",
+                        REQUIRED_MESSAGE
+                );
+                valid = false;
+            }
         } else if (styleTags.isEmpty()
                 || styleTags.size() > STYLE_TAGS.size()) {
             addViolation(
@@ -288,6 +337,22 @@ public class AiJobContextValidator
             addViolation(context, "occasion", NOT_ALLOWED_MESSAGE);
             valid = false;
         }
+        if (requestContext.casualFormalLevel() != null) {
+            addViolation(
+                    context,
+                    "casualFormalLevel",
+                    NOT_ALLOWED_MESSAGE
+            );
+            valid = false;
+        }
+        if (requestContext.neatGlamorousLevel() != null) {
+            addViolation(
+                    context,
+                    "neatGlamorousLevel",
+                    NOT_ALLOWED_MESSAGE
+            );
+            valid = false;
+        }
         if (requestContext.styleTags() != null) {
             addViolation(context, "styleTags", NOT_ALLOWED_MESSAGE);
             valid = false;
@@ -319,6 +384,10 @@ public class AiJobContextValidator
                 .addPropertyNode("context")
                 .addPropertyNode(field)
                 .addConstraintViolation();
+    }
+
+    private boolean isSliderLevel(Integer value) {
+        return value != null && value >= 1 && value <= 10;
     }
 
     private boolean hasText(String value) {

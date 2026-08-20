@@ -9,6 +9,7 @@ import org.likelionhsu.hackathon.common.exception.RequestValidationException;
 import org.likelionhsu.hackathon.common.response.ApiResponse;
 import org.likelionhsu.hackathon.common.response.PageResponse;
 import org.likelionhsu.hackathon.place.domain.PlaceCategory;
+import org.likelionhsu.hackathon.place.dto.PlaceResponse;
 import org.likelionhsu.hackathon.place.dto.PlaceSavedStateResponse;
 import org.likelionhsu.hackathon.place.dto.PlaceSearchResponse;
 import org.likelionhsu.hackathon.place.dto.SavedPlaceResponse;
@@ -75,6 +76,25 @@ public class PlaceController {
                         latitude,
                         longitude,
                         radius
+                )
+        );
+    }
+
+    @Operation(
+            summary = "장소 상세 조회",
+            description = "저장된 장소의 기본 정보와 현재 사용자의 저장 여부를 조회합니다."
+    )
+    @GetMapping("/{placeId}")
+    public ApiResponse<PlaceResponse> getPlace(
+            @PathVariable
+            @Min(value = 1, message = "1 이상이어야 합니다.")
+            Long placeId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ApiResponse.success(
+                placeService.getPlace(
+                        Long.valueOf(jwt.getSubject()),
+                        placeId
                 )
         );
     }

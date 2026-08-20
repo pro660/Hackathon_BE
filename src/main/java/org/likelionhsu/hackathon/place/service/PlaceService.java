@@ -98,6 +98,26 @@ public class PlaceService {
     }
 
     @Transactional(readOnly = true)
+    public PlaceResponse getPlace(
+            Long userId,
+            Long placeId
+    ) {
+        StoredPlace place = placeRepository.findById(placeId)
+                .orElseThrow(() ->
+                        new BusinessException(
+                                ErrorCode.PLACE_NOT_FOUND
+                        )
+                );
+
+        boolean saved = placeRepository.findSavedPlaceIds(
+                userId,
+                List.of(placeId)
+        ).contains(placeId);
+
+        return toResponse(place, saved);
+    }
+
+    @Transactional(readOnly = true)
     public PageResponse<SavedPlaceResponse> getSavedPlaces(
             Long userId,
             Pageable pageable
